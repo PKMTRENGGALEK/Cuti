@@ -1,123 +1,329 @@
 <!DOCTYPE html>
 <html lang="id">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Aplikasi Cuti Puskesmas</title>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Aplikasi Cuti Puskesmas</title>
 
-    <!-- Bootstrap 5 -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <!-- Bootstrap Icons -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
-    <!-- Sidebar -->
-    <div class="sidebar d-flex flex-column">
-      <h4 class="mb-4 text-center">
-        <i class="bi bi-hospital me-2"></i>Puskesmas
-      </h4>
-      <a href="#" class="active"
-        ><i class="bi bi-calendar-check me-2"></i>Sisa Cuti</a
-      >
-      <a href="#"><i class="bi bi-pencil-square me-2"></i>Input Data Cuti</a>
-      <a href="#"><i class="bi bi-clock-history me-2"></i>Lihat Status Cuti</a>
-      <a href="#"><i class="bi bi-journal-text me-2"></i>Lihat Riwayat Cuti</a>
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Font Awesome 6 -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet"/>
+
+  <style>
+    :root{
+      --bg:#f5f7fa;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --brand:#4f46e5;
+    }
+    body{
+      background:var(--bg);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    /* Sidebar Desktop */
+    .sidebar{
+      width:260px;
+      min-height:100vh;
+      background:var(--card);
+      border-right:1px solid var(--border);
+      padding:2rem 1rem;
+      position:fixed; top:0; left:0;
+    }
+    .sidebar .brand{
+      font-weight:700;
+      color:#1f2937;
+      letter-spacing:.3px;
+    }
+    .menu a{
+      display:flex; align-items:center; gap:.75rem;
+      padding:.75rem 1rem; margin:.25rem 0;
+      color:#374151; text-decoration:none; border-radius:10px;
+      transition:.25s ease;
+      font-weight:500;
+    }
+    .menu a:hover, .menu a.active{
+      background:var(--brand); color:#fff;
+      transform: translateX(4px);
+    }
+
+    /* Offcanvas (Mobile Sidebar) */
+    .offcanvas .menu a{
+      display:flex; align-items:center; gap:.75rem;
+      padding:.75rem 1rem; margin:.25rem 0;
+      color:#374151; text-decoration:none; border-radius:10px;
+      transition:.25s ease; font-weight:500;
+    }
+    .offcanvas .menu a:hover, .offcanvas .menu a.active{
+      background:var(--brand); color:#fff;
+      transform: translateX(4px);
+    }
+
+    /* Content & Navbar */
+    .content{ margin-left:260px; padding:2rem; transition:margin-left .3s;}
+    .navbar{
+      background:var(--card);
+      box-shadow:0 2px 6px rgba(0,0,0,.05);
+      border-radius:12px;
+    }
+    .navbar .brand-title{
+      display:flex; align-items:center; gap:.6rem; font-weight:600;
+    }
+    .hello{
+      color:var(--muted); font-size:.9rem;
+    }
+
+    /* Avatar */
+    .avatar {
+      width:40px; height:40px;
+      border-radius:50%;
+      background:var(--brand);
+      color:#fff;
+      display:flex; align-items:center; justify-content:center;
+      font-weight:600;
+      cursor:pointer;
+    }
+
+    /* Cards */
+    .card{
+      border:none; border-radius:16px;
+      box-shadow:0 2px 10px rgba(0,0,0,.06);
+      transition:transform .2s ease, box-shadow .3s ease;
+      background:var(--card);
+    }
+    .card:hover{ transform:translateY(-4px); box-shadow:0 6px 18px rgba(0,0,0,.08); }
+
+    footer{
+      margin-left:260px; text-align:center; padding:1rem;
+      color:var(--muted); font-size:.9rem; transition:margin-left .3s;
+    }
+
+    /* Mobile */
+    @media (max-width: 991px){
+      .sidebar{ display:none; }
+      .content{ margin-left:0; padding:1.25rem; }
+      footer{ margin-left:0; }
+      .navbar{ border-radius:10px; }
+      .hello{ display:none; } /* biar navbar tetap bersih di HP */
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar (Desktop) -->
+  <aside class="sidebar d-none d-lg-flex flex-column">
+    <div class="text-center mb-4">
+      <div class="brand">
+        <i class="fa-solid fa-hospital text-primary me-2"></i>Puskesmas
+      </div>
+      <div class="small text-muted">Trenggalek</div>
     </div>
 
-    <!-- Content -->
-    <div class="content">
-      <!-- Navbar -->
-      <nav class="navbar navbar-expand-lg navbar-light mb-4 rounded">
-        <div class="container-fluid">
-          <span class="navbar-brand mb-0 h5"
-            ><i class="bi bi-calendar-event me-2"></i>Aplikasi Cuti
-            Pegawai</span
-          >
-          <div>
-            <span class="text-muted small me-3">
-              Halo, <strong id="namaPegawai">Pegawai</strong>
-            </span>
+    <nav class="menu">
+      <a href="#" class="active"><i class="fa-solid fa-calendar-check"></i><span>Sisa Cuti</span></a>
+      <a href="input-cuti.html"><i class="fa-solid fa-pen-to-square"></i><span>Input Data Cuti</span></a>
+      <a href="#"><i class="fa-solid fa-clock-rotate-left"></i><span>Lihat Status Cuti</span></a>
+      <a href="#"><i class="fa-solid fa-book-open"></i><span>Lihat Riwayat Cuti</span></a>
+      <hr class="my-3">
+      <a href="#" onclick="logout()" class="text-danger"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a>
+    </nav>
+  </aside>
 
-            <button class="btn btn-outline-success btn-sm" onclick="logout()">
-              <i class="bi bi-box-arrow-right me-1"></i>Logout
-            </button>
-          </div>
-        </div>
+  <!-- Offcanvas (Mobile) -->
+  <div class="offcanvas offcanvas-start" tabindex="-1" id="mobileSidebar">
+    <div class="offcanvas-header border-bottom">
+      <h5 class="offcanvas-title fw-bold">
+        <i class="fa-solid fa-hospital text-primary me-2"></i>Puskesmas Trenggalek
+      </h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+      <nav class="menu">
+        <a href="#" class="active" data-bs-dismiss="offcanvas"><i class="fa-solid fa-calendar-check"></i><span>Sisa Cuti</span></a>
+        <a href="input-cuti.html" data-bs-dismiss="offcanvas"><i class="fa-solid fa-pen-to-square"></i><span>Input Data Cuti</span></a>
+        <a href="#" data-bs-dismiss="offcanvas"><i class="fa-solid fa-clock-rotate-left"></i><span>Lihat Status Cuti</span></a>
+        <a href="#" data-bs-dismiss="offcanvas"><i class="fa-solid fa-book-open"></i><span>Lihat Riwayat Cuti</span></a>
+        <hr class="my-3">
+        <a href="#" class="text-danger" onclick="logout()" data-bs-dismiss="offcanvas"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a>
       </nav>
+    </div>
+  </div>
 
-      <!-- Dashboard Cards -->
-      <div class="row g-4">
-        <div class="col-md-4">
-          <div class="card p-4 text-center">
-            <i
-              class="bi bi-calendar-check text-success"
-              style="font-size: 2.5rem"
-            ></i>
-            <h5 class="mt-3">Sisa Cuti</h5>
-            <h2 class="fw-bold text-success">8 Hari</h2>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="card p-4 text-center">
-            <i
-              class="bi bi-pencil-square text-primary"
-              style="font-size: 2.5rem"
-            ></i>
-            <h5 class="mt-3">Ajukan Cuti</h5>
-            <p class="text-muted mb-0">Isi form pengajuan cuti</p>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="card p-4 text-center">
-            <i
-              class="bi bi-clock-history text-warning"
-              style="font-size: 2.5rem"
-            ></i>
-            <h5 class="mt-3">Status Pengajuan</h5>
-            <p class="text-muted mb-0">Lihat status cuti anda</p>
+  <!-- Content -->
+  <main class="content">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg rounded mb-4 px-3">
+      <div class="container-fluid">
+        <!-- tombol hamburger untuk mobile -->
+        <button class="btn btn-outline-primary d-lg-none me-2" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+
+        <span class="brand-title">
+          <i class="fa-solid fa-calendar-days text-primary"></i>
+          Aplikasi Cuti Pegawai
+        </span>
+
+        <div class="ms-auto d-flex align-items-center gap-3">
+          <div class="hello">Halo, <strong id="namaPegawai">Pegawai</strong></div>
+          <!-- Avatar dengan dropdown -->
+          <div class="dropdown">
+            <div class="avatar dropdown-toggle" id="avatarDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+              P
+            </div>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="avatarDropdown">
+              <li><a class="dropdown-item" href="#"><i class="fa-solid fa-user me-2"></i>Profil</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item text-danger" href="#" onclick="logout()"><i class="fa-solid fa-right-from-bracket me-2"></i>Logout</a></li>
+            </ul>
           </div>
         </div>
       </div>
+    </nav>
 
-      <!-- Placeholder untuk konten -->
-      <div class="card p-4 mt-4">
-        <h5 class="mb-3">
-          <i class="bi bi-info-circle me-2"></i>Informasi Cuti
-        </h5>
-        <p class="text-muted">
-          Silakan pilih menu di sidebar untuk mulai mengelola cuti Anda.
-        </p>
+    <!-- Dashboard Cards -->
+    <div class="row g-4">
+      <div class="col-md-4">
+  <div class="card p-4 text-center position-relative overflow-hidden" style="background: linear-gradient(135deg, #4ade80, #22d3ee); color:#fff;">
+    <i class="fa-solid fa-calendar-check" style="font-size:2rem;"></i>
+    <h5 class="mt-3 fw-semibold">Sisa Cuti</h5>
+    <h2 class="fw-bold" id="sisaCuti">0</h2>
+    <span class="badge bg-white text-dark mt-2" id="cutiTerpakai">Cuti Terpakai: 0</span>
+
+    <!-- Progress bar -->
+    <div class="progress mt-3" style="height:12px; border-radius:10px; background: rgba(255,255,255,0.3);">
+      <div class="progress-bar" id="cutiProgress" role="progressbar" style="width: 0%; background: #fff;"></div>
+    </div>
+
+    <!-- Tambahan efek dekoratif -->
+    <div style="position:absolute; top:-20px; right:-20px; font-size:4rem; opacity:0.2;">
+      <i class="fa-solid fa-calendar-check"></i>
+    </div>
+  </div>
+</div>
+
+      <div class="col-md-4">
+        <div class="card p-4 text-center">
+          <i class="fa-solid fa-pen-to-square text-primary" style="font-size:2.4rem;"></i>
+          <h5 class="mt-3 fw-semibold">Ajukan Cuti</h5>
+          <p class="text-muted mb-0">Isi form pengajuan cuti</p>
+        </div>
+      </div>
+     <div class="col-md-4">
+        <div class="card p-4 text-center">
+          <i class="fa-solid fa-clock-rotate-left text-warning" style="font-size:2.4rem;"></i>
+          <h5 class="mt-3 fw-semibold">Status Pengajuan</h5>
+          <p class="text-muted mb-0" id="statusPengajuan">Memuat...</p>
+        </div>
       </div>
     </div>
-    <footer>
-      &copy; 2025 Puskesmas Trenggalek | Sistem Cuti Pegawai | @Yoga
-    </footer>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        const userData = localStorage.getItem("userData");
-        if (!userData) {
-          window.location.href = "login.html"; // kalau belum login tendang balik
-          return;
-        }
+    <!-- Informasi -->
+    <div class="card p-4 mt-4">
+      <h5 class="mb-3 fw-semibold">
+        <i class="fa-solid fa-circle-info text-info me-2"></i>Informasi Cuti
+      </h5>
+      <p class="text-muted">
+        Silakan pilih menu di sidebar untuk mulai mengelola cuti Anda.
+      </p>
+    </div>
+  </main>
 
-        const user = JSON.parse(userData);
-        document.getElementById("namaPegawai").textContent = user.nama; // ambil nama dari session login
-      });
+  <footer>
+    &copy; 2025 Puskesmas Trenggalek | Sistem Cuti Pegawai | @Yoga
+  </footer>
 
-      function logout() {
-        localStorage.removeItem("userData");
-        window.location.href = "login.html";
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const userData = localStorage.getItem("userData");
+      if (!userData) {
+        window.location.href = "index.html";
+        return;
       }
-    </script>
-  </body>
+
+      const user = JSON.parse(userData);
+
+      // Tampilkan nama
+      const el = document.getElementById("namaPegawai");
+      if (el) el.textContent = user.nama || "Pegawai";
+
+      // Set avatar inisial
+      const avatarEl = document.querySelector(".avatar");
+      if (avatarEl && user.nama) {
+        avatarEl.textContent = user.nama.charAt(0).toUpperCase();
+      }
+
+      // Callback JSONP
+      window.handleCutiData = function(data) {
+        console.log("Data diterima dari GAS:", data);
+        
+        // Ambil semua cuti pegawai (bukan cuma tahunan)
+       const semuaCutiPegawai = data.filter(c => 
+          (c["Nama Pegawai"] || "").trim().toLowerCase() === (user.nama || "").trim().toLowerCase()
+        );
+
+        let statusTerakhir = "Belum ada pengajuan";
+        if (semuaCutiPegawai.length > 0) {
+          semuaCutiPegawai.sort((a,b) => new Date(b["Tanggal Mulai"]) - new Date(a["Tanggal Mulai"]));
+          statusTerakhir = semuaCutiPegawai[0]["Status"] || "Belum ada status"; // <-- pastikan key sesuai JSON
+        }
+        
+        // Badge warna
+        let badgeClass = "bg-secondary";
+        if(statusTerakhir.includes("Menunggu")) badgeClass = "bg-warning text-dark";
+        else if(statusTerakhir.includes("Disetujui")) badgeClass = "bg-success";
+        else if(statusTerakhir.includes("Ditolak")) badgeClass = "bg-danger";
+
+        const statusEl = document.getElementById("statusPengajuan");
+        if(statusEl) statusEl.innerHTML = `<span class="badge ${badgeClass}">${statusTerakhir}</span>`;
+
+        // Ambil cuti yang sesuai pegawai DAN jenisnya Cuti Tahunan
+        const userCuti = data.filter(c => 
+          (c["Nama Pegawai"] || "").trim().toLowerCase() === (user.nama || "").trim().toLowerCase()
+          && (c["Jenis Cuti"] || "").trim() === "Cuti Tahunan"
+        );
+        console.log("Data Cuti Tahunan pegawai:", userCuti);
+        
+        let totalTerpakai = 0;
+        userCuti.forEach(c => {
+          const lama = parseFloat(c["Lama Cuti"]);
+          totalTerpakai += isNaN(lama) ? 0 : lama;
+        });
+
+        const totalCutiTahunan = 12;
+        const sisa = totalCutiTahunan - totalTerpakai;
+
+        const sisaEl = document.getElementById("sisaCuti");
+        const terpakaiEl = document.getElementById("cutiTerpakai");
+        if (sisaEl) sisaEl.textContent = sisa >= 0 ? sisa : 0;
+        if (terpakaiEl) terpakaiEl.textContent = `Cuti Terpakai: ${totalTerpakai}`;
+        const progressEl = document.getElementById("cutiProgress");
+        if(progressEl){
+          const persen = (totalTerpakai / totalCutiTahunan) * 100;
+          progressEl.style.width = persen + "%";
+        }
+      };
+
+
+      // Panggil JSONP
+      const scriptURL = "https://script.google.com/macros/s/AKfycbzt6xv3yHqeRiTrNcmghTwAq5cgpJ873CF3S4t4XC5qQTa60fcUFILFIdOk9KFaO0o2/exec?callback=handleCutiData";
+      const s = document.createElement('script');
+      s.src = scriptURL;
+      s.async = true;
+      s.onerror = () => console.error("Gagal load JSONP");
+      document.body.appendChild(s);
+    });
+
+    function logout() {
+      localStorage.removeItem("userData");
+      window.location.href = "index.html";
+    }
+</script>
+
+</body>
 </html>
