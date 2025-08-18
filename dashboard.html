@@ -124,7 +124,7 @@
     <nav class="menu">
       <a href="#" class="active"><i class="fa-solid fa-calendar-check"></i><span>Sisa Cuti</span></a>
       <a href="input-cuti.html"><i class="fa-solid fa-pen-to-square"></i><span>Input Data Cuti</span></a>
-      <a href="#"><i class="fa-solid fa-clock-rotate-left"></i><span>Lihat Status Cuti</span></a>
+      <a href="status-cuti.html"><i class="fa-solid fa-clock-rotate-left"></i><span>Lihat Status Cuti</span></a>
       <a href="#"><i class="fa-solid fa-book-open"></i><span>Lihat Riwayat Cuti</span></a>
       <hr class="my-3">
       <a href="#" onclick="logout()" class="text-danger"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a>
@@ -143,7 +143,7 @@
       <nav class="menu">
         <a href="#" class="active" data-bs-dismiss="offcanvas"><i class="fa-solid fa-calendar-check"></i><span>Sisa Cuti</span></a>
         <a href="input-cuti.html" data-bs-dismiss="offcanvas"><i class="fa-solid fa-pen-to-square"></i><span>Input Data Cuti</span></a>
-        <a href="#" data-bs-dismiss="offcanvas"><i class="fa-solid fa-clock-rotate-left"></i><span>Lihat Status Cuti</span></a>
+        <a href="status-cuti.html" data-bs-dismiss="offcanvas"><i class="fa-solid fa-clock-rotate-left"></i><span>Lihat Status Cuti</span></a>
         <a href="#" data-bs-dismiss="offcanvas"><i class="fa-solid fa-book-open"></i><span>Lihat Riwayat Cuti</span></a>
         <hr class="my-3">
         <a href="#" class="text-danger" onclick="logout()" data-bs-dismiss="offcanvas"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a>
@@ -257,100 +257,115 @@
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const userData = localStorage.getItem("userData");
-      if (!userData) {
-        window.location.href = "index.html";
-        return;
-      }
+ <script>
+document.addEventListener("DOMContentLoaded", () => {
+  const userData = localStorage.getItem("userData");
+  if (!userData) {
+    window.location.href = "index.html";
+    return;
+  }
 
-      const user = JSON.parse(userData);
+  const user = JSON.parse(userData);
 
-      // Tampilkan nama
-      const el = document.getElementById("namaPegawai");
-      if (el) el.textContent = user.nama || "Pegawai";
+  // Tampilkan nama
+  const el = document.getElementById("namaPegawai");
+  if (el) el.textContent = user.nama || "Pegawai";
 
-      // Set avatar inisial
-      const avatarEl = document.querySelector(".avatar");
-      if (avatarEl && user.nama) {
-        avatarEl.textContent = user.nama.charAt(0).toUpperCase();
-      }
+  // Set avatar inisial
+  const avatarEl = document.querySelector(".avatar");
+  if (avatarEl && user.nama) {
+    avatarEl.textContent = user.nama.charAt(0).toUpperCase();
+  }
 
-      // Callback JSONP
-      window.handleCutiData = function(data) {
-        console.log("Data diterima dari GAS:", data);
-        
-        // Ambil semua cuti pegawai (bukan cuma tahunan)
-       const semuaCutiPegawai = data.filter(c => 
-          (c["Nama Pegawai"] || "").trim().toLowerCase() === (user.nama || "").trim().toLowerCase()
-        );
+  // Callback JSONP
+  window.handleCutiData = function(data) {
+    console.log("Data diterima dari GAS:", data);
 
-        let statusTerakhir = "Belum ada pengajuan";
-        if (semuaCutiPegawai.length > 0) {
-          semuaCutiPegawai.sort((a,b) => new Date(b["Tanggal Mulai"]) - new Date(a["Tanggal Mulai"]));
-          statusTerakhir = semuaCutiPegawai[0]["Status"] || "Belum ada status"; // <-- pastikan key sesuai JSON
-            tanggalPengajuanTerakhir = semuaCutiPegawai[0]["Tanggal Pengajuan"] || "-";
-          const tgl = new Date(tanggalPengajuanTerakhir);
-        tanggalPengajuanTerakhir = tgl.toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' });
-        }
-        
-        // Badge warna
-        let badgeClass = "bg-secondary";
-        if(statusTerakhir.includes("Menunggu")) badgeClass = "bg-warning text-dark";
-        else if(statusTerakhir.includes("Disetujui")) badgeClass = "bg-success";
-        else if(statusTerakhir.includes("Ditolak")) badgeClass = "bg-danger";
+    // Ambil semua cuti pegawai (bukan cuma tahunan)
+    const semuaCutiPegawai = data.filter(c => 
+      (c["Nama Pegawai"] || "").trim().toLowerCase() === (user.nama || "").trim().toLowerCase()
+    );
 
-        const statusEl = document.getElementById("statusPengajuan");
-        if(statusEl) statusEl.innerHTML = `<span class="badge ${badgeClass}">${statusTerakhir}</span>
-         <small class="d-block mt-1">Tanggal Pengajuan: ${tanggalPengajuanTerakhir}</small>`;
+    // ===== Inisialisasi variabel agar aman =====
+    let statusTerakhir = "Belum ada pengajuan";
+    let tanggalPengajuanTerakhir = "-";
 
-        // Ambil cuti yang sesuai pegawai DAN jenisnya Cuti Tahunan
-        const userCuti = data.filter(c => 
-          (c["Nama Pegawai"] || "").trim().toLowerCase() === (user.nama || "").trim().toLowerCase()
-          && (c["Jenis Cuti"] || "").trim() === "Cuti Tahunan"
-        );
-        console.log("Data Cuti Tahunan pegawai:", userCuti);
-        
-        let totalTerpakai = 0;
-        userCuti.forEach(c => {
-          const lama = parseFloat(c["Lama Cuti"]);
-          totalTerpakai += isNaN(lama) ? 0 : lama;
+    if (semuaCutiPegawai.length > 0) {
+      // Urutkan berdasarkan tanggal mulai terbaru
+      semuaCutiPegawai.sort((a, b) => new Date(b["Tanggal Mulai"]) - new Date(a["Tanggal Mulai"]));
+
+      statusTerakhir = semuaCutiPegawai[0]["Status"] || "Belum ada status";
+
+      const tglRaw = semuaCutiPegawai[0]["Tanggal Pengajuan"] || "-";
+      if (tglRaw !== "-") {
+        const tgl = new Date(tglRaw);
+        tanggalPengajuanTerakhir = tgl.toLocaleDateString('id-ID', {
+          day:'2-digit', month:'long', year:'numeric',
+          hour:'2-digit', minute:'2-digit', second:'2-digit'
         });
+      }
+    }
 
-        const totalCutiTahunan = 12;
-        const sisa = totalCutiTahunan - totalTerpakai;
+    // Badge warna
+    let badgeClass = "bg-secondary";
+    if(statusTerakhir.includes("Menunggu")) badgeClass = "bg-warning text-dark";
+    else if(statusTerakhir.includes("Disetujui")) badgeClass = "bg-success";
+    else if(statusTerakhir.includes("Ditolak")) badgeClass = "bg-danger";
 
-        const sisaEl = document.getElementById("sisaCuti");
-        const terpakaiEl = document.getElementById("cutiTerpakai");
-        if (sisaEl) sisaEl.textContent = sisa >= 0 ? sisa : 0;
-        if (terpakaiEl) terpakaiEl.textContent = `Cuti Terpakai: ${totalTerpakai}`;
-        const progressEl = document.getElementById("cutiProgress");
-        if(progressEl){
-          const persen = (totalTerpakai / totalCutiTahunan) * 100;
-          progressEl.style.width = persen + "%";
-        }
-        // Sembunyikan overlay loading
-        const loadingEl = document.getElementById("loadingOverlay");
-        if(loadingEl) loadingEl.style.display = "none";
+    const statusEl = document.getElementById("statusPengajuan");
+    if(statusEl) {
+      statusEl.innerHTML = `
+        <span class="badge ${badgeClass}">${statusTerakhir}</span>
+        <small class="d-block mt-1">Tanggal Pengajuan: ${tanggalPengajuanTerakhir}</small>
+      `;
+    }
 
-      };
+    // Ambil cuti tahunan
+    const userCutiTahunan = data.filter(c => 
+      (c["Nama Pegawai"] || "").trim().toLowerCase() === (user.nama || "").trim().toLowerCase()
+      && (c["Jenis Cuti"] || "").trim() === "Cuti Tahunan"
+    );
 
-
-      // Panggil JSONP
-      const scriptURL = "https://script.google.com/macros/s/AKfycbzt6xv3yHqeRiTrNcmghTwAq5cgpJ873CF3S4t4XC5qQTa60fcUFILFIdOk9KFaO0o2/exec?callback=handleCutiData";
-      const s = document.createElement('script');
-      s.src = scriptURL;
-      s.async = true;
-      s.onerror = () => console.error("Gagal load JSONP");
-      document.body.appendChild(s);
+    let totalTerpakai = 0;
+    userCutiTahunan.forEach(c => {
+      const lama = parseFloat(c["Lama Cuti"]);
+      totalTerpakai += isNaN(lama) ? 0 : lama;
     });
 
-    function logout() {
-      localStorage.removeItem("userData");
-      window.location.href = "index.html";
+    const totalCutiTahunan = 12;
+    const sisa = Math.max(totalCutiTahunan - totalTerpakai, 0);
+
+    const sisaEl = document.getElementById("sisaCuti");
+    const terpakaiEl = document.getElementById("cutiTerpakai");
+    const progressEl = document.getElementById("cutiProgress");
+
+    if (sisaEl) sisaEl.textContent = sisa;
+    if (terpakaiEl) terpakaiEl.textContent = `Cuti Terpakai: ${totalTerpakai}`;
+    if (progressEl) {
+      const persen = (totalTerpakai / totalCutiTahunan) * 100;
+      progressEl.style.width = persen + "%";
     }
+
+    // Sembunyikan overlay loading
+    const loadingEl = document.getElementById("loadingOverlay");
+    if(loadingEl) loadingEl.style.display = "none";
+  };
+
+  // Panggil JSONP
+  const scriptURL = "https://script.google.com/macros/s/AKfycbzt6xv3yHqeRiTrNcmghTwAq5cgpJ873CF3S4t4XC5qQTa60fcUFILFIdOk9KFaO0o2/exec?callback=handleCutiData";
+  const s = document.createElement('script');
+  s.src = scriptURL;
+  s.async = true;
+  s.onerror = () => console.error("Gagal load JSONP");
+  document.body.appendChild(s);
+});
+
+function logout() {
+  localStorage.removeItem("userData");
+  window.location.href = "index.html";
+}
 </script>
+
 
 </body>
 </html>

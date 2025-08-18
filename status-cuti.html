@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Status Pengajuan Cuti - Puskesmas</title>
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome 6 -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet"/>
+
+  <style>
+    body{ background:#f5f7fa; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .sidebar{ width:260px; min-height:100vh; background:#fff; border-right:1px solid #e5e7eb; padding:2rem 1rem; position:fixed; top:0; left:0; }
+    .sidebar .brand{ font-weight:700; color:#1f2937; letter-spacing:.3px; }
+    .menu a{ display:flex; align-items:center; gap:.75rem; padding:.75rem 1rem; margin:.25rem 0; color:#374151; text-decoration:none; border-radius:10px; transition:.25s ease; font-weight:500; }
+    .menu a:hover, .menu a.active{ background:#45c44c; color:#fff; transform: translateX(4px); }
+    .content{ margin-left:260px; padding:2rem; transition:margin-left .3s; }
+    .navbar{ background:#fff; box-shadow:0 2px 6px rgba(0,0,0,.05); border-radius:12px; }
+    .avatar { width:40px; height:40px; border-radius:50%; background:#45c44c; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:600; cursor:pointer; }
+    footer{ margin-left:260px; text-align:center; padding:1rem; color:#6b7280; font-size:.9rem; transition:margin-left .3s; }
+    @media (max-width: 991px){ .sidebar{ display:none; } .content{ margin-left:0; padding:1.25rem; } footer{ margin-left:0; } }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar Desktop -->
+  <aside class="sidebar d-none d-lg-flex flex-column">
+    <div class="text-center mb-4">
+      <div class="brand"><i class="fa-solid fa-hospital text-primary me-2"></i>Puskesmas</div>
+      <div class="small text-muted">Trenggalek</div>
+    </div>
+    <nav class="menu">
+      <a href="dashboard.html"><i class="fa-solid fa-calendar-check"></i><span>Sisa Cuti</span></a>
+      <a href="input-cuti.html"><i class="fa-solid fa-pen-to-square"></i><span>Input Data Cuti</span></a>
+      <a href="#" class="active"><i class="fa-solid fa-clock-rotate-left"></i><span>Lihat Status Cuti</span></a>
+      <a href="#"><i class="fa-solid fa-book-open"></i><span>Lihat Riwayat Cuti</span></a>
+      <hr class="my-3">
+      <a href="#" class="text-danger" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a>
+    </nav>
+  </aside>
+
+  <!-- Offcanvas Mobile -->
+  <div class="offcanvas offcanvas-start" tabindex="-1" id="mobileSidebar">
+    <div class="offcanvas-header border-bottom">
+      <h5 class="offcanvas-title fw-bold"><i class="fa-solid fa-hospital text-primary me-2"></i>Puskesmas Trenggalek</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+      <nav class="menu">
+        <a href="dashboard.html" data-bs-dismiss="offcanvas"><i class="fa-solid fa-calendar-check"></i><span>Sisa Cuti</span></a>
+        <a href="input-cuti.html" data-bs-dismiss="offcanvas"><i class="fa-solid fa-pen-to-square"></i><span>Input Data Cuti</span></a>
+        <a href="#" class="active" data-bs-dismiss="offcanvas"><i class="fa-solid fa-clock-rotate-left"></i><span>Lihat Status Cuti</span></a>
+        <a href="#" data-bs-dismiss="offcanvas"><i class="fa-solid fa-book-open"></i><span>Lihat Riwayat Cuti</span></a>
+        <hr class="my-3">
+        <a href="#" class="text-danger" onclick="logout()" data-bs-dismiss="offcanvas"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); z-index:9999; display:flex; align-items:center; justify-content:center; font-size:1.5rem; color:#4f46e5;">
+    <div><i class="fa-solid fa-spinner fa-spin me-2"></i> Memuat data...</div>
+  </div>
+
+  <!-- Content -->
+  <main class="content">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg rounded mb-4 px-3">
+      <div class="container-fluid">
+        <button class="btn btn-outline-primary d-lg-none me-2" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar"><i class="fa-solid fa-bars"></i></button>
+        <span class="brand-title"><i class="fa-solid fa-clock-rotate-left text-primary"></i> Status Pengajuan Cuti</span>
+        <div class="ms-auto d-flex align-items-center gap-3">
+          <div class="hello">Halo, <strong id="namaPegawai">Pegawai</strong></div>
+          <div class="dropdown">
+            <div class="avatar dropdown-toggle" id="avatarDropdown" data-bs-toggle="dropdown">P</div>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="avatarDropdown">
+              <li><a class="dropdown-item" href="#"><i class="fa-solid fa-user me-2"></i>Profil</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item text-danger" href="#" onclick="logout()"><i class="fa-solid fa-right-from-bracket me-2"></i>Logout</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Tabel Status Cuti -->
+    <div class="card p-4">
+      <h5 class="mb-4"><i class="fa-solid fa-list-check me-2"></i>Daftar Pengajuan Cuti</h5>
+      <div class="table-responsive">
+        <table class="table table-striped table-hover" id="tabelCuti">
+          <thead class="table-light">
+            <tr>
+              <th>No</th>
+              <th>Jenis Cuti</th>
+              <th>Lama Cuti</th>
+              <th>Tanggal Mulai</th>
+              <th>Tanggal Selesai</th>
+              <th>Status</th>
+              <th>Tanggal Pengajuan</th>
+              <th>File Pendukung</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <footer>&copy; 2025 Puskesmas Trenggalek | Sistem Cuti Pegawai | @Yoga</footer>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const userData = localStorage.getItem("userData");
+      if(!userData) { window.location.href = "index.html"; return; }
+      const user = JSON.parse(userData);
+
+      document.getElementById("namaPegawai").textContent = user.nama || "Pegawai";
+      document.querySelector(".avatar").textContent = user.nama.charAt(0).toUpperCase();
+
+      window.handleCutiData = function(data){
+        const tabelBody = document.querySelector("#tabelCuti tbody");
+        tabelBody.innerHTML = "";
+
+        const userCuti = data.filter(c => (c["Nama Pegawai"] || "").trim().toLowerCase() === user.nama.trim().toLowerCase());
+        userCuti.sort((a,b) => new Date(b["Tanggal Pengajuan"]) - new Date(a["Tanggal Pengajuan"]));
+
+        userCuti.forEach((c,i) => {
+          let statusClass = "badge bg-secondary";
+          if(c.Status.includes("Menunggu")) statusClass="badge bg-warning text-dark";
+          else if(c.Status.includes("Disetujui")) statusClass="badge bg-success";
+          else if(c.Status.includes("Ditolak")) statusClass="badge bg-danger";
+
+          let tglPengajuan = c["Tanggal Pengajuan"] ? new Date(c["Tanggal Pengajuan"]).toLocaleDateString('id-ID',{ day:'2-digit', month:'long', year:'numeric'}) : "-";
+
+          tabelBody.innerHTML += `<tr>
+            <td>${i+1}</td>
+            <td>${c["Jenis Cuti"] || "-"}</td>
+            <td>${c["Lama Cuti"] || "-"}</td>
+            <td>${c["Tanggal Mulai"] || "-"}</td>
+            <td>${c["Tanggal Selesai"] || "-"}</td>
+            <td><span class="${statusClass}">${c.Status || "-"}</span></td>
+            <td>${tglPengajuan}</td>
+            <td>${c["File Pendukung"] ? `<a href="${c["File Pendukung"]}" target="_blank"><i class="fa-solid fa-file-pdf text-danger"></i></a>` : "-"}</td>
+          </tr>`;
+        });
+
+        document.getElementById("loadingOverlay").style.display = "none";
+      };
+
+      const scriptURL = "https://script.google.com/macros/s/AKfycbzt6xv3yHqeRiTrNcmghTwAq5cgpJ873CF3S4t4XC5qQTa60fcUFILFIdOk9KFaO0o2/exec?callback=handleCutiData";
+      const s = document.createElement('script');
+      s.src = scriptURL;
+      s.async = true;
+      s.onerror = () => console.error("Gagal load JSONP");
+      document.body.appendChild(s);
+    });
+
+    function logout() {
+      localStorage.removeItem("userData");
+      window.location.href="index.html";
+    }
+  </script>
+
+</body>
+</html>
