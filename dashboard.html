@@ -16,7 +16,7 @@
       --card:#ffffff;
       --muted:#6b7280;
       --border:#e5e7eb;
-      --brand:#4f46e5;
+      --brand:#45c44c;
     }
     body{
       background:var(--bg);
@@ -150,6 +150,15 @@
       </nav>
     </div>
   </div>
+  <!-- Loading Overlay -->
+<div id="loadingOverlay" style="
+    position:fixed; top:0; left:0; width:100%; height:100%;
+    background:rgba(255,255,255,0.8); z-index:9999;
+    display:flex; align-items:center; justify-content:center; font-size:1.5rem; color:#4f46e5;">
+  <div>
+    <i class="fa-solid fa-spinner fa-spin me-2"></i> Memuat data...
+  </div>
+</div>
 
   <!-- Content -->
   <main class="content">
@@ -186,49 +195,59 @@
     <!-- Dashboard Cards -->
     <div class="row g-4">
       <div class="col-md-4">
-  <div class="card p-4 text-center position-relative overflow-hidden" style="background: linear-gradient(135deg, #4ade80, #22d3ee); color:#fff;">
-    <i class="fa-solid fa-calendar-check" style="font-size:2rem;"></i>
-    <h5 class="mt-3 fw-semibold">Sisa Cuti</h5>
-    <h2 class="fw-bold" id="sisaCuti">0</h2>
-    <span class="badge bg-white text-dark mt-2" id="cutiTerpakai">Cuti Terpakai: 0</span>
+        <div class="card p-4 text-center position-relative overflow-hidden" style="background: linear-gradient(135deg, #4ade80, #22d3ee); color:#fff;">
+          <i class="fa-solid fa-calendar-check" style="font-size:2rem;"></i>
+          <h5 class="mt-3 fw-semibold">Sisa Cuti</h5>
+          <h2 class="fw-bold" id="sisaCuti">0</h2>
+          <span class="badge bg-white text-dark mt-2" id="cutiTerpakai">Cuti Terpakai: 0</span>
 
-    <!-- Progress bar -->
-    <div class="progress mt-3" style="height:12px; border-radius:10px; background: rgba(255,255,255,0.3);">
-      <div class="progress-bar" id="cutiProgress" role="progressbar" style="width: 0%; background: #fff;"></div>
-    </div>
-
-    <!-- Tambahan efek dekoratif -->
-    <div style="position:absolute; top:-20px; right:-20px; font-size:4rem; opacity:0.2;">
-      <i class="fa-solid fa-calendar-check"></i>
-    </div>
-  </div>
-</div>
-
+          <!-- Tambahan efek dekoratif -->
+          <div style="position:absolute; top:-20px; right:-20px; font-size:4rem; opacity:0.2;">
+            <i class="fa-solid fa-calendar-check"></i>
+          </div>
+        </div>
+      </div>
       <div class="col-md-4">
-        <div class="card p-4 text-center">
-          <i class="fa-solid fa-pen-to-square text-primary" style="font-size:2.4rem;"></i>
+        <div class="card p-4 text-center position-relative overflow-hidden" style="background: linear-gradient(135deg, #60a5fa, #3b82f6); color:#fff;">
+          <i class="fa-solid fa-pen-to-square" style="font-size:2rem;"></i>
           <h5 class="mt-3 fw-semibold">Ajukan Cuti</h5>
-          <p class="text-muted mb-0">Isi form pengajuan cuti</p>
+          <p class="mb-0">Isi form pengajuan cuti</p>
+
+          <div style="position:absolute; top:-20px; right:-20px; font-size:4rem; opacity:0.2;">
+            <i class="fa-solid fa-pen-to-square"></i>
+          </div>
         </div>
       </div>
      <div class="col-md-4">
-        <div class="card p-4 text-center">
-          <i class="fa-solid fa-clock-rotate-left text-warning" style="font-size:2.4rem;"></i>
-          <h5 class="mt-3 fw-semibold">Status Pengajuan</h5>
-          <p class="text-muted mb-0" id="statusPengajuan">Memuat...</p>
+       <div class="card p-4 text-center position-relative overflow-hidden" style="background: linear-gradient(135deg, #facc15, #f97316); color:#fff;">
+        <i class="fa-solid fa-clock-rotate-left" style="font-size:2rem;"></i>
+          <p class="mt-3 fw-semibold">Status Pengajuan Terakhir</p>
+           
+          <p class=" mb-0" id="statusPengajuan">Memuat...</p>
+          <div style="position:absolute; top:-20px; right:-20px; font-size:4rem; opacity:0.2;">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- Informasi -->
-    <div class="card p-4 mt-4">
-      <h5 class="mb-3 fw-semibold">
-        <i class="fa-solid fa-circle-info text-info me-2"></i>Informasi Cuti
-      </h5>
-      <p class="text-muted">
-        Silakan pilih menu di sidebar untuk mulai mengelola cuti Anda.
-      </p>
+    <div class="col-12 col-md-12 mt-4">
+  <div class="card p-4 position-relative overflow-hidden" style="background: linear-gradient(135deg, #da997b, #f12e2e); color:#ffffff;">
+    <h5 class="mb-3 fw-semibold">
+      <i class="fa-solid fa-circle-info me-2"></i>Informasi Cuti
+    </h5>
+    <p>
+      Silakan pilih menu di sidebar untuk mulai mengelola cuti Anda.
+    </p>
+
+    <!-- Efek dekoratif ikon besar di kanan atas -->
+    <div style="position:absolute; top:-20px; right:-20px; font-size:4rem; opacity:0.15;">
+      <i class="fa-solid fa-circle-info"></i>
     </div>
+  </div>
+</div>
+
   </main>
 
   <footer>
@@ -271,6 +290,9 @@
         if (semuaCutiPegawai.length > 0) {
           semuaCutiPegawai.sort((a,b) => new Date(b["Tanggal Mulai"]) - new Date(a["Tanggal Mulai"]));
           statusTerakhir = semuaCutiPegawai[0]["Status"] || "Belum ada status"; // <-- pastikan key sesuai JSON
+            tanggalPengajuanTerakhir = semuaCutiPegawai[0]["Tanggal Pengajuan"] || "-";
+          const tgl = new Date(tanggalPengajuanTerakhir);
+        tanggalPengajuanTerakhir = tgl.toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' });
         }
         
         // Badge warna
@@ -280,7 +302,8 @@
         else if(statusTerakhir.includes("Ditolak")) badgeClass = "bg-danger";
 
         const statusEl = document.getElementById("statusPengajuan");
-        if(statusEl) statusEl.innerHTML = `<span class="badge ${badgeClass}">${statusTerakhir}</span>`;
+        if(statusEl) statusEl.innerHTML = `<span class="badge ${badgeClass}">${statusTerakhir}</span>
+         <small class="d-block mt-1">Tanggal Pengajuan: ${tanggalPengajuanTerakhir}</small>`;
 
         // Ambil cuti yang sesuai pegawai DAN jenisnya Cuti Tahunan
         const userCuti = data.filter(c => 
@@ -307,6 +330,10 @@
           const persen = (totalTerpakai / totalCutiTahunan) * 100;
           progressEl.style.width = persen + "%";
         }
+        // Sembunyikan overlay loading
+        const loadingEl = document.getElementById("loadingOverlay");
+        if(loadingEl) loadingEl.style.display = "none";
+
       };
 
 

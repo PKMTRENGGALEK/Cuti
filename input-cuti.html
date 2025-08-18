@@ -59,68 +59,82 @@
 </head>
 <body>
   <div class="container py-5">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center header-section">
-      <h3>
-        <i class="fa-solid fa-pen-to-square text-primary me-2"></i>Form Input Cuti
-      </h3>
-      <a href="index.html" class="btn btn-outline-secondary btn-sm">
-        <i class="fa-solid fa-arrow-left me-1"></i>Kembali
-      </a>
-    </div>
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center header-section">
+    <h3>
+      <i class="fa-solid fa-pen-to-square text-primary me-2"></i>Form Input Cuti
+    </h3>
+    <a href="index.html" class="btn btn-outline-secondary btn-sm">
+      <i class="fa-solid fa-arrow-left me-1"></i>Kembali
+    </a>
+  </div>
 
-    <!-- Form Cuti -->
-    <div class="card p-4">
-      <form id="formCuti">
-        <div class="row g-3">
-          <div class="col-md-6">
-            <label class="form-label">Nama Pegawai</label>
-            <input type="text" class="form-control" id="namaPegawai" readonly>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Jabatan</label>
-            <input type="text" class="form-control" id="jabatan" readonly>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Tanggal Mulai <span class="badge badge-info">Pilih tanggal</span></label>
-            <input type="text" class="form-control" id="tglMulai" placeholder="Pilih tanggal mulai" required>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Tanggal Selesai <span class="badge badge-info">Pilih tanggal</span></label>
-            <input type="text" class="form-control" id="tglSelesai" placeholder="Pilih tanggal selesai" required>
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">Lama Cuti (hari)</label>
-            <input type="text" class="form-control fw-bold text-center" id="lamaCuti" readonly>
-          </div>
-          <div class="col-md-8">
-            <label class="form-label">Jenis Cuti</label>
-            <select class="form-select" id="jenisCuti" required>
-              <option value="">-- Pilih Jenis Cuti --</option>
-              <option>Cuti Tahunan</option>
-              <option>Cuti Sakit</option>
-              <option>Cuti Melahirkan</option>
-              <option>Cuti Besar</option>
-              <option>Cuti Alasan Penting</option>
-            </select>
-          </div>
-          <div class="col-12">
-            <label class="form-label">Keterangan</label>
-            <textarea class="form-control" id="keterangan" rows="3" placeholder="Tuliskan keterangan cuti..." required></textarea>
-          </div>
-          <div class="col-12">
-            <label class="form-label">Upload File Pendukung (opsional)</label>
-            <input type="file" class="form-control" id="filePendukung" accept=".pdf,.jpg,.jpeg,.png">
-          </div>
+  <!-- Card Form -->
+  <div class="card position-relative overflow-hidden" style="background: linear-gradient(135deg, #4ade80, #22d3ee); color:#fff; padding:2rem;">
+    <!-- Header Form -->
+    <h5 class="mb-3 fw-semibold">
+      <i class="fa-solid fa-circle-info me-2"></i>Informasi Pegawai
+    </h5>
+
+    <form id="formCuti">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Nama Pegawai</label>
+          <input type="text" class="form-control" id="namaPegawai" readonly style="border-radius:12px;">
         </div>
-        <div class="mt-4 text-end">
-          <button type="submit" class="btn btn-primary">
-            <i class="fa-solid fa-paper-plane me-1"></i>Ajukan Cuti
-          </button>
+        <div class="col-md-6">
+          <label class="form-label">Jabatan</label>
+          <input type="text" class="form-control" id="jabatan" readonly style="border-radius:12px;">
         </div>
-      </form>
+        <div class="col-md-6">
+          <label class="form-label">Tanggal Mulai</label>
+          <input type="text" class="form-control" id="tglMulai" placeholder="Pilih tanggal mulai" required style="border-radius:12px;">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Tanggal Selesai</label>
+          <input type="text" class="form-control" id="tglSelesai" placeholder="Pilih tanggal selesai" required style="border-radius:12px;">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Lama Cuti (hari)</label>
+          <input type="text" class="form-control fw-bold text-center" id="lamaCuti" readonly style="border-radius:12px;">
+        </div>
+        <div class="col-md-8">
+          <label class="form-label">Jenis Cuti</label>
+          <select class="form-select" id="jenisCuti" required style="border-radius:12px;">
+            <option value="">-- Pilih Jenis Cuti --</option>
+            <option>Cuti Tahunan</option>
+            <option>Cuti Sakit</option>
+            <option>Cuti Melahirkan</option>
+            <option>Cuti Besar</option>
+            <option>Cuti Alasan Penting</option>
+          </select>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Keterangan</label>
+          <textarea class="form-control" id="keterangan" rows="3" placeholder="Tuliskan keterangan cuti..." required style="border-radius:12px;"></textarea>
+        </div>
+        <div class="col-12" id="filePendukungWrapper">
+          <label class="form-label">Upload File Pendukung (opsional)</label>
+          <input type="file" class="form-control" id="filePendukung" accept=".pdf,.jpg,.jpeg,.png" style="border-radius:12px;">
+        </div>
+      </div>
+
+      <div class="mt-4 text-end">
+        <button type="submit" class="btn btn-primary text-white fw-bold" style="border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,.15);">
+          <i class="fa-solid fa-paper-plane me-1"></i>Ajukan Cuti
+        </button>
+      </div>
+    </form>
+
+    <!-- Efek dekoratif ikon besar di kanan atas -->
+    <div style="position:absolute; top:-20px; right:-20px; font-size:5rem; opacity:0.15;">
+      <i class="fa-solid fa-pen-to-square"></i>
     </div>
   </div>
+</div>
+
+
+
   <!-- Toast dan Spinner -->
 <div class="position-fixed top-0 start-50 translate-middle-x mt-3" style="z-index: 1080; min-width: 300px;">
   <div id="liveToast" class="toast align-items-center text-white bg-primary border-0" role="alert" aria-live="assertive" aria-atomic="true">
@@ -255,36 +269,44 @@ document.getElementById("formCuti").addEventListener("submit", async e => {
   };
 
   const toastEl = document.getElementById("liveToast");
-  const toastBody = document.getElementById("toastBody");
-  const toastSpinner = document.getElementById("toastSpinner");
-  const toast = new bootstrap.Toast(toastEl);
+const toastBody = document.getElementById("toastBody");
+const toastSpinner = document.getElementById("toastSpinner");
 
-  // Tampilkan toast saat memulai pengiriman
-  toastBody.textContent = "Mengirim data ke spreadsheet...";
-  toastSpinner.style.display = "inline-block";
-  toast.show();
+// buat instance toast, matikan autohide agar tetap terlihat
+const toast = new bootstrap.Toast(toastEl, { autohide: false });
 
-  try {
-    const res = await fetch("https://script.google.com/macros/s/AKfycbzt6xv3yHqeRiTrNcmghTwAq5cgpJ873CF3S4t4XC5qQTa60fcUFILFIdOk9KFaO0o2/exec", {
-      method:"POST",
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
+// tampilkan toast saat mulai submit
+toastBody.textContent = "Mengirim data ke spreadsheet...";
+toastSpinner.style.display = "inline-block";
+toast.show();
 
-    toastSpinner.style.display = "none"; // sembunyikan spinner saat selesai
+try {
+  const res = await fetch("https://script.google.com/macros/s/AKfycbzt6xv3yHqeRiTrNcmghTwAq5cgpJ873CF3S4t4XC5qQTa60fcUFILFIdOk9KFaO0o2/exec", {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json();
 
-    if(data.status==="success"){
-      toastBody.textContent = "✅ Pengajuan cuti berhasil disimpan!";
-      document.getElementById("formCuti").reset();
-      document.getElementById("lamaCuti").value = "";
-    } else {
-      toastBody.textContent = "❌ Gagal: " + data.message;
-    }
+  // sembunyikan spinner saat selesai
+  toastSpinner.style.display = "none";
 
-  } catch(err){
-    toastSpinner.style.display = "none";
-    toastBody.textContent = "❌ Error: "+err.message;
+  if (data.status === "success") {
+    toastBody.textContent = "✅ Pengajuan cuti berhasil disimpan!";
+    // bisa otomatis hide setelah 3 detik
+    setTimeout(() => toast.hide(), 3000);
+    document.getElementById("formCuti").reset();
+    document.getElementById("lamaCuti").value = "";
+  } else {
+    toastBody.textContent = "❌ Gagal: " + data.message;
+    toast.show(); // pastikan toast terlihat
   }
+
+} catch(err){
+  toastSpinner.style.display = "none";
+  toastBody.textContent = "❌ Error: " + err.message;
+  toast.show();
+}
+
 });
 
 });
