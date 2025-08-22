@@ -119,9 +119,9 @@
     <aside class="sidebar d-none d-lg-flex flex-column">
       <div class="text-center mb-4">
         <div class="brand">
-          <i class="fa-solid fa-hospital text-primary me-2"></i>Puskesmas Trenggalek
+          <i class="fa-solid fa-hospital text-primary me-2"></i>Puskesmas
         </div>
-        <!-- <div class="small text-muted">Trenggalek</div> -->
+        <div class="small text-muted">Trenggalek</div>
       </div>
       <nav class="menu">
         <a href="dashboard.html"
@@ -341,123 +341,7 @@
 
         const cacheKey = "cutiDataCache";
 
-       function renderCuti(data) {
-  const userCuti = data.filter(
-    (c) =>
-      (c["Nama Pegawai"] || "").trim().toLowerCase() ===
-      user.nama.trim().toLowerCase()
-  );
-
-  // Urutkan by tanggal pengajuan desc
-  userCuti.sort(
-    (a, b) =>
-      new Date(b["Tanggal Pengajuan"]) - new Date(a["Tanggal Pengajuan"])
-  );
-
-  // Siapkan array untuk DataTables
-  const rows = userCuti.map((c, i) => {
-    let statusClass = "badge bg-secondary";
-    if (c.Status?.includes("Menunggu"))
-      statusClass = "badge bg-warning text-dark";
-    else if (c.Status?.includes("Disetujui"))
-      statusClass = "badge bg-success";
-    else if (c.Status?.includes("Ditolak"))
-      statusClass = "badge bg-danger";
-
-    const tglPengajuan = c["Tanggal Pengajuan"]
-      ? new Date(c["Tanggal Pengajuan"]).toLocaleDateString("id-ID", {
-          day: "2-digit",
-          month: "long",
-          year: "numeric",
-        })
-      : "-";
-    const tglMulai = c["Tanggal Mulai"]
-      ? new Date(c["Tanggal Mulai"]).toLocaleDateString("id-ID", {
-          day: "2-digit",
-          month: "long",
-          year: "numeric",
-        })
-      : "-";
-    const tglSelesai = c["Tanggal Selesai"]
-      ? new Date(c["Tanggal Selesai"]).toLocaleDateString("id-ID", {
-          day: "2-digit",
-          month: "long",
-          year: "numeric",
-        })
-      : "-";
-
-    return [
-      i + 1,
-      c["Jenis Cuti"] || "-",
-      c["Lama Cuti"] || "-",
-      tglMulai,
-      tglSelesai,
-      `<span class="${statusClass}">${c.Status || "-"}</span>`,
-      tglPengajuan,
-      c["Keterangan"] || "-",
-      c["File Pendukung"]
-        ? `<a href="${c["File Pendukung"]}" target="_blank"><i class="fa-solid fa-file-pdf text-danger"></i></a>`
-        : "-",
-    ];
-  });
-
-  // === Inisialisasi DataTables sekali saja ===
-  if (!$.fn.DataTable.isDataTable("#tabelCuti")) {
-    window.tableCuti = $("#tabelCuti").DataTable({
-      data: rows,
-      columns: [
-        { title: "No" },
-        { title: "Jenis Cuti" },
-        { title: "Lama Cuti" },
-        { title: "Tanggal Mulai" },
-        { title: "Tanggal Selesai" },
-        { title: "Status" },
-        { title: "Tanggal Pengajuan" },
-        { title: "Keterangan Cuti" },
-        { title: "File Pendukung" },
-      ],
-      pageLength: 5,
-      lengthMenu: [5, 10, 25, 50],
-      responsive: true,
-      dom: "Bfrtip",
-      buttons: [
-        {
-          extend: "excel",
-          text: '<i class="fa-solid fa-file-excel text-success"></i> Excel',
-          className: "btn btn-sm btn-outline-success",
-        },
-        {
-          extend: "pdf",
-          text: '<i class="fa-solid fa-file-pdf text-danger"></i> PDF',
-          className: "btn btn-sm btn-outline-danger",
-        },
-        {
-          extend: "print",
-          text: '<i class="fa-solid fa-print"></i> Print',
-          className: "btn btn-sm btn-outline-primary",
-        },
-      ],
-      language: {
-        search: "🔍 Cari:",
-        lengthMenu: "Tampilkan _MENU_ data",
-        info: "Menampilkan _START_ - _END_ dari _TOTAL_ data",
-        infoEmpty: "Tidak ada data tersedia",
-        paginate: {
-          first: "Awal",
-          last: "Akhir",
-          next: "→",
-          previous: "←",
-        },
-      },
-    });
-  } else {
-    // Update data kalau tabel sudah ada
-    window.tableCuti.clear().rows.add(rows).draw();
-  }
-
-  document.getElementById("loadingOverlay").style.display = "none";
-}
-
+        function renderCuti(data) {
   const tabelBody = document.querySelector("#tabelCuti tbody");
   tabelBody.innerHTML = "";
 
