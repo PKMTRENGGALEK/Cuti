@@ -341,9 +341,10 @@
 
         const cacheKey = "cutiDataCache";
 
-        function renderCuti(data) {
-  const tabelBody = document.querySelector("#tabelCuti tbody");
-  tabelBody.innerHTML = "";
+       function renderCuti(data) {
+  const tabel = $("#tabelCuti");
+  const tabelBody = tabel.find("tbody");
+  tabelBody.empty();
 
   const userCuti = data.filter(
     (c) =>
@@ -357,7 +358,7 @@
       new Date(b["Tanggal Pengajuan"]) - new Date(a["Tanggal Pengajuan"])
   );
 
-  userCuti.forEach((c, i) => {
+  const rows = userCuti.map((c, i) => {
     let statusClass = "badge bg-secondary";
     if (c.Status?.includes("Menunggu"))
       statusClass = "badge bg-warning text-dark";
@@ -388,7 +389,7 @@
         })
       : "-";
 
-    tabelBody.innerHTML += `
+    return `
       <tr>
         <td>${i + 1}</td>
         <td>${c["Jenis Cuti"] || "-"}</td>
@@ -406,10 +407,13 @@
       </tr>`;
   });
 
-  // === Aktifkan DataTables setelah render ===
+  tabelBody.html(rows.join(""));
+
+  // === Inisialisasi atau update DataTables ===
   if ($.fn.DataTable.isDataTable("#tabelCuti")) {
     $("#tabelCuti").DataTable().clear().destroy();
   }
+
   $("#tabelCuti").DataTable({
     pageLength: 5,
     lengthMenu: [5, 10, 25, 50],
@@ -448,6 +452,7 @@
 
   document.getElementById("loadingOverlay").style.display = "none";
 }
+
 
         function ambilData(showLoading = false) {
           if (showLoading) {
