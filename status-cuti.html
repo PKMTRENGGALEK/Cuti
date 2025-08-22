@@ -96,6 +96,22 @@
           margin-left: 0;
         }
       }
+      .spinner {
+        border: 6px solid #f3f3f3; /* abu-abu */
+        border-top: 6px solid #3498db; /* biru */
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
     </style>
   </head>
   <body>
@@ -174,6 +190,7 @@
     </div>
 
     <!-- Loading Overlay -->
+    <!-- Loading Overlay -->
     <div
       id="loadingOverlay"
       style="
@@ -187,11 +204,14 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.5rem;
-        color: #4f46e5;
       "
     >
-      <div><i class="fa-solid fa-spinner fa-spin me-2"></i> Memuat data...</div>
+      <div class="d-flex align-items-center text-primary">
+        <div class="spinner-border me-2" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        Memuat data...
+      </div>
     </div>
 
     <!-- Content -->
@@ -278,7 +298,6 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
     <script>
       document.addEventListener("DOMContentLoaded", () => {
         const userData = localStorage.getItem("userData");
@@ -288,6 +307,7 @@
         }
         const user = JSON.parse(userData);
 
+        // Nama & avatar
         document.getElementById("namaPegawai").textContent =
           user.nama || "Pegawai";
         document.querySelector(".avatar").textContent = user.nama
@@ -305,6 +325,8 @@
               (c["Nama Pegawai"] || "").trim().toLowerCase() ===
               user.nama.trim().toLowerCase()
           );
+
+          // Urutkan by tanggal pengajuan desc
           userCuti.sort(
             (a, b) =>
               new Date(b["Tanggal Pengajuan"]) -
@@ -320,8 +342,22 @@
             else if (c.Status?.includes("Ditolak"))
               statusClass = "badge bg-danger";
 
-            let tglPengajuan = c["Tanggal Pengajuan"]
+            const tglPengajuan = c["Tanggal Pengajuan"]
               ? new Date(c["Tanggal Pengajuan"]).toLocaleDateString("id-ID", {
+                  day: "2-digit",
+                  month: "long",
+                  year: "numeric",
+                })
+              : "-";
+            const tglMulai = c["Tanggal Mulai"]
+              ? new Date(c["Tanggal Mulai"]).toLocaleDateString("id-ID", {
+                  day: "2-digit",
+                  month: "long",
+                  year: "numeric",
+                })
+              : "-";
+            const tglSelesai = c["Tanggal Selesai"]
+              ? new Date(c["Tanggal Selesai"]).toLocaleDateString("id-ID", {
                   day: "2-digit",
                   month: "long",
                   year: "numeric",
@@ -333,8 +369,8 @@
                 <td>${i + 1}</td>
                 <td>${c["Jenis Cuti"] || "-"}</td>
                 <td>${c["Lama Cuti"] || "-"}</td>
-                <td>${c["Tanggal Mulai"] || "-"}</td>
-                <td>${c["Tanggal Selesai"] || "-"}</td>
+                <td>${tglMulai}</td>
+                <td>${tglSelesai}</td>
                 <td><span class="${statusClass}">${c.Status || "-"}</span></td>
                 <td>${tglPengajuan}</td>
                 <td>${
@@ -348,16 +384,14 @@
           document.getElementById("loadingOverlay").style.display = "none";
         }
 
-        function ambilData(force = false) {
-          // Pakai cache jika ada & belum expired (1 menit)
-          const cache = localStorage.getItem(cacheKey);
-          if (cache && !force) {
-            const parsed = JSON.parse(cache);
-            if (Date.now() - parsed.timestamp < 60000) {
-              renderCuti(parsed.data);
-              return;
-            }
+        function ambilData(showLoading = false) {
+          if (showLoading) {
+            document.getElementById("loadingOverlay").style.display = "flex";
           }
+
+          // Hapus script JSONP lama bila ada
+          const oldScript = document.getElementById("jsonpCuti");
+          if (oldScript) oldScript.remove();
 
           // Callback JSONP
           window.handleCutiData = function (data) {
@@ -370,22 +404,37 @@
           };
 
           const scriptURL =
-            "https://script.google.com/macros/s/AKfycbzt6xv3yHqeRiTrNcmghTwAq5cgpJ873CF3S4t4XC5qQTa60fcUFILFIdOk9KFaO0o2/exec?callback=handleCutiData&_t=" +
-            Date.now(); // tambahin timestamp biar gak ke-cache browser
+            "https://script.google.com/macros/s/AKfycbzt6xv3yHqeRiTrNcmghTwAq5cgpJ873CF3S4t4XC5qQTa60fcUFILFIdOk9KFaO0o2/exec" +
+            "?callback=handleCutiData&_t=" +
+            Date.now();
           const s = document.createElement("script");
+          s.id = "jsonpCuti";
           s.src = scriptURL;
           s.async = true;
-          s.onerror = () => console.error("Gagal load JSONP");
+          s.onerror = () => {
+            console.error("Gagal load JSONP");
+            document.getElementById("loadingOverlay").style.display = "none";
+          };
           document.body.appendChild(s);
         }
 
-        // Ambil pertama kali
-        ambilData(true);
-
-        // Auto update tiap 1 menit
-        setInterval(() => {
-          console.log("⏳ Cek update data cuti...");
+        // === Pertama kali buka halaman ===
+        const cache = localStorage.getItem(cacheKey);
+        if (cache) {
+          // Tampilkan cache langsung
+          const parsed = JSON.parse(cache);
+          renderCuti(parsed.data);
+          // Ambil data baru di background (tanpa overlay)
+          ambilData(false);
+        } else {
+          // Kalau belum ada cache, tampilkan overlay
           ambilData(true);
+        }
+
+        // Auto update tiap 1 menit (tanpa reload)
+        setInterval(() => {
+          console.log("⏳ Auto update data cuti...");
+          ambilData(false);
         }, 60000);
       });
 

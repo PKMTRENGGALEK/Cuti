@@ -28,8 +28,6 @@
         background: var(--bg);
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
       }
-
-      /* Sidebar Desktop */
       .sidebar {
         width: 260px;
         min-height: 100vh;
@@ -63,8 +61,6 @@
         color: #fff;
         transform: translateX(4px);
       }
-
-      /* Offcanvas (Mobile Sidebar) */
       .offcanvas .menu a {
         display: flex;
         align-items: center;
@@ -83,8 +79,6 @@
         color: #fff;
         transform: translateX(4px);
       }
-
-      /* Content & Navbar */
       .content {
         margin-left: 260px;
         padding: 2rem;
@@ -105,8 +99,6 @@
         color: var(--muted);
         font-size: 0.9rem;
       }
-
-      /* Avatar */
       .avatar {
         width: 40px;
         height: 40px;
@@ -119,20 +111,18 @@
         font-weight: 600;
         cursor: pointer;
       }
-
-      /* Cards */
       .card {
         border: none;
         border-radius: 16px;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
         transition: transform 0.2s ease, box-shadow 0.3s ease;
         background: var(--card);
+        cursor: default;
       }
       .card:hover {
         transform: translateY(-4px);
         box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
       }
-
       footer {
         margin-left: 260px;
         text-align: center;
@@ -141,8 +131,6 @@
         font-size: 0.9rem;
         transition: margin-left 0.3s;
       }
-
-      /* Mobile */
       @media (max-width: 991px) {
         .sidebar {
           display: none;
@@ -154,12 +142,9 @@
         footer {
           margin-left: 0;
         }
-        .navbar {
-          border-radius: 10px;
-        }
         .hello {
           display: none;
-        } /* biar navbar tetap bersih di HP */
+        }
       }
     </style>
   </head>
@@ -172,7 +157,6 @@
         </div>
         <div class="small text-muted">Trenggalek</div>
       </div>
-
       <nav class="menu">
         <a href="#" class="active"
           ><i class="fa-solid fa-calendar-check"></i><span>Dashboard</span></a
@@ -185,7 +169,7 @@
           ><i class="fa-solid fa-clock-rotate-left"></i
           ><span>Lihat Status Cuti</span></a
         >
-        <a href="#"
+        <a href="riwayat-cuti.html"
           ><i class="fa-solid fa-book-open"></i
           ><span>Lihat Riwayat Cuti</span></a
         >
@@ -222,7 +206,7 @@
             ><i class="fa-solid fa-clock-rotate-left"></i
             ><span>Lihat Status Cuti</span></a
           >
-          <a href="#" data-bs-dismiss="offcanvas"
+          <a href="riwayat-cuti.html" data-bs-dismiss="offcanvas"
             ><i class="fa-solid fa-book-open"></i
             ><span>Lihat Riwayat Cuti</span></a
           >
@@ -238,6 +222,7 @@
         </nav>
       </div>
     </div>
+
     <!-- Loading Overlay -->
     <div
       id="loadingOverlay"
@@ -252,44 +237,40 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.5rem;
-        color: #4f46e5;
       "
     >
-      <div><i class="fa-solid fa-spinner fa-spin me-2"></i> Memuat data...</div>
+      <div class="d-flex align-items-center text-primary">
+        <div class="spinner-border me-2" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        Memuat data...
+      </div>
     </div>
-
     <!-- Content -->
     <main class="content">
       <!-- Navbar -->
       <nav class="navbar navbar-expand-lg rounded mb-4 px-3">
         <div class="container-fluid">
-          <!-- tombol hamburger untuk mobile -->
           <button
             class="btn btn-outline-primary d-lg-none me-2"
             data-bs-toggle="offcanvas"
             data-bs-target="#mobileSidebar"
-            aria-controls="mobileSidebar"
           >
             <i class="fa-solid fa-bars"></i>
           </button>
-
-          <span class="brand-title">
-            <i class="fa-solid fa-calendar-days text-primary"></i>
-            Aplikasi Cuti Pegawai
-          </span>
-
+          <span class="brand-title"
+            ><i class="fa-solid fa-calendar-days text-primary"></i>Aplikasi Cuti
+            Pegawai</span
+          >
           <div class="ms-auto d-flex align-items-center gap-3">
             <div class="hello">
               Halo, <strong id="namaPegawai">Pegawai</strong>
             </div>
-            <!-- Avatar dengan dropdown -->
             <div class="dropdown">
               <div
                 class="avatar dropdown-toggle"
                 id="avatarDropdown"
                 data-bs-toggle="dropdown"
-                aria-expanded="false"
               >
                 P
               </div>
@@ -320,6 +301,7 @@
 
       <!-- Dashboard Cards -->
       <div class="row g-4">
+        <!-- Sisa Cuti -->
         <div class="col-md-4">
           <div
             class="card p-4 text-center position-relative overflow-hidden"
@@ -329,13 +311,18 @@
             "
           >
             <i class="fa-solid fa-calendar-check" style="font-size: 2rem"></i>
-            <h5 class="mt-3 fw-semibold">Sisa Cuti</h5>
+            <h5 class="mt-3 fw-semibold">Dashboard</h5>
             <h2 class="fw-bold" id="sisaCuti">0</h2>
             <span class="badge bg-white text-dark mt-2" id="cutiTerpakai"
               >Cuti Terpakai: 0</span
             >
-
-            <!-- Tambahan efek dekoratif -->
+            <div class="progress mt-3" style="height: 8px; border-radius: 6px">
+              <div
+                id="cutiProgress"
+                class="progress-bar bg-success"
+                style="width: 0%"
+              ></div>
+            </div>
             <div
               style="
                 position: absolute;
@@ -349,18 +336,20 @@
             </div>
           </div>
         </div>
+        <!-- Ajukan Cuti -->
         <div class="col-md-4">
           <div
             class="card p-4 text-center position-relative overflow-hidden"
             style="
               background: linear-gradient(135deg, #60a5fa, #3b82f6);
               color: #fff;
+              cursor: pointer;
             "
+            onclick="window.location.href='input-cuti.html'"
           >
             <i class="fa-solid fa-pen-to-square" style="font-size: 2rem"></i>
             <h5 class="mt-3 fw-semibold">Ajukan Cuti</h5>
             <p class="mb-0">Isi form pengajuan cuti</p>
-
             <div
               style="
                 position: absolute;
@@ -374,6 +363,7 @@
             </div>
           </div>
         </div>
+        <!-- Status -->
         <div class="col-md-4">
           <div
             class="card p-4 text-center position-relative overflow-hidden"
@@ -387,7 +377,6 @@
               style="font-size: 2rem"
             ></i>
             <p class="mt-3 fw-semibold">Status Pengajuan Terakhir</p>
-
             <p class="mb-0" id="statusPengajuan">Memuat...</p>
             <div
               style="
@@ -405,20 +394,18 @@
       </div>
 
       <!-- Informasi -->
-      <div class="col-12 col-md-12 mt-4">
+      <div class="col-12 mt-4">
         <div
           class="card p-4 position-relative overflow-hidden"
           style="
             background: linear-gradient(135deg, #da997b, #f12e2e);
-            color: #ffffff;
+            color: #fff;
           "
         >
           <h5 class="mb-3 fw-semibold">
             <i class="fa-solid fa-circle-info me-2"></i>Informasi Cuti
           </h5>
           <p>Silakan pilih menu di sidebar untuk mulai mengelola cuti Anda.</p>
-
-          <!-- Efek dekoratif ikon besar di kanan atas -->
           <div
             style="
               position: absolute;
@@ -440,7 +427,6 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
     <script>
       document.addEventListener("DOMContentLoaded", () => {
         const userData = localStorage.getItem("userData");
@@ -448,44 +434,40 @@
           window.location.href = "index.html";
           return;
         }
-
         const user = JSON.parse(userData);
+        document.getElementById("namaPegawai").textContent =
+          user.nama || "Pegawai";
+        document.querySelector(".avatar").textContent = (user.nama || "P")
+          .charAt(0)
+          .toUpperCase();
 
-        // Tampilkan nama
-        const el = document.getElementById("namaPegawai");
-        if (el) el.textContent = user.nama || "Pegawai";
+        const cacheKey = "cutiDashboardCache";
 
-        // Set avatar inisial
-        const avatarEl = document.querySelector(".avatar");
-        if (avatarEl && user.nama) {
-          avatarEl.textContent = user.nama.charAt(0).toUpperCase();
-        }
-
-        // Callback JSONP
-        window.handleCutiData = function (data) {
-          console.log("Data diterima dari GAS:", data);
-
-          // Ambil semua cuti pegawai (bukan cuma tahunan)
+        function renderDashboard(data) {
           const semuaCutiPegawai = data.filter(
             (c) =>
               (c["Nama Pegawai"] || "").trim().toLowerCase() ===
               (user.nama || "").trim().toLowerCase()
           );
-
-          // ===== Inisialisasi variabel agar aman =====
           let statusTerakhir = "Belum ada pengajuan";
           let tanggalPengajuanTerakhir = "-";
 
+          function parseDate(tgl) {
+            if (!tgl) return null;
+            if (tgl.includes("/")) {
+              const [d, m, y] = tgl.split("/");
+              return new Date(`${y}-${m}-${d}`);
+            }
+            return new Date(tgl);
+          }
+
           if (semuaCutiPegawai.length > 0) {
-            // Urutkan berdasarkan tanggal mulai terbaru
             semuaCutiPegawai.sort(
               (a, b) =>
-                new Date(b["Tanggal Mulai"]) - new Date(a["Tanggal Mulai"])
+                parseDate(b["Tanggal Mulai"]) - parseDate(a["Tanggal Mulai"])
             );
-
             statusTerakhir =
               semuaCutiPegawai[0]["Status"] || "Belum ada status";
-
             const tglRaw = semuaCutiPegawai[0]["Tanggal Pengajuan"] || "-";
             if (tglRaw !== "-") {
               const tgl = new Date(tglRaw);
@@ -495,28 +477,25 @@
                 year: "numeric",
                 hour: "2-digit",
                 minute: "2-digit",
-                second: "2-digit",
               });
             }
           }
 
-          // Badge warna
+          const statusMap = {
+            Menunggu: "bg-warning text-dark",
+            Disetujui: "bg-success",
+            Ditolak: "bg-danger",
+          };
           let badgeClass = "bg-secondary";
-          if (statusTerakhir.includes("Menunggu"))
-            badgeClass = "bg-warning text-dark";
-          else if (statusTerakhir.includes("Disetujui"))
-            badgeClass = "bg-success";
-          else if (statusTerakhir.includes("Ditolak")) badgeClass = "bg-danger";
+          Object.keys(statusMap).forEach((k) => {
+            if (statusTerakhir.includes(k)) badgeClass = statusMap[k];
+          });
 
-          const statusEl = document.getElementById("statusPengajuan");
-          if (statusEl) {
-            statusEl.innerHTML = `
-        <span class="badge ${badgeClass}">${statusTerakhir}</span>
-        <small class="d-block mt-1">Tanggal Pengajuan: ${tanggalPengajuanTerakhir}</small>
-      `;
-          }
+          document.getElementById("statusPengajuan").innerHTML = `
+            <span class="badge ${badgeClass}">${statusTerakhir}</span>
+            <small class="d-block mt-1">Tanggal Pengajuan: ${tanggalPengajuanTerakhir}</small>
+          `;
 
-          // Ambil cuti tahunan
           const userCutiTahunan = data.filter(
             (c) =>
               (c["Nama Pegawai"] || "").trim().toLowerCase() ===
@@ -532,36 +511,64 @@
 
           const totalCutiTahunan = 12;
           const sisa = Math.max(totalCutiTahunan - totalTerpakai, 0);
+          document.getElementById("sisaCuti").textContent = sisa;
+          document.getElementById(
+            "cutiTerpakai"
+          ).textContent = `Cuti Terpakai: ${totalTerpakai}`;
+          document.getElementById("cutiProgress").style.width =
+            (totalTerpakai / totalCutiTahunan) * 100 + "%";
 
-          const sisaEl = document.getElementById("sisaCuti");
-          const terpakaiEl = document.getElementById("cutiTerpakai");
-          const progressEl = document.getElementById("cutiProgress");
+          document.getElementById("loadingOverlay").style.display = "none";
+        }
 
-          if (sisaEl) sisaEl.textContent = sisa;
-          if (terpakaiEl)
-            terpakaiEl.textContent = `Cuti Terpakai: ${totalTerpakai}`;
-          if (progressEl) {
-            const persen = (totalTerpakai / totalCutiTahunan) * 100;
-            progressEl.style.width = persen + "%";
+        function ambilData(force = false) {
+          const cache = localStorage.getItem(cacheKey);
+          if (cache && !force) {
+            const parsed = JSON.parse(cache);
+            if (Date.now() - parsed.timestamp < 60000) {
+              renderDashboard(parsed.data);
+              return;
+            }
           }
 
-          // Sembunyikan overlay loading
-          const loadingEl = document.getElementById("loadingOverlay");
-          if (loadingEl) loadingEl.style.display = "none";
-        };
+          // JSONP callback
+          window.handleCutiData = function (data) {
+            const finalData = Array.isArray(data) ? data : data.data || [];
+            localStorage.setItem(
+              cacheKey,
+              JSON.stringify({ data: finalData, timestamp: Date.now() })
+            );
+            renderDashboard(finalData);
+          };
 
-        // Panggil JSONP
-        const scriptURL =
-          "https://script.google.com/macros/s/AKfycbzt6xv3yHqeRiTrNcmghTwAq5cgpJ873CF3S4t4XC5qQTa60fcUFILFIdOk9KFaO0o2/exec?callback=handleCutiData";
-        const s = document.createElement("script");
-        s.src = scriptURL;
-        s.async = true;
-        s.onerror = () => console.error("Gagal load JSONP");
-        document.body.appendChild(s);
+          // Hapus script lama
+          const oldScript = document.getElementById("jsonpDashboard");
+          if (oldScript) oldScript.remove();
+
+          const scriptURL =
+            "https://script.google.com/macros/s/AKfycbzt6xv3yHqeRiTrNcmghTwAq5cgpJ873CF3S4t4XC5qQTa60fcUFILFIdOk9KFaO0o2/exec" +
+            "?callback=handleCutiData&_t=" +
+            Date.now();
+          const s = document.createElement("script");
+          s.id = "jsonpDashboard";
+          s.src = scriptURL;
+          s.async = true;
+          document.body.appendChild(s);
+        }
+
+        // Render dari cache dulu biar instan
+        ambilData(false);
+
+        // Fetch ulang (force) biar update
+        ambilData(true);
+
+        // Refresh tiap 60 detik
+        setInterval(() => ambilData(true), 60000);
       });
 
       function logout() {
         localStorage.removeItem("userData");
+        localStorage.removeItem("cutiDashboardCache");
         window.location.href = "index.html";
       }
     </script>
