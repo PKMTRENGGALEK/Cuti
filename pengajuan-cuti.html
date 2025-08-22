@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Status Pengajuan Cuti - Puskesmas</title>
+
+    <!-- Bootstrap 5 -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <!-- Font Awesome 6 -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      rel="stylesheet"
+    />
+
+    <style>
+  
+      :root {
+        --bg: #f5f7fa;
+        --card: #ffffff;
+        --muted: #6b7280;
+        --border: #e5e7eb;
+        --brand: #45c44c;
+      }
+      body {
+        background: var(--bg);
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+      .sidebar {
+        width: 260px;
+        min-height: 100vh;
+        background: var(--card);
+        border-right: 1px solid var(--border);
+        padding: 2rem 1rem;
+        position: fixed;
+        top: 0;
+        left: 0;
+      }
+      .sidebar .brand {
+        font-weight: 700;
+        color: #1f2937;
+        letter-spacing: 0.3px;
+      }
+      .menu a {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+        margin: 0.25rem 0;
+        color: #374151;
+        text-decoration: none;
+        border-radius: 10px;
+        transition: 0.25s ease;
+        font-weight: 500;
+      }
+      .menu a:hover,
+      .menu a.active {
+        background: var(--brand);
+        color: #fff;
+        transform: translateX(4px);
+      }
+      .content {
+        margin-left: 260px;
+        padding: 2rem;
+        transition: margin-left 0.3s;
+      }
+      .navbar {
+        background: var(--card);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        border-radius: 12px;
+      }
+      footer {
+        margin-left: 260px;
+        text-align: center;
+        padding: 1rem;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+      @media (max-width: 991px) {
+        .sidebar { display: none; }
+        .content { margin-left: 0; padding: 1.25rem; }
+        footer { margin-left: 0; }
+      }
+      #tabelPengajuan {
+    font-size: 0.85rem;  /* lebih kecil dari default */
+  }
+  #tabelPengajuan {
+    font-size: 0.85rem;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  #tabelPengajuan thead {
+    background: #f1f3f5;
+    text-transform: uppercase;
+    font-size: 0.78rem;
+    letter-spacing: 0.5px;
+  }
+
+  #tabelPengajuan th, 
+  #tabelPengajuan td {
+    vertical-align: middle !important;
+    text-align: center;
+    padding: 0.65rem;
+  }
+
+  #tabelPengajuan tbody tr:hover {
+    background: #f9fafb;
+  }
+
+  .badge {
+    font-size: 0.7rem;
+    padding: 0.45em 0.65em;
+    border-radius: 50px;
+  }
+
+  .btn-sm {
+    border-radius: 8px;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  /* responsive mobile */
+  @media (max-width: 768px) {
+    #tabelPengajuan {
+      font-size: 0.75rem;
+    }
+    #tabelPengajuan th, 
+    #tabelPengajuan td {
+      padding: 0.4rem;
+    }
+  }
+/* Custom search box datatables */
+.dataTables_filter {
+  float: right;
+  margin-bottom: 10px;
+}
+
+.dataTables_filter label {
+  font-weight: 600;
+  margin-right: 8px;
+}
+
+.dataTables_filter input {
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  box-shadow: none;
+  transition: all 0.2s ease-in-out;
+}
+
+.dataTables_filter input:focus {
+  border-color: #198754; /* hijau bootstrap */
+  outline: none;
+  box-shadow: 0 0 0 0.15rem rgba(25, 135, 84, 0.25);
+}
+.avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #45c44c;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Sidebar Desktop -->
+    <aside class="sidebar d-none d-lg-flex flex-column">
+      <div class="text-center mb-4">
+        <div class="brand">
+          <i class="fa-solid fa-hospital text-primary me-2"></i>Puskesmas Trenggalek
+        </div>
+        <div class="small text-muted"></div>
+      </div>
+      <nav class="menu">
+        <a href="dashboard.html"
+          ><i class="fa-solid fa-calendar-check"></i><span>Dashboard</span></a
+        >
+        <a href="input-cuti.html"
+          ><i class="fa-solid fa-pen-to-square"></i
+          ><span>Input Data Cuti</span></a
+        >
+        <a href="status-cuti.html" 
+          ><i class="fa-solid fa-clock-rotate-left"></i
+          ><span>Lihat Status Cuti</span></a
+        >
+        <a href="#"
+          ><i class="fa-solid fa-book-open"></i
+          ><span>Lihat Riwayat Cuti</span></a
+        >
+        <a href="pengajuan-cuti.html"class="active" ><i class="fa-solid fa-user-check"></i><span>Pengajuan Cuti</span></a>
+        <hr class="my-3" />
+        <a href="#" class="text-danger" onclick="logout()"
+          ><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a
+        >
+      </nav>
+    </aside>
+
+    <!-- Offcanvas Mobile -->
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="mobileSidebar">
+      <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title fw-bold">
+          <i class="fa-solid fa-hospital text-primary me-2"></i>Puskesmas
+          Trenggalek
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="offcanvas"
+        ></button>
+      </div>
+      <div class="offcanvas-body">
+        <nav class="menu">
+          <a href="dashboard.html"
+            ><i class="fa-solid fa-calendar-check"></i><span>Dashboard</span></a
+          >
+          <a href="input-cuti.html"
+            ><i class="fa-solid fa-pen-to-square"></i
+            ><span>Input Data Cuti</span></a
+          >
+          <a href="status-cuti.html"  data-bs-dismiss="offcanvas"
+            ><i class="fa-solid fa-clock-rotate-left"></i
+            ><span>Lihat Status Cuti</span></a
+          >
+          <a href="#" data-bs-dismiss="offcanvas"
+            ><i class="fa-solid fa-book-open"></i
+            ><span>Lihat Riwayat Cuti</span></a
+          >
+           <a href="pengajuan-cuti.html" class="active" data-bs-dismiss="offcanvas"
+            ><i class="fa-solid fa-book-open"></i
+            ><span>Pengajuan Cuti</span></a
+          >
+          <hr class="my-3" />
+          <a
+            href="#"
+            class="text-danger"
+            onclick="logout()"
+            data-bs-dismiss="offcanvas"
+            ><i class="fa-solid fa-right-from-bracket"></i
+            ><span>Logout</span></a
+          >
+        </nav>
+      </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <!-- Loading Overlay -->
+    <div
+      id="loadingOverlay"
+      style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.8);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      "
+    >
+      <div class="d-flex align-items-center text-primary">
+        <div class="spinner-border me-2" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        Memuat data...
+      </div>
+    </div>
+
+    <!-- Content -->
+    <main class="content">
+      <!-- Navbar -->
+      <nav class="navbar navbar-expand-lg rounded mb-4 px-3">
+        <div class="container-fluid">
+          <span class="fw-bold"><i class="fa-solid fa-user-check text-success"></i> Pengajuan Cuti</span>
+            <div class="ms-auto d-flex align-items-center gap-3">
+            <div class="hello">
+              Halo, <strong id="namaPegawai">Pegawai</strong>
+            </div>
+            <div class="dropdown">
+              <div
+                class="avatar dropdown-toggle"
+                id="avatarDropdown"
+                data-bs-toggle="dropdown"
+              >
+                P
+              </div>
+              <ul
+                class="dropdown-menu dropdown-menu-end"
+                aria-labelledby="avatarDropdown"
+              >
+                <li>
+                  <a class="dropdown-item" href="#"
+                    ><i class="fa-solid fa-user me-2"></i>Profil</a
+                  >
+                </li>
+                <li><hr class="dropdown-divider" /></li>
+                <li>
+                  <a
+                    class="dropdown-item text-danger"
+                    href="#"
+                    onclick="logout()"
+                    ><i class="fa-solid fa-right-from-bracket me-2"></i
+                    >Logout</a
+                  >
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <!-- Card DataTable -->
+      <div class="card p-4">
+        <h5 class="mb-3 fw-semibold"><i class="fa-solid fa-list me-2"></i>Daftar Pengajuan Cuti Pegawai</h5>
+        <div class="table-responsive">
+          <table id="tabelPengajuan"  class="table table-striped table-hover table-bordered align-middle shadow-sm"  style="width:100%">
+            <thead class="table-light">
+              <tr class="text-center">
+                <th>No</th>
+                <th>Nama Pegawai</th>
+                <th>Jenis Cuti</th>
+                <th>Tanggal Cuti</th>
+                <th>Lama</th>
+                <th>Status</th>
+                <th>Keterangan</th>
+                <th>File</th>
+                <th>Tanggal Pengajuan</th>
+                <th width="100px">Aksi</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      &copy; 2025 Puskesmas Trenggalek | Sistem Cuti Pegawai
+    </footer>
+    <!-- Modal Tolak -->
+  <div class="modal fade" id="modalTolak" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title">Alasan Penolakan Cuti</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="tolakNo" />
+          <div class="mb-3">
+            <label for="alasanTolak" class="form-label">Masukkan alasan penolakan:</label>
+            <textarea class="form-control" id="alasanTolak" rows="3"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+          <button class="btn btn-danger" onclick="submitTolak()">Tolak</button>
+        </div>
+      </div>
+    </div>
+  </div>
+    <!-- Script -->
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.print.min.js"></script>
+    <!-- Bootstrap Bundle (sudah termasuk Popper) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+const scriptURL = "https://script.google.com/macros/s/AKfycbzt6xv3yHqeRiTrNcmghTwAq5cgpJ873CF3S4t4XC5qQTa60fcUFILFIdOk9KFaO0o2/exec";
+
+function formatDate(dateString) {
+  if (!dateString) return "-";
+  const d = new Date(dateString);
+  if (isNaN(d)) return dateString;
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
+function handleCutiData(data) {
+  const tbody = $("#tabelPengajuan tbody");
+  tbody.empty();
+
+  // Filter hanya yang status "Menunggu Persetujuan"
+  const filtered = data.filter(row => row["Status"] === "Menunggu Persetujuan");
+
+  // Urutkan berdasarkan tanggal pengajuan terbaru
+  filtered.sort((a, b) => new Date(b["Tanggal Pengajuan"]) - new Date(a["Tanggal Pengajuan"]));
+
+  // Render baris
+  filtered.forEach((row, i) => {
+    tbody.append(renderRow(row, i));
+  });
+
+  // Setup DataTable
+  if ($.fn.DataTable.isDataTable("#tabelPengajuan")) {
+    $("#tabelPengajuan").DataTable().clear().destroy();
+  }
+  $("#tabelPengajuan").DataTable({
+    pageLength: 5,
+    lengthMenu: [5, 10, 25, 50],
+    responsive: true,
+    order: []
+  });
+
+  $("#loadingOverlay").hide();
+}
+
+
+function renderRow(row, i){
+  let statusBadge = `<span class="badge bg-secondary">Menunggu</span>`;
+  if (row["Status"] === "Disetujui") statusBadge = `<span class="badge bg-success">Disetujui</span>`;
+  if (row["Status"] === "Ditolak") statusBadge = `<span class="badge bg-danger">Ditolak</span>`;
+  if (row["Status"] === "Menunggu Persetujuan") statusBadge = `<span class="badge bg-warning text-dark">Menunggu Persetujuan</span>`;
+
+  let actionBtn = "";
+  if (row["Status"] === "Menunggu Persetujuan") {
+    actionBtn = `
+      <button class="btn btn-success btn-sm me-1" onclick="updateStatus('${row["No"]}','Disetujui')"><i class="fa fa-check"></i></button>
+      <button class="btn btn-danger btn-sm" onclick="showModalTolak('${row["No"]}')"><i class="fa fa-times"></i></button>
+    `;
+  }
+  if (row["Status"] === "Ditolak" && row["Alasan"]) {
+    actionBtn = `<button class="btn btn-info btn-sm" onclick="lihatAlasan('${row["Alasan"]}')"><i class="fa fa-eye"></i> Alasan</button>`;
+  }
+
+  return `
+    <tr id="row-${row["No"]}">
+      <td>${i+1}</td>
+      <td>${row["Nama Pegawai"]}</td>
+      <td>${row["Jenis Cuti"]}</td>
+      <td>${formatDate(row["Tanggal Mulai"])} s/d ${formatDate(row["Tanggal Selesai"])}</td>
+      <td>${row["Lama Cuti"]}</td>
+      <td>${statusBadge}</td>
+      <td>${row["Keterangan"] || "-"}</td>
+      <td>${row["File Pendukung"] ? `<a href="${row["File Pendukung"]}" target="_blank"><i class="fa fa-file-pdf text-danger"></i></a>` : "-"}</td>
+      <td>${formatDate(row["Tanggal Pengajuan"])}</td>
+      <td>${actionBtn}</td>
+    </tr>
+  `;
+}
+
+function updateStatus(no, status, alasan="") {
+  $.post(scriptURL, { action:"updateStatus", no:no, status:status, alasan:alasan })
+    .done(() => {
+      Swal.fire("Berhasil", "Status cuti diperbarui", "success");
+
+      // update baris tabel tanpa reload
+      const row = $(`#row-${no}`);
+      if(row.length){
+        // Ambil data lama dari row, hanya update status dan action
+        row.find("td:eq(5)").html(
+          status === "Disetujui" ? `<span class="badge bg-success">Disetujui</span>` :
+          status === "Ditolak" ? `<span class="badge bg-danger">Ditolak</span>` :
+          `<span class="badge bg-warning text-dark">Menunggu Persetujuan</span>`
+        );
+
+        if(status === "Ditolak"){
+          row.find("td:last").html(`<button class="btn btn-info btn-sm" onclick="lihatAlasan('${alasan}')"><i class="fa fa-eye"></i> Alasan</button>`);
+        }else{
+          row.find("td:last").html("-");
+        }
+      }
+    })
+    .fail(() => Swal.fire("Error","Gagal memperbarui status","error"));
+}
+
+// Modal Tolak
+function showModalTolak(no){
+  $("#tolakNo").val(no);
+  $("#alasanTolak").val("");
+  new bootstrap.Modal(document.getElementById("modalTolak")).show();
+}
+
+function submitTolak(){
+  const no = $("#tolakNo").val();
+  const alasan = $("#alasanTolak").val().trim();
+  if(!alasan){
+    Swal.fire("Peringatan","Alasan penolakan harus diisi!","warning");
+    return;
+  }
+  updateStatus(no,"Ditolak",alasan);
+  bootstrap.Modal.getInstance(document.getElementById("modalTolak")).hide();
+}
+
+// Lihat alasan penolakan
+function lihatAlasan(alasan){
+  Swal.fire("Alasan Penolakan", alasan, "info");
+}
+
+function loadData() {
+  $("#loadingOverlay").show();
+  $.ajax({
+    url: scriptURL + "?callback=handleCutiData&_t=" + new Date().getTime(),
+    dataType: "jsonp",
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const userData = localStorage.getItem("userData");
+  if(!userData){ 
+    window.location.href="index.html"; 
+    return; 
+  }
+  const user = JSON.parse(userData);
+
+  // Nama & avatar
+  document.getElementById("namaPegawai").textContent = user.nama || "Pegawai";
+  document.querySelector(".avatar").textContent = user.nama
+    ? user.nama.charAt(0).toUpperCase()
+    : "?";
+
+  loadData();
+});
+
+</script>
+
+  </body>
+</html>

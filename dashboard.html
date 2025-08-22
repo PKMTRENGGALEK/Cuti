@@ -146,6 +146,15 @@
           display: none;
         }
       }
+      .badge-baru {
+  font-size: 0.75rem;
+  padding: 0.25em 0.5em;
+  border-radius: 12px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+
     </style>
   </head>
   <body>
@@ -173,6 +182,10 @@
           ><i class="fa-solid fa-book-open"></i
           ><span>Lihat Riwayat Cuti</span></a
         >
+        <a href="pengajuan-cuti.html" id="menuPengajuan" class="d-flex justify-content-between align-items-center">
+  <span><i class="fa-solid fa-user-check me-2"></i>Pengajuan Cuti</span>
+</a>
+
         <hr class="my-3" />
         <a href="#" onclick="logout()" class="text-danger"
           ><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a
@@ -210,6 +223,10 @@
             ><i class="fa-solid fa-book-open"></i
             ><span>Lihat Riwayat Cuti</span></a
           >
+          <a href="pengajuan-cuti.html" id="menuPengajuanMobile" data-bs-dismiss="offcanvas" class="d-flex justify-content-between align-items-center">
+  <span><i class="fa-solid fa-book-open me-2"></i>Pengajuan Cuti</span>
+</a>
+
           <hr class="my-3" />
           <a
             href="#"
@@ -428,149 +445,143 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        const userData = localStorage.getItem("userData");
-        if (!userData) {
-          window.location.href = "index.html";
-          return;
-        }
-        const user = JSON.parse(userData);
-        document.getElementById("namaPegawai").textContent =
-          user.nama || "Pegawai";
-        document.querySelector(".avatar").textContent = (user.nama || "P")
-          .charAt(0)
-          .toUpperCase();
+     document.addEventListener("DOMContentLoaded", () => {
+  const userData = localStorage.getItem("userData");
+  if (!userData) return window.location.href = "index.html";
 
-        const cacheKey = "cutiDashboardCache";
+  const user = JSON.parse(userData);
+  const namaPegawai = document.getElementById("namaPegawai");
+  const avatar = document.querySelector(".avatar");
 
-        function renderDashboard(data) {
-          const semuaCutiPegawai = data.filter(
-            (c) =>
-              (c["Nama Pegawai"] || "").trim().toLowerCase() ===
-              (user.nama || "").trim().toLowerCase()
-          );
-          let statusTerakhir = "Belum ada pengajuan";
-          let tanggalPengajuanTerakhir = "-";
+  if (namaPegawai) namaPegawai.textContent = user.nama || "Pegawai";
+  if (avatar) avatar.textContent = (user.nama || "P").charAt(0).toUpperCase();
 
-          function parseDate(tgl) {
-            if (!tgl) return null;
-            if (tgl.includes("/")) {
-              const [d, m, y] = tgl.split("/");
-              return new Date(`${y}-${m}-${d}`);
-            }
-            return new Date(tgl);
-          }
+  const role = (user.role || "").toLowerCase();
 
-          if (semuaCutiPegawai.length > 0) {
-            semuaCutiPegawai.sort(
-              (a, b) =>
-                parseDate(b["Tanggal Mulai"]) - parseDate(a["Tanggal Mulai"])
-            );
-            statusTerakhir =
-              semuaCutiPegawai[0]["Status"] || "Belum ada status";
-            const tglRaw = semuaCutiPegawai[0]["Tanggal Pengajuan"] || "-";
-            if (tglRaw !== "-") {
-              const tgl = new Date(tglRaw);
-              tanggalPengajuanTerakhir = tgl.toLocaleDateString("id-ID", {
-                day: "2-digit",
-                month: "long",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              });
-            }
-          }
+  const menuPengajuan = document.getElementById("menuPengajuan");
+  const menuPengajuanMobile = document.getElementById("menuPengajuanMobile");
 
-          const statusMap = {
-            Menunggu: "bg-warning text-dark",
-            Disetujui: "bg-success",
-            Ditolak: "bg-danger",
-          };
-          let badgeClass = "bg-secondary";
-          Object.keys(statusMap).forEach((k) => {
-            if (statusTerakhir.includes(k)) badgeClass = statusMap[k];
-          });
+  // Default hide
+  if (menuPengajuan) menuPengajuan.style.display = "none";
+  if (menuPengajuanMobile) menuPengajuanMobile.style.display = "none";
 
-          document.getElementById("statusPengajuan").innerHTML = `
-            <span class="badge ${badgeClass}">${statusTerakhir}</span>
-            <small class="d-block mt-1">Tanggal Pengajuan: ${tanggalPengajuanTerakhir}</small>
-          `;
+  // Show only for admin / supervisi
+  if (role === "Admin" || role === "Supervisi") {
+    if (menuPengajuan) menuPengajuan.style.display = "flex";
+    if (menuPengajuanMobile) menuPengajuanMobile.style.display = "flex";
+  }
 
-          const userCutiTahunan = data.filter(
-            (c) =>
-              (c["Nama Pegawai"] || "").trim().toLowerCase() ===
-                (user.nama || "").trim().toLowerCase() &&
-              (c["Jenis Cuti"] || "").trim() === "Cuti Tahunan"
-          );
+  const cacheKey = "cutiDashboardCache";
 
-          let totalTerpakai = 0;
-          userCutiTahunan.forEach((c) => {
-            const lama = parseFloat(c["Lama Cuti"]);
-            totalTerpakai += isNaN(lama) ? 0 : lama;
-          });
+  function renderDashboard(data) {
+    if (!Array.isArray(data)) data = data.data || [];
 
-          const totalCutiTahunan = 12;
-          const sisa = Math.max(totalCutiTahunan - totalTerpakai, 0);
-          document.getElementById("sisaCuti").textContent = sisa;
-          document.getElementById(
-            "cutiTerpakai"
-          ).textContent = `Cuti Terpakai: ${totalTerpakai}`;
-          document.getElementById("cutiProgress").style.width =
-            (totalTerpakai / totalCutiTahunan) * 100 + "%";
+    // ===== Dashboard =====
+    const semuaCutiPegawai = data.filter(c => (c["Nama Pegawai"] || "").trim().toLowerCase() === (user.nama || "").trim().toLowerCase());
+    
+    // Status terakhir
+    let statusTerakhir = "Belum ada pengajuan";
+    let tanggalPengajuanTerakhir = "-";
 
-          document.getElementById("loadingOverlay").style.display = "none";
-        }
-
-        function ambilData(force = false) {
-          const cache = localStorage.getItem(cacheKey);
-          if (cache && !force) {
-            const parsed = JSON.parse(cache);
-            if (Date.now() - parsed.timestamp < 60000) {
-              renderDashboard(parsed.data);
-              return;
-            }
-          }
-
-          // JSONP callback
-          window.handleCutiData = function (data) {
-            const finalData = Array.isArray(data) ? data : data.data || [];
-            localStorage.setItem(
-              cacheKey,
-              JSON.stringify({ data: finalData, timestamp: Date.now() })
-            );
-            renderDashboard(finalData);
-          };
-
-          // Hapus script lama
-          const oldScript = document.getElementById("jsonpDashboard");
-          if (oldScript) oldScript.remove();
-
-          const scriptURL =
-            "https://script.google.com/macros/s/AKfycbzt6xv3yHqeRiTrNcmghTwAq5cgpJ873CF3S4t4XC5qQTa60fcUFILFIdOk9KFaO0o2/exec" +
-            "?callback=handleCutiData&_t=" +
-            Date.now();
-          const s = document.createElement("script");
-          s.id = "jsonpDashboard";
-          s.src = scriptURL;
-          s.async = true;
-          document.body.appendChild(s);
-        }
-
-        // Render dari cache dulu biar instan
-        ambilData(false);
-
-        // Fetch ulang (force) biar update
-        ambilData(true);
-
-        // Refresh tiap 60 detik
-        setInterval(() => ambilData(true), 60000);
-      });
-
-      function logout() {
-        localStorage.removeItem("userData");
-        localStorage.removeItem("cutiDashboardCache");
-        window.location.href = "index.html";
+    if (semuaCutiPegawai.length > 0) {
+      semuaCutiPegawai.sort((a, b) => new Date(b["Tanggal Mulai"]) - new Date(a["Tanggal Mulai"]));
+      statusTerakhir = semuaCutiPegawai[0]["Status"] || "Belum ada status";
+      const tglRaw = semuaCutiPegawai[0]["Tanggal Pengajuan"] || "-";
+      if (tglRaw !== "-") {
+        const tgl = new Date(tglRaw);
+        tanggalPengajuanTerakhir = tgl.toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" });
       }
+    }
+
+    const statusMap = { Menunggu: "bg-warning text-dark", Disetujui: "bg-success", Ditolak: "bg-danger" };
+    let badgeClass = "bg-secondary";
+    Object.keys(statusMap).forEach(k => { if (statusTerakhir.includes(k)) badgeClass = statusMap[k]; });
+
+    const statusEl = document.getElementById("statusPengajuan");
+    if (statusEl) statusEl.innerHTML = `<span class="badge ${badgeClass}">${statusTerakhir}</span><small class="d-block mt-1">Tanggal Pengajuan: ${tanggalPengajuanTerakhir}</small>`;
+
+    // ===== Cuti Tahunan =====
+    const userCutiTahunan = data.filter(c => (c["Nama Pegawai"] || "").trim().toLowerCase() === (user.nama || "").trim().toLowerCase() && (c["Jenis Cuti"] || "").trim() === "Cuti Tahunan");
+
+    let totalTerpakai = 0;
+    userCutiTahunan.forEach(c => { const lama = parseFloat(c["Lama Cuti"]); totalTerpakai += isNaN(lama) ? 0 : lama; });
+
+    const totalCutiTahunan = 12;
+    const sisa = Math.max(totalCutiTahunan - totalTerpakai, 0);
+
+    const sisaEl = document.getElementById("sisaCuti");
+    if (sisaEl) sisaEl.textContent = sisa;
+    const terpakaiEl = document.getElementById("cutiTerpakai");
+    if (terpakaiEl) terpakaiEl.textContent = `Cuti Terpakai: ${totalTerpakai}`;
+    const progressEl = document.getElementById("cutiProgress");
+    if (progressEl) progressEl.style.width = (totalTerpakai / totalCutiTahunan) * 100 + "%";
+
+    // ===== Badge Pengajuan =====
+    const pengajuanMenunggu = data.filter(c => (c["Status"] || "").trim() === "Menunggu Persetujuan").length;
+
+    function setBadge(el) {
+  if (!el) return;
+  const oldBadge = el.querySelector(".badge-baru");
+  if (oldBadge) oldBadge.remove();
+
+  if (pengajuanMenunggu > 0) {
+    const span = document.createElement("span");
+    span.className = "badge bg-danger badge-baru ms-auto";
+    span.textContent = pengajuanMenunggu;
+    el.appendChild(span);
+  }
+}
+
+
+
+    setBadge(menuPengajuan);
+    setBadge(menuPengajuanMobile);
+
+    // Hide loading
+    const loadingOverlay = document.getElementById("loadingOverlay");
+    if (loadingOverlay) loadingOverlay.style.display = "none";
+  }
+
+  function ambilData(force = false) {
+    const cache = localStorage.getItem(cacheKey);
+    if (cache && !force) {
+      const parsed = JSON.parse(cache);
+      if (Date.now() - parsed.timestamp < 60000) {
+        renderDashboard(parsed.data);
+        return;
+      }
+    }
+
+    // JSONP
+    window.handleCutiData = function(data) {
+      const finalData = Array.isArray(data) ? data : data.data || [];
+      localStorage.setItem(cacheKey, JSON.stringify({ data: finalData, timestamp: Date.now() }));
+      renderDashboard(finalData);
+    };
+
+    const oldScript = document.getElementById("jsonpDashboard");
+    if (oldScript) oldScript.remove();
+
+    const scriptURL = "https://script.google.com/macros/s/AKfycbzt6xv3yHqeRiTrNcmghTwAq5cgpJ873CF3S4t4XC5qQTa60fcUFILFIdOk9KFaO0o2/exec?callback=handleCutiData&_t=" + Date.now();
+    const s = document.createElement("script");
+    s.id = "jsonpDashboard";
+    s.src = scriptURL;
+    s.async = true;
+    document.body.appendChild(s);
+  }
+
+  // Fetch
+  ambilData(false);
+  ambilData(true);
+  setInterval(() => ambilData(true), 60000);
+});
+
+function logout() {
+  localStorage.removeItem("userData");
+  localStorage.removeItem("cutiDashboardCache");
+  window.location.href = "index.html";
+}
+
     </script>
   </body>
 </html>
