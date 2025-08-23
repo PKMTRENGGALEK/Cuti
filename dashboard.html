@@ -183,10 +183,14 @@
           ><span>Lihat Riwayat Cuti</span></a
         >
         <a href="pengajuan-cuti.html" id="menuPengajuan" class="d-flex justify-content-between align-items-center">
-  <span><i class="fa-solid fa-user-check me-2"></i>Pengajuan Cuti</span>
-</a>
+          <span><i class="fa-solid fa-user-check me-2"></i>Pengajuan Cuti</span>
+        </a>
 
         <hr class="my-3" />
+         <a href="profile.html"
+          ><i class="fa-solid fa-user"></i
+          ><span>Profile</span></a
+        >
         <a href="#" onclick="logout()" class="text-danger"
           ><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a
         >
@@ -219,15 +223,17 @@
             ><i class="fa-solid fa-clock-rotate-left"></i
             ><span>Lihat Status Cuti</span></a
           >
-          <a href="riwayat-cuti.html" data-bs-dismiss="offcanvas"
-            ><i class="fa-solid fa-book-open"></i
+          <a href="riwayat-cuti.html"><i class="fa-solid fa-book-open"></i
             ><span>Lihat Riwayat Cuti</span></a
           >
-          <a href="pengajuan-cuti.html" id="menuPengajuanMobile" data-bs-dismiss="offcanvas" class="d-flex justify-content-between align-items-center">
-  <span><i class="fa-solid fa-book-open me-2"></i>Pengajuan Cuti</span>
-</a>
+          <a href="pengajuan-cuti.html" id="menuPengajuanMobile" class="d-flex justify-content-between align-items-center">
+            <span><i class="fa-solid fa-book-open me-2"></i>Pengajuan Cuti</span>
+          </a>
 
           <hr class="my-3" />
+           <a href="profile.html"><i class="fa-solid fa-user"></i
+            ><span>Profile</span></a
+          >
           <a
             href="#"
             class="text-danger"
@@ -446,94 +452,91 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
      document.addEventListener("DOMContentLoaded", () => {
-  const userData = localStorage.getItem("userData");
-  if (!userData) return window.location.href = "index.html";
+      const userData = localStorage.getItem("userData");
+      if (!userData) return window.location.href = "index.html";
 
-  const user = JSON.parse(userData);
-  const namaPegawai = document.getElementById("namaPegawai");
-  const avatar = document.querySelector(".avatar");
+      const user = JSON.parse(userData);
+      const namaPegawai = document.getElementById("namaPegawai");
+      const avatar = document.querySelector(".avatar");
 
-  if (namaPegawai) namaPegawai.textContent = user.nama || "Pegawai";
-  if (avatar) avatar.textContent = (user.nama || "P").charAt(0).toUpperCase();
+      if (namaPegawai) namaPegawai.textContent = user.nama || "Pegawai";
+      if (avatar) avatar.textContent = (user.nama || "P").charAt(0).toUpperCase();
 
-  const role = (user.role || "").toLowerCase();
+      const role = (user.role || "").toLowerCase();
 
-  const menuPengajuan = document.getElementById("menuPengajuan");
-  const menuPengajuanMobile = document.getElementById("menuPengajuanMobile");
+      const menuPengajuan = document.getElementById("menuPengajuan");
+      const menuPengajuanMobile = document.getElementById("menuPengajuanMobile");
 
-  // Default hide
-  if (menuPengajuan) menuPengajuan.style.display = "none";
-  if (menuPengajuanMobile) menuPengajuanMobile.style.display = "none";
+      // Default hide
+      if (menuPengajuan) menuPengajuan.style.display = "none";
+      if (menuPengajuanMobile) menuPengajuanMobile.style.display = "none";
 
-  // Show only for admin / supervisi
-  if (role === "Admin" || role === "Supervisi") {
-    if (menuPengajuan) menuPengajuan.style.display = "flex";
-    if (menuPengajuanMobile) menuPengajuanMobile.style.display = "flex";
-  }
+      // Show only for admin / supervisi
+      if (role === "Admin" || role === "Supervisi") {
+        if (menuPengajuan) menuPengajuan.style.display = "flex";
+        if (menuPengajuanMobile) menuPengajuanMobile.style.display = "flex";
+      }
 
-  const cacheKey = "cutiDashboardCache";
+      const cacheKey = "cutiDashboardCache";
 
-  function renderDashboard(data) {
-    if (!Array.isArray(data)) data = data.data || [];
+      function renderDashboard(data) {
+        if (!Array.isArray(data)) data = data.data || [];
 
-    // ===== Dashboard =====
-    const semuaCutiPegawai = data.filter(c => (c["Nama Pegawai"] || "").trim().toLowerCase() === (user.nama || "").trim().toLowerCase());
-    
-    // Status terakhir
-    let statusTerakhir = "Belum ada pengajuan";
-    let tanggalPengajuanTerakhir = "-";
+        // ===== Dashboard =====
+        const semuaCutiPegawai = data.filter(c => (c["Nama Pegawai"] || "").trim().toLowerCase() === (user.nama || "").trim().toLowerCase());
+        
+        // Status terakhir
+        let statusTerakhir = "Belum ada pengajuan";
+        let tanggalPengajuanTerakhir = "-";
 
-    if (semuaCutiPegawai.length > 0) {
-      semuaCutiPegawai.sort((a, b) => new Date(b["Tanggal Mulai"]) - new Date(a["Tanggal Mulai"]));
-      statusTerakhir = semuaCutiPegawai[0]["Status"] || "Belum ada status";
-      const tglRaw = semuaCutiPegawai[0]["Tanggal Pengajuan"] || "-";
-      if (tglRaw !== "-") {
-        const tgl = new Date(tglRaw);
-        tanggalPengajuanTerakhir = tgl.toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" });
+        if (semuaCutiPegawai.length > 0) {
+          semuaCutiPegawai.sort((a, b) => new Date(b["Tanggal Mulai"]) - new Date(a["Tanggal Mulai"]));
+          statusTerakhir = semuaCutiPegawai[0]["Status"] || "Belum ada status";
+          const tglRaw = semuaCutiPegawai[0]["Tanggal Pengajuan"] || "-";
+          if (tglRaw !== "-") {
+            const tgl = new Date(tglRaw);
+            tanggalPengajuanTerakhir = tgl.toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" });
+          }
+        }
+
+        const statusMap = { Menunggu: "bg-warning text-dark", Disetujui: "bg-success", Ditolak: "bg-danger" };
+        let badgeClass = "bg-secondary";
+        Object.keys(statusMap).forEach(k => { if (statusTerakhir.includes(k)) badgeClass = statusMap[k]; });
+
+        const statusEl = document.getElementById("statusPengajuan");
+        if (statusEl) statusEl.innerHTML = `<span class="badge ${badgeClass}">${statusTerakhir}</span><small class="d-block mt-1">Tanggal Pengajuan: ${tanggalPengajuanTerakhir}</small>`;
+
+        // ===== Cuti Tahunan =====
+        const userCutiTahunan = data.filter(c => (c["Nama Pegawai"] || "").trim().toLowerCase() === (user.nama || "").trim().toLowerCase() && (c["Jenis Cuti"] || "").trim() === "Cuti Tahunan");
+
+        let totalTerpakai = 0;
+        userCutiTahunan.forEach(c => { const lama = parseFloat(c["Lama Cuti"]); totalTerpakai += isNaN(lama) ? 0 : lama; });
+
+        const totalCutiTahunan = 12;
+        const sisa = Math.max(totalCutiTahunan - totalTerpakai, 0);
+
+        const sisaEl = document.getElementById("sisaCuti");
+        if (sisaEl) sisaEl.textContent = sisa;
+        const terpakaiEl = document.getElementById("cutiTerpakai");
+        if (terpakaiEl) terpakaiEl.textContent = `Cuti Terpakai: ${totalTerpakai}`;
+        const progressEl = document.getElementById("cutiProgress");
+        if (progressEl) progressEl.style.width = (totalTerpakai / totalCutiTahunan) * 100 + "%";
+
+        // ===== Badge Pengajuan =====
+        const pengajuanMenunggu = data.filter(c => (c["Status"] || "").trim() === "Menunggu Persetujuan").length;
+
+        function setBadge(el) {
+      if (!el) return;
+      const oldBadge = el.querySelector(".badge-baru");
+      if (oldBadge) oldBadge.remove();
+
+      if (pengajuanMenunggu > 0) {
+        const span = document.createElement("span");
+        span.className = "badge bg-danger badge-baru ms-auto";
+        span.textContent = pengajuanMenunggu;
+        el.appendChild(span);
       }
     }
-
-    const statusMap = { Menunggu: "bg-warning text-dark", Disetujui: "bg-success", Ditolak: "bg-danger" };
-    let badgeClass = "bg-secondary";
-    Object.keys(statusMap).forEach(k => { if (statusTerakhir.includes(k)) badgeClass = statusMap[k]; });
-
-    const statusEl = document.getElementById("statusPengajuan");
-    if (statusEl) statusEl.innerHTML = `<span class="badge ${badgeClass}">${statusTerakhir}</span><small class="d-block mt-1">Tanggal Pengajuan: ${tanggalPengajuanTerakhir}</small>`;
-
-    // ===== Cuti Tahunan =====
-    const userCutiTahunan = data.filter(c => (c["Nama Pegawai"] || "").trim().toLowerCase() === (user.nama || "").trim().toLowerCase() && (c["Jenis Cuti"] || "").trim() === "Cuti Tahunan");
-
-    let totalTerpakai = 0;
-    userCutiTahunan.forEach(c => { const lama = parseFloat(c["Lama Cuti"]); totalTerpakai += isNaN(lama) ? 0 : lama; });
-
-    const totalCutiTahunan = 12;
-    const sisa = Math.max(totalCutiTahunan - totalTerpakai, 0);
-
-    const sisaEl = document.getElementById("sisaCuti");
-    if (sisaEl) sisaEl.textContent = sisa;
-    const terpakaiEl = document.getElementById("cutiTerpakai");
-    if (terpakaiEl) terpakaiEl.textContent = `Cuti Terpakai: ${totalTerpakai}`;
-    const progressEl = document.getElementById("cutiProgress");
-    if (progressEl) progressEl.style.width = (totalTerpakai / totalCutiTahunan) * 100 + "%";
-
-    // ===== Badge Pengajuan =====
-    const pengajuanMenunggu = data.filter(c => (c["Status"] || "").trim() === "Menunggu Persetujuan").length;
-
-    function setBadge(el) {
-  if (!el) return;
-  const oldBadge = el.querySelector(".badge-baru");
-  if (oldBadge) oldBadge.remove();
-
-  if (pengajuanMenunggu > 0) {
-    const span = document.createElement("span");
-    span.className = "badge bg-danger badge-baru ms-auto";
-    span.textContent = pengajuanMenunggu;
-    el.appendChild(span);
-  }
-}
-
-
-
     setBadge(menuPengajuan);
     setBadge(menuPengajuanMobile);
 

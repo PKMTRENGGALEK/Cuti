@@ -197,7 +197,9 @@
           ><i class="fa-solid fa-book-open"></i
           ><span>Lihat Riwayat Cuti</span></a
         >
-        <a href="pengajuan-cuti.html"class="active" ><i class="fa-solid fa-user-check"></i><span>Pengajuan Cuti</span></a>
+         <a href="pengajuan-cuti.html"class="active" id="menuPengajuan" class="d-flex justify-content-between align-items-center">
+          <span><i class="fa-solid fa-user-check me-2"></i>Pengajuan Cuti</span>
+        </a>
         <hr class="my-3" />
         <a href="#" class="text-danger" onclick="logout()"
           ><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a
@@ -227,7 +229,7 @@
             ><i class="fa-solid fa-pen-to-square"></i
             ><span>Input Data Cuti</span></a
           >
-          <a href="status-cuti.html"  data-bs-dismiss="offcanvas"
+          <a href="status-cuti.html" 
             ><i class="fa-solid fa-clock-rotate-left"></i
             ><span>Lihat Status Cuti</span></a
           >
@@ -235,10 +237,9 @@
             ><i class="fa-solid fa-book-open"></i
             ><span>Lihat Riwayat Cuti</span></a
           >
-           <a href="pengajuan-cuti.html" class="active" data-bs-dismiss="offcanvas"
-            ><i class="fa-solid fa-book-open"></i
-            ><span>Pengajuan Cuti</span></a
-          >
+            <a href="pengajuan-cuti.html" class="active" id="menuPengajuanMobile" class="d-flex justify-content-between align-items-center">
+            <span><i class="fa-solid fa-book-open me-2"></i>Pengajuan Cuti</span>
+          </a>
           <hr class="my-3" />
           <a
             href="#"
@@ -282,8 +283,18 @@
       <!-- Navbar -->
       <nav class="navbar navbar-expand-lg rounded mb-4 px-3">
         <div class="container-fluid">
-          <span class="fw-bold"><i class="fa-solid fa-user-check text-success"></i> Pengajuan Cuti</span>
-            <div class="ms-auto d-flex align-items-center gap-3">
+          <button
+            class="btn btn-outline-primary d-lg-none me-2"
+            data-bs-toggle="offcanvas"
+            data-bs-target="#mobileSidebar"
+          >
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <span class="brand-title"
+            ><i class="fa-solid fa-clock-rotate-left text-primary"></i> Status
+            Pengajuan Cuti</span
+          >
+          <div class="ms-auto d-flex align-items-center gap-3">
             <div class="hello">
               Halo, <strong id="namaPegawai">Pegawai</strong>
             </div>
@@ -390,6 +401,7 @@
 <script>
 const scriptURL = "https://script.google.com/macros/s/AKfycbzt6xv3yHqeRiTrNcmghTwAq5cgpJ873CF3S4t4XC5qQTa60fcUFILFIdOk9KFaO0o2/exec";
 
+// Format tanggal: dd/mm/yyyy
 function formatDate(dateString) {
   if (!dateString) return "-";
   const d = new Date(dateString);
@@ -400,36 +412,7 @@ function formatDate(dateString) {
   return `${day}/${month}/${year}`;
 }
 
-function handleCutiData(data) {
-  const tbody = $("#tabelPengajuan tbody");
-  tbody.empty();
-
-  // Filter hanya yang status "Menunggu Persetujuan"
-  const filtered = data.filter(row => row["Status"] === "Menunggu Persetujuan");
-
-  // Urutkan berdasarkan tanggal pengajuan terbaru
-  filtered.sort((a, b) => new Date(b["Tanggal Pengajuan"]) - new Date(a["Tanggal Pengajuan"]));
-
-  // Render baris
-  filtered.forEach((row, i) => {
-    tbody.append(renderRow(row, i));
-  });
-
-  // Setup DataTable
-  if ($.fn.DataTable.isDataTable("#tabelPengajuan")) {
-    $("#tabelPengajuan").DataTable().clear().destroy();
-  }
-  $("#tabelPengajuan").DataTable({
-    pageLength: 5,
-    lengthMenu: [5, 10, 25, 50],
-    responsive: true,
-    order: []
-  });
-
-  $("#loadingOverlay").hide();
-}
-
-
+// Render baris tabel
 function renderRow(row, i){
   let statusBadge = `<span class="badge bg-secondary">Menunggu</span>`;
   if (row["Status"] === "Disetujui") statusBadge = `<span class="badge bg-success">Disetujui</span>`;
@@ -453,7 +436,7 @@ function renderRow(row, i){
       <td>${row["Nama Pegawai"]}</td>
       <td>${row["Jenis Cuti"]}</td>
       <td>${formatDate(row["Tanggal Mulai"])} s/d ${formatDate(row["Tanggal Selesai"])}</td>
-      <td>${row["Lama Cuti"]}</td>
+      <td>${row["Lama Cuti"]} Hari</td>
       <td>${statusBadge}</td>
       <td>${row["Keterangan"] || "-"}</td>
       <td>${row["File Pendukung"] ? `<a href="${row["File Pendukung"]}" target="_blank"><i class="fa fa-file-pdf text-danger"></i></a>` : "-"}</td>
@@ -463,15 +446,14 @@ function renderRow(row, i){
   `;
 }
 
+// Update status cuti
 function updateStatus(no, status, alasan="") {
   $.post(scriptURL, { action:"updateStatus", no:no, status:status, alasan:alasan })
     .done(() => {
       Swal.fire("Berhasil", "Status cuti diperbarui", "success");
 
-      // update baris tabel tanpa reload
       const row = $(`#row-${no}`);
       if(row.length){
-        // Ambil data lama dari row, hanya update status dan action
         row.find("td:eq(5)").html(
           status === "Disetujui" ? `<span class="badge bg-success">Disetujui</span>` :
           status === "Ditolak" ? `<span class="badge bg-danger">Ditolak</span>` :
@@ -511,6 +493,7 @@ function lihatAlasan(alasan){
   Swal.fire("Alasan Penolakan", alasan, "info");
 }
 
+// Load data cuti dari Google Sheets
 function loadData() {
   $("#loadingOverlay").show();
   $.ajax({
@@ -519,6 +502,48 @@ function loadData() {
   });
 }
 
+// Handle data cuti callback
+function handleCutiData(data) {
+  const tbody = $("#tabelPengajuan tbody");
+  tbody.empty();
+
+  // Filter hanya status "Menunggu Persetujuan"
+  const filtered = data.filter(row => row["Status"] === "Menunggu Persetujuan");
+  filtered.sort((a, b) => new Date(b["Tanggal Pengajuan"]) - new Date(a["Tanggal Pengajuan"]));
+
+  filtered.forEach((row, i) => tbody.append(renderRow(row, i)));
+
+  if ($.fn.DataTable.isDataTable("#tabelPengajuan")) {
+    $("#tabelPengajuan").DataTable().clear().destroy();
+  }
+  $("#tabelPengajuan").DataTable({
+    pageLength: 5,
+    lengthMenu: [5,10,25,50],
+    responsive:true,
+    order:[]
+  });
+
+  // ===== Badge Pengajuan =====
+  const pengajuanMenunggu = data.filter(c => (c["Status"] || "").trim() === "Menunggu Persetujuan").length;
+  function setBadge(el) {
+    if (!el) return;
+    const oldBadge = el.querySelector(".badge-baru");
+    if (oldBadge) oldBadge.remove();
+    if (pengajuanMenunggu > 0) {
+      const span = document.createElement("span");
+      span.className = "badge bg-danger badge-baru ms-auto";
+      span.textContent = pengajuanMenunggu;
+      el.appendChild(span);
+    }
+  }
+
+  setBadge(document.getElementById("menuPengajuan"));
+  setBadge(document.getElementById("menuPengajuanMobile"));
+
+  $("#loadingOverlay").hide();
+}
+
+// On DOM ready
 document.addEventListener("DOMContentLoaded", () => {
   const userData = localStorage.getItem("userData");
   if(!userData){ 
@@ -529,14 +554,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Nama & avatar
   document.getElementById("namaPegawai").textContent = user.nama || "Pegawai";
-  document.querySelector(".avatar").textContent = user.nama
-    ? user.nama.charAt(0).toUpperCase()
-    : "?";
+  document.querySelector(".avatar").textContent = user.nama ? user.nama.charAt(0).toUpperCase() : "?";
 
+  const role = (user.role || "").toLowerCase();
+  const menuPengajuan = document.getElementById("menuPengajuan");
+  const menuPengajuanMobile = document.getElementById("menuPengajuanMobile");
+
+  // Default hide
+  if (menuPengajuan) menuPengajuan.style.display = "none";
+  if (menuPengajuanMobile) menuPengajuanMobile.style.display = "none";
+
+  // Show only for admin / supervisi
+  if (role === "admin" || role === "supervisi") {
+    if (menuPengajuan) menuPengajuan.style.display = "flex";
+    if (menuPengajuanMobile) menuPengajuanMobile.style.display = "flex";
+  }
+
+  // Load data cuti
   loadData();
 });
-
 </script>
+
 
   </body>
 </html>

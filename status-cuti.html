@@ -139,8 +139,9 @@
           ><i class="fa-solid fa-book-open"></i
           ><span>Lihat Riwayat Cuti</span></a
         >
-        <a href="pengajuan-cuti.html" ><i class="fa-solid fa-user-check"></i><span>Pengajuan Cuti</span></a>
-        <hr class="my-3" />
+       <a href="pengajuan-cuti.html" id="menuPengajuan" class="d-flex justify-content-between align-items-center">
+          <span><i class="fa-solid fa-user-check me-2"></i>Pengajuan Cuti</span>
+        </a>
         <a href="#" class="text-danger" onclick="logout()"
           ><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a
         >
@@ -177,10 +178,9 @@
             ><i class="fa-solid fa-book-open"></i
             ><span>Lihat Riwayat Cuti</span></a
           >
-           <a href="pengajuan-cuti.html" data-bs-dismiss="offcanvas"
-            ><i class="fa-solid fa-book-open"></i
-            ><span>Pengajuan Cuti</span></a
-          >
+           <a href="pengajuan-cuti.html" id="menuPengajuanMobile" class="d-flex justify-content-between align-items-center">
+            <span><i class="fa-solid fa-book-open me-2"></i>Pengajuan Cuti</span>
+          </a>
           <hr class="my-3" />
           <a
             href="#"
@@ -320,7 +320,20 @@
         document.querySelector(".avatar").textContent = user.nama
           .charAt(0)
           .toUpperCase();
+         const role = (user.role || "").toLowerCase();
 
+      const menuPengajuan = document.getElementById("menuPengajuan");
+      const menuPengajuanMobile = document.getElementById("menuPengajuanMobile");
+
+      // Default hide
+      if (menuPengajuan) menuPengajuan.style.display = "none";
+      if (menuPengajuanMobile) menuPengajuanMobile.style.display = "none";
+
+      // Show only for admin / supervisi
+      if (role === "Admin" || role === "Supervisi") {
+        if (menuPengajuan) menuPengajuan.style.display = "flex";
+        if (menuPengajuanMobile) menuPengajuanMobile.style.display = "flex";
+      }
         const cacheKey = "cutiDataCache";
 
         function renderCuti(data) {
@@ -375,7 +388,7 @@
               <tr>
                 <td>${i + 1}</td>
                 <td>${c["Jenis Cuti"] || "-"}</td>
-                <td>${c["Lama Cuti"] || "-"}</td>
+                <td>${c["Lama Cuti"] || "-"} Hari</td>
                 <td>${tglMulai}</td>
                 <td>${tglSelesai}</td>
                 <td><span class="${statusClass}">${c.Status || "-"}</span></td>
@@ -388,6 +401,23 @@
                 }</td>
               </tr>`;
           });
+           // ===== Badge Pengajuan =====
+        const pengajuanMenunggu = data.filter(c => (c["Status"] || "").trim() === "Menunggu Persetujuan").length;
+
+        function setBadge(el) {
+      if (!el) return;
+      const oldBadge = el.querySelector(".badge-baru");
+      if (oldBadge) oldBadge.remove();
+
+      if (pengajuanMenunggu > 0) {
+        const span = document.createElement("span");
+        span.className = "badge bg-danger badge-baru ms-auto";
+        span.textContent = pengajuanMenunggu;
+        el.appendChild(span);
+      }
+    }
+    setBadge(menuPengajuan);
+    setBadge(menuPengajuanMobile);
 
           document.getElementById("loadingOverlay").style.display = "none";
         }
