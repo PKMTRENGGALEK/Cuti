@@ -427,7 +427,7 @@ function renderRow(row, i){
     `;
   }
   if (row["Status"] === "Ditolak" && row["Alasan"]) {
-    actionBtn = `<button class="btn btn-info btn-sm" onclick="lihatAlasan('${row["Alasan"]}')"><i class="fa fa-eye"></i> Alasan</button>`;
+    actionBtn = `<button class="btn btn-info btn-sm" onclick="lihatAlasan('${row["Keterangan Status"]}')"><i class="fa fa-eye"></i> Alasan</button>`;
   }
 
   return `
