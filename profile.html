@@ -270,58 +270,13 @@
       </div>
     </div>
     <!-- Content -->
-    <main class="content">
-        <nav class="navbar navbar-expand-lg rounded mb-4 px-3">
-        <div class="container-fluid">
-          <button
-            class="btn btn-outline-primary d-lg-none me-2"
-            data-bs-toggle="offcanvas"
-            data-bs-target="#mobileSidebar"
-          >
-            <i class="fa-solid fa-bars"></i>
-          </button>
-          <span class="brand-title"
-            ><i class="fa-solid fa-calendar-days text-primary"></i>Aplikasi Cuti
-            Pegawai</span
-          >
-          <div class="ms-auto d-flex align-items-center gap-3">
-            <div class="hello">
-              Halo, <strong id="namaPegawai">Pegawai</strong>
-            </div>
-            <div class="dropdown">
-              <div
-                class="avatar dropdown-toggle"
-                id="avatarDropdown"
-                data-bs-toggle="dropdown"
-              >
-                P
-              </div>
-              <ul
-                class="dropdown-menu dropdown-menu-end"
-                aria-labelledby="avatarDropdown"
-              >
-                <li>
-                  <a class="dropdown-item" href="#"
-                    ><i class="fa-solid fa-user me-2"></i>Profil</a
-                  >
-                </li>
-                <li><hr class="dropdown-divider" /></li>
-                <li>
-                  <a
-                    class="dropdown-item text-danger"
-                    href="#"
-                    onclick="logout()"
-                    ><i class="fa-solid fa-right-from-bracket me-2"></i
-                    >Logout</a
-                  >
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </nav>
-        <div class="container">
-   <div class="card p-4 mx-auto" style="max-width: 600px;">
+ <main class="content">
+  <nav class="navbar navbar-expand-lg rounded mb-4 px-3">
+    <!-- navbar seperti milikmu -->
+  </nav>
+
+  <div class="container">
+    <div class="card p-4 mx-auto" style="max-width: 600px;">
       <div class="d-flex align-items-center mb-3">
         <div class="avatar me-3" id="avatarProfileLarge">P</div>
         <div>
@@ -342,20 +297,28 @@
       </ul>
 
       <h5>Ganti Password</h5>
-      <div class="mb-3">
-        <input type="password" id="passLama" class="form-control mb-2" placeholder="Password Lama" />
-        <input type="password" id="passBaru" class="form-control mb-2" placeholder="Password Baru" />
-        <input type="password" id="passKonf" class="form-control" placeholder="Konfirmasi Password Baru" />
-      </div>
-      <button class="btn btn-success w-100" onclick="gantiPassword()"><i class="fa-solid fa-key me-2"></i>Ganti Password</button>
+
+      <!-- Form POST biasa, target iframe untuk submit tanpa reload halaman -->
+      <form id="formGantiPassword" method="post" action="https://script.google.com/macros/s/AKfycbz9MpDI3ilm3O-85KNTcGZ70D8Gv8K_UUHMc4CSrmJCsiM5Wl2oYd3nEXhyp9F1Nw06/exec" target="dummyFrame">
+        <input type="hidden" name="action" value="gantiPassword">
+        <input type="hidden" name="username" id="formUsername" value="">
+        <div class="mb-3">
+          <input type="password" name="passLama" id="passLama" class="form-control mb-2" placeholder="Password Lama" required>
+          <input type="password" name="passBaru" id="passBaru" class="form-control mb-2" placeholder="Password Baru" required>
+          <input type="password" name="passKonf" id="passKonf" class="form-control" placeholder="Konfirmasi Password Baru" required>
+        </div>
+        <button type="submit" class="btn btn-success w-100"  onclick="gantiPassword(event)"><i class="fa-solid fa-key me-2"></i>Ganti Password</button>
+      </form>
+
+      <!-- Iframe hidden -->
+      <iframe name="dummyFrame" style="display:none;"></iframe>
+
     </div>
   </div>
-</div>
 </main>
 
 
 <script>
-
 const scriptURL = "https://script.google.com/macros/s/AKfycbz9MpDI3ilm3O-85KNTcGZ70D8Gv8K_UUHMc4CSrmJCsiM5Wl2oYd3nEXhyp9F1Nw06/exec";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -365,17 +328,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const user = JSON.parse(userData);
 
-  // tampilkan data user
   document.getElementById("namaProfile").textContent = user.nama || "-";
   document.getElementById("jabatanProfile").textContent = user.jabatan || "-";
   document.getElementById("usernameProfile").textContent = user.username || "-";
   document.getElementById("namaProfileText").textContent = user.nama || "-";
   document.getElementById("jabatanProfileText").textContent = user.jabatan || "-";
+  document.getElementById("formUsername").value = user.username || "";
 
   const avatar = document.getElementById("avatarProfileLarge");
   if(avatar) avatar.textContent = (user.nama||"P").charAt(0).toUpperCase();
 
-  // hide overlay
   if(overlay) overlay.style.display = "none";
 });
 
@@ -384,10 +346,13 @@ function logout(){
   window.location.href="index.html";
 }
 
-function gantiPassword(){
+async function gantiPassword(event){
+  event.preventDefault(); // cegah reload form
+
   const passLama = document.getElementById("passLama").value.trim();
   const passBaru = document.getElementById("passBaru").value.trim();
   const passKonf = document.getElementById("passKonf").value.trim();
+  const overlay = document.getElementById("loadingOverlay");
 
   if(!passLama || !passBaru || !passKonf){
     alert("Semua field harus diisi!");
@@ -402,30 +367,36 @@ function gantiPassword(){
   const payload = {
     action: "gantiPassword",
     username: userData.username,
-    passLama: passLama,
-    passBaru: passBaru
+    passLama,
+    passBaru
   };
 
-  fetch(scriptURL, {
-    method: "POST",
-    body: JSON.stringify(payload),
-    headers: { "Content-Type": "application/json" }
-  })
-  .then(res => res.json())
-  .then(res => {
+  try {
+    if(overlay) overlay.style.display = "flex"; // tampilkan loading
+    const response = await fetch(scriptURL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    const res = await response.json();
+
     if(res.status === "success"){
       alert("Password berhasil diubah!");
       document.getElementById("passLama").value = "";
       document.getElementById("passBaru").value = "";
       document.getElementById("passKonf").value = "";
     } else {
-      alert("Gagal mengubah password: "+res.message);
+      alert("Gagal mengubah password: " + res.message);
     }
-  })
-  .catch(() => alert("Terjadi kesalahan saat menghubungi server."));
+  } catch(err){
+    console.error(err);
+    alert("Terjadi kesalahan saat menghubungi server.");
+  } finally {
+    if(overlay) overlay.style.display = "none"; // sembunyikan loading
+  }
 }
 </script>
-
 
 </body>
 </html>

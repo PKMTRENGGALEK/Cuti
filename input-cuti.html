@@ -425,7 +425,7 @@
             const toast = new bootstrap.Toast(toastEl, { autohide: false });
 
             // tampilkan toast saat mulai submit
-            toastBody.textContent = "Mengirim data ke spreadsheet...";
+            toastBody.textContent = "Proses Menyimpan Data...";
             toastSpinner.style.display = "inline-block";
             toast.show();
 
@@ -446,6 +446,7 @@
                 toastBody.textContent = "✅ Pengajuan cuti berhasil disimpan!";
                 // bisa otomatis hide setelah 3 detik
                 setTimeout(() => toast.hide(), 3000);
+                 window.location.href = "dashboard.html"; // halaman badge
                 document.getElementById("formCuti").reset();
                 document.getElementById("lamaCuti").value = "";
               } else {

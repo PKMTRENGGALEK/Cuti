@@ -324,16 +324,15 @@
 
       const menuPengajuan = document.getElementById("menuPengajuan");
       const menuPengajuanMobile = document.getElementById("menuPengajuanMobile");
+// Hanya tampilkan kalau role Admin / Supervisi
+const bolehAksesPengajuan = role === "admin" || role === "supervisi";
 
-      // Default hide
-      if (menuPengajuan) menuPengajuan.style.display = "none";
-      if (menuPengajuanMobile) menuPengajuanMobile.style.display = "none";
+if (!bolehAksesPengajuan) {
+  if (menuPengajuan) menuPengajuan.remove();
+  if (menuPengajuanMobile) menuPengajuanMobile.remove();
+}
 
-      // Show only for admin / supervisi
-      if (role === "Admin" || role === "Supervisi") {
-        if (menuPengajuan) menuPengajuan.style.display = "flex";
-        if (menuPengajuanMobile) menuPengajuanMobile.style.display = "flex";
-      }
+
         const cacheKey = "cutiDataCache";
 
         function renderCuti(data) {
@@ -481,6 +480,7 @@
         localStorage.removeItem("cutiDataCache");
         window.location.href = "index.html";
       }
+      
     </script>
   </body>
 </html>

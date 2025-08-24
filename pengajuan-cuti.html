@@ -15,7 +15,7 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
       rel="stylesheet"
     />
-
+    
     <style>
   
       :root {
@@ -446,8 +446,16 @@ function renderRow(row, i){
   `;
 }
 
-// Update status cuti
+// ✅ Update status dengan SweetAlert Loading
 function updateStatus(no, status, alasan="") {
+  Swal.fire({
+    title: "Memproses...",
+    text: "Mohon tunggu sebentar",
+    allowOutsideClick: false,
+    didOpen: () => { Swal.showLoading(); },
+    showConfirmButton: false
+  });
+
   $.post(scriptURL, { action:"updateStatus", no:no, status:status, alasan:alasan })
     .done(() => {
       Swal.fire("Berhasil", "Status cuti diperbarui", "success");
@@ -467,7 +475,9 @@ function updateStatus(no, status, alasan="") {
         }
       }
     })
-    .fail(() => Swal.fire("Error","Gagal memperbarui status","error"));
+    .fail(() => {
+      Swal.fire("Error","Gagal memperbarui status","error");
+    });
 }
 
 // Modal Tolak
@@ -488,7 +498,7 @@ function submitTolak(){
   bootstrap.Modal.getInstance(document.getElementById("modalTolak")).hide();
 }
 
-// Lihat alasan penolakan
+// Lihat alasan
 function lihatAlasan(alasan){
   Swal.fire("Alasan Penolakan", alasan, "info");
 }
@@ -573,6 +583,11 @@ document.addEventListener("DOMContentLoaded", () => {
   // Load data cuti
   loadData();
 });
+function logout() {
+  localStorage.removeItem("userData");
+  localStorage.removeItem("cutiDashboardCache");
+  window.location.href = "index.html";
+}
 </script>
 
 
