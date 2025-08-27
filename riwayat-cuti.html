@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Status Pengajuan Cuti - Puskesmas</title>
+    <title>Status Pengajuan Cuti - Semua Data</title>
 
     <!-- Bootstrap 5 -->
     <link
@@ -15,8 +15,20 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
       rel="stylesheet"
     />
+    <!-- DataTables Bootstrap 5 -->
+    <link
+      href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css"
+      rel="stylesheet"
+    />
 
     <style>
+      :root {
+        --bg: #f5f7fa;
+        --card: #ffffff;
+        --muted: #6b7280;
+        --border: #e5e7eb;
+        --brand: #45c44c;
+      }
       body {
         background: #f5f7fa;
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -64,18 +76,6 @@
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
         border-radius: 12px;
       }
-      .avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: #45c44c;
-        color: #fff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 600;
-        cursor: pointer;
-      }
       footer {
         margin-left: 260px;
         text-align: center;
@@ -96,21 +96,27 @@
           margin-left: 0;
         }
       }
-      .spinner {
-        border: 6px solid #f3f3f3; /* abu-abu */
-        border-top: 6px solid #3498db; /* biru */
-        border-radius: 50%;
-        width: 50px;
-        height: 50px;
-        animation: spin 1s linear infinite;
+      .navbar .brand-title {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-weight: 600;
       }
-      @keyframes spin {
-        0% {
-          transform: rotate(0deg);
-        }
-        100% {
-          transform: rotate(360deg);
-        }
+      .hello {
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+      .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--brand);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        cursor: pointer;
       }
     </style>
   </head>
@@ -122,7 +128,6 @@
           <i class="fa-solid fa-hospital text-success me-2"></i>Puskesmas
           Trenggalek
         </div>
-        <div class="small text-muted"></div>
       </div>
       <nav class="menu">
         <a href="dashboard.html"
@@ -132,11 +137,11 @@
           ><i class="fa-solid fa-pen-to-square"></i
           ><span>Input Data Cuti</span></a
         >
-        <a href="status-cuti.html" class="active"
+        <a href="status-cuti.html"
           ><i class="fa-solid fa-clock-rotate-left"></i
           ><span>Lihat Status Cuti</span></a
         >
-        <a href="#" id="menuRiwayat"
+        <a href="#" class="active"
           ><i class="fa-solid fa-users"></i><span>Lihat Riwayat Cuti</span></a
         >
         <a
@@ -159,7 +164,11 @@
           <i class="fa-solid fa-hospital text-success me-2"></i>Puskesmas
           Trenggalek
         </h5>
-        <button type="button" class="btn-close"></button>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="offcanvas"
+        ></button>
       </div>
       <div class="offcanvas-body">
         <nav class="menu">
@@ -170,11 +179,11 @@
             ><i class="fa-solid fa-pen-to-square"></i
             ><span>Input Data Cuti</span></a
           >
-          <a href="status-cuti.html" class="active"
+          <a href="status-cuti.html"
             ><i class="fa-solid fa-clock-rotate-left"></i
             ><span>Lihat Status Cuti</span></a
           >
-          <a href="#" id="menuRiwayatMobile"
+          <a href="#" class="active"
             ><i class="fa-solid fa-users"></i><span>Lihat Riwayat Cuti</span></a
           >
           <a
@@ -187,11 +196,7 @@
             >
           </a>
           <hr class="my-3" />
-          <a
-            href="#"
-            class="text-danger"
-            onclick="logout()"
-            data-bs-dismiss="offcanvas"
+          <a href="#" class="text-danger" onclick="logout()"
             ><i class="fa-solid fa-right-from-bracket"></i
             ><span>Logout</span></a
           >
@@ -199,7 +204,6 @@
       </div>
     </div>
 
-    <!-- Loading Overlay -->
     <!-- Loading Overlay -->
     <div
       id="loadingOverlay"
@@ -237,8 +241,8 @@
             <i class="fa-solid fa-bars"></i>
           </button>
           <span class="brand-title"
-            ><i class="fa-solid fa-clock-rotate-left text-primary"></i> Status
-            Pengajuan Cuti</span
+            ><i class="fa-solid fa-calendar-days text-success"></i> Aplikasi
+            Cuti Pegawai</span
           >
           <div class="ms-auto d-flex align-items-center gap-3">
             <div class="hello">
@@ -280,23 +284,23 @@
       <!-- Tabel Status Cuti -->
       <div class="card p-4">
         <h5 class="mb-4">
-          <i class="fa-solid fa-list-check me-2"></i>Daftar Pengajuan Cuti
+          <i class="fa-solid fa-list-check me-2"></i>Daftar Semua Pengajuan Cuti
         </h5>
         <div class="table-responsive">
-          <table class="table table-striped table-hover" id="tabelCuti">
+          <table id="tabelCuti" class="table table-striped table-bordered">
             <thead class="table-light">
               <tr>
                 <th>No</th>
+                <th>Nama Pegawai</th>
                 <th>Jenis Cuti</th>
-                <th>Lama Cuti</th>
-                <th>Tanggal Mulai</th>
-                <th>Tanggal Selesai</th>
+                <th>Lama</th>
+                <th>Tgl Mulai</th>
+                <th>Tgl Selesai</th>
                 <th>Status</th>
-                <th>Tanggal Pengajuan</th>
-                <th>Keterangan Cuti</th>
-                <th>File Pendukung</th>
+                <th>Tgl Pengajuan</th>
+                <th>Keterangan</th>
+                <th>File</th>
                 <th>Alasan</th>
-                <!-- Tambahan -->
               </tr>
             </thead>
             <tbody></tbody>
@@ -308,6 +312,7 @@
     <footer>
       &copy; 2025 Puskesmas Trenggalek | Sistem Cuti Pegawai | @Yoga
     </footer>
+
     <!-- Modal Alasan -->
     <div class="modal fade" id="alasanModal" tabindex="-1">
       <div class="modal-dialog">
@@ -320,9 +325,7 @@
               data-bs-dismiss="modal"
             ></button>
           </div>
-          <div class="modal-body" id="alasanModalBody">
-            <!-- Alasan dari database masuk sini -->
-          </div>
+          <div class="modal-body" id="alasanModalBody"></div>
           <div class="modal-footer">
             <button
               type="button"
@@ -335,25 +338,26 @@
         </div>
       </div>
     </div>
-
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- DataTables -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 
     <script>
       document.addEventListener("DOMContentLoaded", () => {
         const userData = localStorage.getItem("userData");
-        if (!userData) {
-          window.location.href = "index.html";
-          return;
-        }
-        const user = JSON.parse(userData);
+        if (!userData) return (window.location.href = "index.html");
 
-        // Nama & avatar
-        document.getElementById("namaPegawai").textContent =
-          user.nama || "Pegawai";
-        document.querySelector(".avatar").textContent = user.nama
-          .charAt(0)
-          .toUpperCase();
+        const user = JSON.parse(userData);
+        const namaPegawai = document.getElementById("namaPegawai");
+        const avatar = document.querySelector(".avatar");
+
+        if (namaPegawai) namaPegawai.textContent = user.nama || "Pegawai";
+        if (avatar)
+          avatar.textContent = (user.nama || "P").charAt(0).toUpperCase();
 
         const role = (user.role || "").toLowerCase();
         const menuPengajuan = document.getElementById("menuPengajuan");
@@ -364,33 +368,53 @@
         const menuRiwayatMobile = document.getElementById("menuRiwayatMobile");
         // Hanya tampilkan kalau role Admin / Supervisi
         const bolehAksesPengajuan = role === "admin" || role === "supervisi";
+
+        // Kalau bukan admin/supervisi → hapus elemen dari DOM
         if (!bolehAksesPengajuan) {
           if (menuPengajuan) menuPengajuan.remove();
           if (menuPengajuanMobile) menuPengajuanMobile.remove();
           if (menuRiwayat) menuRiwayat.remove();
           if (menuRiwayatMobile) menuRiwayatMobile.remove();
         }
+        const cacheKey = "cutiDataCacheAll";
+        function renderDashboard(data) {
+          if (!Array.isArray(data)) data = data.data || [];
 
-        const cacheKey = "cutiDataCache";
+          // === Tampilkan menu hanya jika role cocok ===
+          if (bolehAksesPengajuan) {
+            if (menuPengajuan) menuPengajuan.style.display = "flex";
+            if (menuPengajuanMobile) menuPengajuanMobile.style.display = "flex";
+            if (menuRiwayat) menuRiwayat.style.display = "flex";
+            if (menuRiwayatMobile) menuRiwayatMobile.style.display = "flex";
+          } else {
+            if (menuPengajuan) menuPengajuan.style.display = "none";
+            if (menuPengajuanMobile) menuPengajuanMobile.style.display = "none";
+            if (menuRiwayat) menuRiwayat.style.display = "none";
+            if (menuRiwayatMobile) menuRiwayatMobile.style.display = "none";
+          }
+        }
+        function escapeHtml(text) {
+          return text
+            ? text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;")
+            : "";
+        }
 
         function renderCuti(data) {
           const tabelBody = document.querySelector("#tabelCuti tbody");
           tabelBody.innerHTML = "";
 
-          const userCuti = data.filter(
-            (c) =>
-              (c["Nama Pegawai"] || "").trim().toLowerCase() ===
-              user.nama.trim().toLowerCase()
-          );
-
-          // Urutkan by tanggal pengajuan desc
-          userCuti.sort(
+          data.sort(
             (a, b) =>
               new Date(b["Tanggal Pengajuan"]) -
               new Date(a["Tanggal Pengajuan"])
           );
 
-          userCuti.forEach((c, i) => {
+          data.forEach((c, i) => {
             let statusClass = "badge bg-secondary";
             if (c.Status?.includes("Menunggu"))
               statusClass = "badge bg-warning text-dark";
@@ -421,55 +445,46 @@
                 })
               : "-";
 
-            // Escape supaya tidak rusak kalau ada kutip
-            const alasanSafe = (c["Alasan"] || "Tidak ada alasan")
-              .replace(/'/g, "\\'")
-              .replace(/"/g, '\\"');
+            const alasanSafe = escapeHtml(c["Alasan"] || "Tidak ada alasan");
 
             tabelBody.innerHTML += `
-          <tr>
-            <td>${i + 1}</td>
-            <td>${c["Jenis Cuti"] || "-"}</td>
-            <td>${c["Lama Cuti"] || "-"} Hari</td>
-            <td>${tglMulai}</td>
-            <td>${tglSelesai}</td>
-            <td><span class="${statusClass}">${c.Status || "-"}</span></td>
-            <td>${tglPengajuan}</td>
-            <td>${c["Keterangan"] || "-"}</td>
-            <td>${
-              c["File Pendukung"]
-                ? `<a href="${c["File Pendukung"]}" target="_blank"><i class="fa-solid fa-file-pdf text-danger"></i></a>`
-                : "-"
-            }</td>
-            <td>${
-              c.Status?.includes("Ditolak")
-                ? `<button class="btn btn-sm btn-danger" onclick="lihatAlasan('${alasanSafe}')">
-                    View
-                  </button>`
-                : "-"
-            }</td>
-          </tr>`;
+      <tr>
+        <td>${i + 1}</td>
+        <td>${c["Nama Pegawai"] || "-"}</td>
+        <td>${c["Jenis Cuti"] || "-"}</td>
+        <td>${c["Lama Cuti"] || "-"} Hari</td>
+        <td>${tglMulai}</td>
+        <td>${tglSelesai}</td>
+        <td><span class="${statusClass}">${c.Status || "-"}</span></td>
+        <td>${tglPengajuan}</td>
+        <td>${c["Keterangan"] || "-"}</td>
+        <td>${
+          c["File Pendukung"]
+            ? `<a href="${c["File Pendukung"]}" target="_blank"><i class="fa-solid fa-file-pdf text-danger"></i></a>`
+            : "-"
+        }</td>
+        <td>${
+          c.Status?.includes("Ditolak")
+            ? `<button class="btn btn-sm btn-danger" onclick="lihatAlasan('${alasanSafe}')">View</button>`
+            : "-"
+        }</td>
+      </tr>`;
           });
 
-          // ===== Badge Pengajuan =====
-          const pengajuanMenunggu = data.filter(
-            (c) => (c["Status"] || "").trim() === "Menunggu Persetujuan"
-          ).length;
-
-          function setBadge(el) {
-            if (!el) return;
-            const oldBadge = el.querySelector(".badge-baru");
-            if (oldBadge) oldBadge.remove();
-
-            if (pengajuanMenunggu > 0) {
-              const span = document.createElement("span");
-              span.className = "badge bg-danger badge-baru ms-auto";
-              span.textContent = pengajuanMenunggu;
-              el.appendChild(span);
-            }
+          // ✅ DataTable init ulang
+          if ($.fn.DataTable.isDataTable("#tabelCuti")) {
+            $("#tabelCuti").DataTable().destroy();
           }
-          setBadge(menuPengajuan);
-          setBadge(menuPengajuanMobile);
+
+          $("#tabelCuti").DataTable({
+            responsive: true,
+            pageLength: 10,
+            lengthMenu: [5, 10, 25, 50],
+            order: [],
+            language: {
+              url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/id.json",
+            },
+          });
 
           document.getElementById("loadingOverlay").style.display = "none";
         }
@@ -479,11 +494,9 @@
             document.getElementById("loadingOverlay").style.display = "flex";
           }
 
-          // Hapus script JSONP lama bila ada
           const oldScript = document.getElementById("jsonpCuti");
           if (oldScript) oldScript.remove();
 
-          // Callback JSONP
           window.handleCutiData = function (data) {
             const finalData = Array.isArray(data) ? data : data.data || [];
             localStorage.setItem(
@@ -508,7 +521,6 @@
           document.body.appendChild(s);
         }
 
-        // === Pertama kali buka halaman ===
         const cache = localStorage.getItem(cacheKey);
         if (cache) {
           const parsed = JSON.parse(cache);
@@ -518,26 +530,21 @@
           ambilData(true);
         }
 
-        // Auto update tiap 1 menit
         setInterval(() => {
-          console.log("⏳ Auto update data cuti...");
+          console.log("⏳ Auto update semua data cuti...");
           ambilData(false);
         }, 60000);
       });
 
-      // 👉 pindah ke global (bisa dipanggil onclick)
       function lihatAlasan(alasan) {
         document.getElementById("alasanModalBody").textContent =
           alasan || "Tidak ada alasan";
-        const alasanModal = new bootstrap.Modal(
-          document.getElementById("alasanModal")
-        );
-        alasanModal.show();
+        new bootstrap.Modal(document.getElementById("alasanModal")).show();
       }
 
       function logout() {
         localStorage.removeItem("userData");
-        localStorage.removeItem("cutiDataCache");
+        localStorage.removeItem("cutiDataCacheAll");
         window.location.href = "index.html";
       }
     </script>

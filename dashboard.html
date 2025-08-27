@@ -147,14 +147,12 @@
         }
       }
       .badge-baru {
-  font-size: 0.75rem;
-  padding: 0.25em 0.5em;
-  border-radius: 12px;
-  display: inline-block;
-  vertical-align: middle;
-}
-
-
+        font-size: 0.75rem;
+        padding: 0.25em 0.5em;
+        border-radius: 12px;
+        display: inline-block;
+        vertical-align: middle;
+      }
     </style>
   </head>
   <body>
@@ -162,7 +160,8 @@
     <aside class="sidebar d-none d-lg-flex flex-column">
       <div class="text-center mb-4">
         <div class="brand">
-          <i class="fa-solid fa-hospital text-success me-2"></i>Puskesmas Trenggalek
+          <i class="fa-solid fa-hospital text-success me-2"></i>Puskesmas
+          Trenggalek
         </div>
         <div class="small text-muted"></div>
       </div>
@@ -178,16 +177,20 @@
           ><i class="fa-solid fa-clock-rotate-left"></i
           ><span>Lihat Status Cuti</span></a
         >
-        <a href="riwayat-cuti.html"
-          ><i class="fa-solid fa-book-open"></i
-          ><span>Lihat Riwayat Cuti</span></a
+        <a href="riwayat-cuti.html" id="menuRiwayat"
+          ><i class="fa-solid fa-users"></i
+          ><span>Lihat Riwayat Cuti Pegawai</span></a
         >
-        <a href="pengajuan-cuti.html" id="menuPengajuan" class="d-flex justify-content-between align-items-center">
+        <a
+          href="pengajuan-cuti.html"
+          id="menuPengajuan"
+          class="d-flex justify-content-between align-items-center"
+        >
           <span><i class="fa-solid fa-user-check me-2"></i>Pengajuan Cuti</span>
         </a>
 
         <hr class="my-3" />
-         <!-- <a href="profile.html"
+        <!-- <a href="profile.html"
           ><i class="fa-solid fa-user"></i
           ><span>Profile</span></a
         > -->
@@ -223,15 +226,22 @@
             ><i class="fa-solid fa-clock-rotate-left"></i
             ><span>Lihat Status Cuti</span></a
           >
-          <a href="riwayat-cuti.html"><i class="fa-solid fa-book-open"></i
-            ><span>Lihat Riwayat Cuti</span></a
+          <a href="riwayat-cuti.html" id="menuRiwayatMobile"
+            ><i class="fa-solid fa-users"></i
+            ><span>Lihat Riwayat Cuti Pegawai</span></a
           >
-          <a href="pengajuan-cuti.html" id="menuPengajuanMobile" class="d-flex justify-content-between align-items-center">
-            <span><i class="fa-solid fa-book-open me-2"></i>Pengajuan Cuti</span>
+          <a
+            href="pengajuan-cuti.html"
+            id="menuPengajuanMobile"
+            class="d-flex justify-content-between align-items-center"
+          >
+            <span
+              ><i class="fa-solid fa-book-open me-2"></i>Pengajuan Cuti</span
+            >
           </a>
 
           <hr class="my-3" />
-           <!-- <a href="profile.html"><i class="fa-solid fa-user"></i
+          <!-- <a href="profile.html"><i class="fa-solid fa-user"></i
             ><span>Profile</span></a
           > -->
           <a
@@ -450,162 +460,195 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
- <script>
-document.addEventListener("DOMContentLoaded", () => {
-  const userData = localStorage.getItem("userData");
-  if (!userData) return window.location.href = "index.html";
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const userData = localStorage.getItem("userData");
+        if (!userData) return (window.location.href = "index.html");
 
-  const user = JSON.parse(userData);
-  const namaPegawai = document.getElementById("namaPegawai");
-  const avatar = document.querySelector(".avatar");
+        const user = JSON.parse(userData);
+        const namaPegawai = document.getElementById("namaPegawai");
+        const avatar = document.querySelector(".avatar");
 
-  if (namaPegawai) namaPegawai.textContent = user.nama || "Pegawai";
-  if (avatar) avatar.textContent = (user.nama || "P").charAt(0).toUpperCase();
+        if (namaPegawai) namaPegawai.textContent = user.nama || "Pegawai";
+        if (avatar)
+          avatar.textContent = (user.nama || "P").charAt(0).toUpperCase();
 
-  const role = (user.role || "").toLowerCase();
-  const menuPengajuan = document.getElementById("menuPengajuan");
-  const menuPengajuanMobile = document.getElementById("menuPengajuanMobile");
+        const role = (user.role || "").toLowerCase();
+        const menuPengajuan = document.getElementById("menuPengajuan");
+        const menuPengajuanMobile = document.getElementById(
+          "menuPengajuanMobile"
+        );
+        const menuRiwayat = document.getElementById("menuRiwayat");
+        const menuRiwayatMobile = document.getElementById("menuRiwayatMobile");
 
-// Hanya tampilkan kalau role Admin / Supervisi
-const bolehAksesPengajuan = role === "admin" || role === "supervisi";
+        // Hanya tampilkan kalau role Admin / Supervisi
+        const bolehAksesPengajuan = role === "admin" || role === "supervisi";
 
-// Kalau bukan admin/supervisi → hapus elemen dari DOM
-if (!bolehAksesPengajuan) {
-  if (menuPengajuan) menuPengajuan.remove();
-  if (menuPengajuanMobile) menuPengajuanMobile.remove();
-}
-
-  
-  const cacheKey = "cutiDashboardCache";
-
-  function renderDashboard(data) {
-    if (!Array.isArray(data)) data = data.data || [];
-
-    // === Tampilkan menu hanya jika role cocok ===
-    if (bolehAksesPengajuan) {
-      if (menuPengajuan) menuPengajuan.style.display = "flex";
-      if (menuPengajuanMobile) menuPengajuanMobile.style.display = "flex";
-    } else {
-      if (menuPengajuan) menuPengajuan.style.display = "none";
-      if (menuPengajuanMobile) menuPengajuanMobile.style.display = "none";
-    }
-
-    // Data milik user
-    const semuaCutiPegawai = data.filter(c => 
-      (c["Nama Pegawai"] || "").trim().toLowerCase() === (user.nama || "").trim().toLowerCase()
-    );
-
-    // Status terakhir
-    let statusTerakhir = "Belum ada pengajuan";
-    let tanggalPengajuanTerakhir = "-";
-    if (semuaCutiPegawai.length > 0) {
-      semuaCutiPegawai.sort((a, b) => new Date(b["Tanggal Mulai"]) - new Date(a["Tanggal Mulai"]));
-      statusTerakhir = semuaCutiPegawai[0]["Status"] || "Belum ada status";
-      const tglRaw = semuaCutiPegawai[0]["Tanggal Pengajuan"] || "-";
-      if (tglRaw !== "-") {
-        const tgl = new Date(tglRaw);
-        tanggalPengajuanTerakhir = tgl.toLocaleDateString("id-ID", {
-          day: "2-digit",
-          month: "long",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit"
-        });
-      }
-    }
-
-    const statusMap = { Menunggu: "bg-warning text-dark", Disetujui: "bg-success", Ditolak: "bg-danger" };
-    let badgeClass = "bg-secondary";
-    Object.keys(statusMap).forEach(k => { if (statusTerakhir.includes(k)) badgeClass = statusMap[k]; });
-
-    const statusEl = document.getElementById("statusPengajuan");
-    if (statusEl) {
-      statusEl.innerHTML = `<span class="badge ${badgeClass}">${statusTerakhir}</span><small class="d-block mt-1">Tanggal Pengajuan: ${tanggalPengajuanTerakhir}</small>`;
-    }
-
-    // Hitung cuti tahunan
-    const userCutiTahunan = data.filter(c => 
-      (c["Nama Pegawai"] || "").trim().toLowerCase() === (user.nama || "").trim().toLowerCase() &&
-      (c["Jenis Cuti"] || "").trim() === "Cuti Tahunan"
-    );
-    let totalTerpakai = 0;
-    userCutiTahunan.forEach(c => { 
-      const lama = parseFloat(c["Lama Cuti"]); 
-      totalTerpakai += isNaN(lama) ? 0 : lama; 
-    });
-
-    const totalCutiTahunan = 12;
-    const sisa = Math.max(totalCutiTahunan - totalTerpakai, 0);
-    document.getElementById("sisaCuti").textContent = sisa;
-    document.getElementById("cutiTerpakai").textContent = `Cuti Terpakai: ${totalTerpakai}`;
-    document.getElementById("cutiProgress").style.width = (totalTerpakai / totalCutiTahunan) * 100 + "%";
-
-    // ===== Badge Pengajuan (Realtime) =====
-    if (bolehAksesPengajuan) {
-      const pengajuanMenunggu = data.filter(c => (c["Status"] || "").trim() === "Menunggu Persetujuan").length;
-
-      function setBadge(el) {
-        if (!el) return;
-        const oldBadge = el.querySelector(".badge-baru");
-        if (oldBadge) oldBadge.remove();
-        if (pengajuanMenunggu > 0) {
-          const span = document.createElement("span");
-          span.className = "badge bg-danger badge-baru ms-auto";
-          span.textContent = pengajuanMenunggu;
-          el.appendChild(span);
+        // Kalau bukan admin/supervisi → hapus elemen dari DOM
+        if (!bolehAksesPengajuan) {
+          if (menuPengajuan) menuPengajuan.remove();
+          if (menuPengajuanMobile) menuPengajuanMobile.remove();
+          if (menuRiwayat) menuRiwayat.remove();
+          if (menuRiwayatMobile) menuRiwayatMobile.remove();
         }
+
+        const cacheKey = "cutiDashboardCache";
+
+        function renderDashboard(data) {
+          if (!Array.isArray(data)) data = data.data || [];
+
+          // === Tampilkan menu hanya jika role cocok ===
+          if (bolehAksesPengajuan) {
+            if (menuPengajuan) menuPengajuan.style.display = "flex";
+            if (menuPengajuanMobile) menuPengajuanMobile.style.display = "flex";
+            if (menuRiwayat) menuRiwayat.style.display = "flex";
+            if (menuRiwayatMobile) menuRiwayatMobile.style.display = "flex";
+          } else {
+            if (menuPengajuan) menuPengajuan.style.display = "none";
+            if (menuPengajuanMobile) menuPengajuanMobile.style.display = "none";
+            if (menuRiwayat) menuRiwayat.style.display = "none";
+            if (menuRiwayatMobile) menuRiwayatMobile.style.display = "none";
+          }
+
+          // Data milik user
+          const semuaCutiPegawai = data.filter(
+            (c) =>
+              (c["Nama Pegawai"] || "").trim().toLowerCase() ===
+              (user.nama || "").trim().toLowerCase()
+          );
+
+          // Status terakhir
+          let statusTerakhir = "Belum ada pengajuan";
+          let tanggalPengajuanTerakhir = "-";
+          if (semuaCutiPegawai.length > 0) {
+            semuaCutiPegawai.sort(
+              (a, b) =>
+                new Date(b["Tanggal Mulai"]) - new Date(a["Tanggal Mulai"])
+            );
+            statusTerakhir =
+              semuaCutiPegawai[0]["Status"] || "Belum ada status";
+            const tglRaw = semuaCutiPegawai[0]["Tanggal Pengajuan"] || "-";
+            if (tglRaw !== "-") {
+              const tgl = new Date(tglRaw);
+              tanggalPengajuanTerakhir = tgl.toLocaleDateString("id-ID", {
+                day: "2-digit",
+                month: "long",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              });
+            }
+          }
+
+          const statusMap = {
+            Menunggu: "bg-warning text-dark",
+            Disetujui: "bg-success",
+            Ditolak: "bg-danger",
+          };
+          let badgeClass = "bg-secondary";
+          Object.keys(statusMap).forEach((k) => {
+            if (statusTerakhir.includes(k)) badgeClass = statusMap[k];
+          });
+
+          const statusEl = document.getElementById("statusPengajuan");
+          if (statusEl) {
+            statusEl.innerHTML = `<span class="badge ${badgeClass}">${statusTerakhir}</span><small class="d-block mt-1">Tanggal Pengajuan: ${tanggalPengajuanTerakhir}</small>`;
+          }
+
+          // Hitung cuti tahunan
+          const userCutiTahunan = data.filter(
+            (c) =>
+              (c["Nama Pegawai"] || "").trim().toLowerCase() ===
+                (user.nama || "").trim().toLowerCase() &&
+              (c["Jenis Cuti"] || "").trim() === "Cuti Tahunan"
+          );
+          let totalTerpakai = 0;
+          userCutiTahunan.forEach((c) => {
+            const lama = parseFloat(c["Lama Cuti"]);
+            totalTerpakai += isNaN(lama) ? 0 : lama;
+          });
+
+          const totalCutiTahunan = 12;
+          const sisa = Math.max(totalCutiTahunan - totalTerpakai, 0);
+          document.getElementById("sisaCuti").textContent = sisa;
+          document.getElementById(
+            "cutiTerpakai"
+          ).textContent = `Cuti Terpakai: ${totalTerpakai}`;
+          document.getElementById("cutiProgress").style.width =
+            (totalTerpakai / totalCutiTahunan) * 100 + "%";
+
+          // ===== Badge Pengajuan (Realtime) =====
+          if (bolehAksesPengajuan) {
+            const pengajuanMenunggu = data.filter(
+              (c) => (c["Status"] || "").trim() === "Menunggu Persetujuan"
+            ).length;
+
+            function setBadge(el) {
+              if (!el) return;
+              const oldBadge = el.querySelector(".badge-baru");
+              if (oldBadge) oldBadge.remove();
+              if (pengajuanMenunggu > 0) {
+                const span = document.createElement("span");
+                span.className = "badge bg-danger badge-baru ms-auto";
+                span.textContent = pengajuanMenunggu;
+                el.appendChild(span);
+              }
+            }
+            setBadge(menuPengajuan);
+            setBadge(menuPengajuanMobile);
+          }
+
+          // Hide loading
+          const loadingOverlay = document.getElementById("loadingOverlay");
+          if (loadingOverlay) loadingOverlay.style.display = "none";
+        }
+
+        function ambilData() {
+          window.handleCutiData = function (data) {
+            const finalData = Array.isArray(data) ? data : data.data || [];
+            localStorage.setItem(
+              cacheKey,
+              JSON.stringify({ data: finalData, timestamp: Date.now() })
+            );
+            renderDashboard(finalData);
+          };
+
+          const oldScript = document.getElementById("jsonpDashboard");
+          if (oldScript) oldScript.remove();
+
+          const scriptURL =
+            "https://script.google.com/macros/s/AKfycbzt6xv3yHqeRiTrNcmghTwAq5cgpJ873CF3S4t4XC5qQTa60fcUFILFIdOk9KFaO0o2/exec?callback=handleCutiData&_t=" +
+            Date.now();
+          const s = document.createElement("script");
+          s.id = "jsonpDashboard";
+          s.src = scriptURL;
+          s.async = true;
+          document.body.appendChild(s);
+        }
+
+        // ====== Render dari cache kalau ada ======
+        const cache = localStorage.getItem(cacheKey);
+        if (cache) {
+          try {
+            const parsed = JSON.parse(cache);
+            renderDashboard(parsed.data || []);
+          } catch (e) {
+            console.error("Cache rusak:", e);
+          }
+        }
+
+        // Tetap ambil data terbaru sekali
+        ambilData();
+
+        // Update otomatis tiap 10 detik
+        setInterval(() => ambilData(), 10000);
+      });
+
+      function logout() {
+        localStorage.removeItem("userData");
+        localStorage.removeItem("cutiDashboardCache");
+        window.location.href = "index.html";
       }
-      setBadge(menuPengajuan);
-      setBadge(menuPengajuanMobile);
-    }
-
-    // Hide loading
-    const loadingOverlay = document.getElementById("loadingOverlay");
-    if (loadingOverlay) loadingOverlay.style.display = "none";
-  }
-
-  function ambilData() {
-    window.handleCutiData = function(data) {
-      const finalData = Array.isArray(data) ? data : data.data || [];
-      localStorage.setItem(cacheKey, JSON.stringify({ data: finalData, timestamp: Date.now() }));
-      renderDashboard(finalData);
-    };
-
-    const oldScript = document.getElementById("jsonpDashboard");
-    if (oldScript) oldScript.remove();
-
-    const scriptURL = "https://script.google.com/macros/s/AKfycbzt6xv3yHqeRiTrNcmghTwAq5cgpJ873CF3S4t4XC5qQTa60fcUFILFIdOk9KFaO0o2/exec?callback=handleCutiData&_t=" + Date.now();
-    const s = document.createElement("script");
-    s.id = "jsonpDashboard";
-    s.src = scriptURL;
-    s.async = true;
-    document.body.appendChild(s);
-  }
-
-  // ====== Render dari cache kalau ada ======
-  const cache = localStorage.getItem(cacheKey);
-  if (cache) {
-    try {
-      const parsed = JSON.parse(cache);
-      renderDashboard(parsed.data || []);
-    } catch(e) { console.error("Cache rusak:", e); }
-  }
-
-  // Tetap ambil data terbaru sekali
-  ambilData();
-
-  // Update otomatis tiap 10 detik
-  setInterval(() => ambilData(), 10000);
-});
-
-function logout() {
-  localStorage.removeItem("userData");
-  localStorage.removeItem("cutiDashboardCache");
-  window.location.href = "index.html";
-}
-</script>
-
-
-
+    </script>
   </body>
 </html>
