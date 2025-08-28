@@ -560,7 +560,8 @@
             (c) =>
               (c["Nama Pegawai"] || "").trim().toLowerCase() ===
                 (user.nama || "").trim().toLowerCase() &&
-              (c["Jenis Cuti"] || "").trim() === "Cuti Tahunan"
+              (c["Jenis Cuti"] || "").trim() === "Cuti Tahunan" &&
+              (c["Status"] || "").trim() === "Disetujui"
           );
           let totalTerpakai = 0;
           userCutiTahunan.forEach((c) => {
@@ -580,7 +581,7 @@
           // ===== Badge Pengajuan (Realtime) =====
           if (bolehAksesPengajuan) {
             const pengajuanMenunggu = data.filter(
-              (c) => (c["Status"] || "").trim() === "Menunggu Persetujuan"
+              (c) => (c["Status"] || "").trim() === "Menunggu Persetujuan Cuti"
             ).length;
 
             function setBadge(el) {
