@@ -580,23 +580,31 @@
 
           // ===== Badge Pengajuan (Realtime) =====
           if (bolehAksesPengajuan) {
-            const pengajuanMenunggu = data.filter(
-              (c) => (c["Status"] || "").trim() === "Menunggu Persetujuan Cuti"
-            ).length;
+          const pengajuanMenunggu = data.filter((c) => {
+  const st = (c["Status"] || "").toLowerCase();
+  return st.includes("menunggu"); // lebih fleksibel
+}).length;
 
-            function setBadge(el) {
-              if (!el) return;
-              const oldBadge = el.querySelector(".badge-baru");
-              if (oldBadge) oldBadge.remove();
-              if (pengajuanMenunggu > 0) {
-                const span = document.createElement("span");
-                span.className = "badge bg-danger badge-baru ms-auto";
-                span.textContent = pengajuanMenunggu;
-                el.appendChild(span);
-              }
-            }
-            setBadge(menuPengajuan);
-            setBadge(menuPengajuanMobile);
+function setBadge(el) {
+  if (!el) return;
+  const oldBadge = el.querySelector(".badge-baru");
+  if (oldBadge) oldBadge.remove();
+
+  if (pengajuanMenunggu > 0) {
+    const span = document.createElement("span");
+    span.className = "badge bg-danger badge-baru ms-auto";
+    span.textContent = pengajuanMenunggu;
+
+    // Pastikan flex agar badge ke kanan
+    el.style.display = "flex";
+    el.style.alignItems = "center";
+    el.style.justifyContent = "space-between";
+
+    el.appendChild(span);
+  }
+}
+setBadge(menuPengajuan);
+setBadge(menuPengajuanMobile);
           }
 
           // Hide loading
