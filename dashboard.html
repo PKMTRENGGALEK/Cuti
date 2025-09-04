@@ -191,8 +191,7 @@
 
         <hr class="my-3" />
         <!-- <a href="profile.html"
-          ><i class="fa-solid fa-user"></i
-          ><span>Profile</span></a
+          ><i class="fa-solid fa-user"></i><span>Profile</span></a
         > -->
         <a href="#" onclick="logout()" class="text-danger"
           ><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a
@@ -241,8 +240,8 @@
           </a>
 
           <hr class="my-3" />
-          <!-- <a href="profile.html"><i class="fa-solid fa-user"></i
-            ><span>Profile</span></a
+          <!-- <a href="profile.html"
+            ><i class="fa-solid fa-user"></i><span>Profile</span></a
           > -->
           <a
             href="#"
@@ -333,94 +332,122 @@
       </nav>
 
       <!-- Dashboard Cards -->
-      <div class="row g-4">
-        <!-- Sisa Cuti -->
-        <div class="col-md-4">
-          <div
-            class="card p-4 text-center position-relative overflow-hidden"
-            style="
-              background: linear-gradient(135deg, #4ade80, #22d3ee);
-              color: #fff;
-            "
-          >
-            <i class="fa-solid fa-calendar-check" style="font-size: 2rem"></i>
-            <h5 class="mt-3 fw-semibold">Dashboard</h5>
-            <h2 class="fw-bold" id="sisaCuti">0</h2>
-            <span class="badge bg-white text-dark mt-2" id="cutiTerpakai"
-              >Cuti Terpakai: 0</span
-            >
-            <div class="progress mt-3" style="height: 8px; border-radius: 6px">
+      <div class="row mb-4">
+        <div class="col-md-3 mb-4">
+          <div class="card p-3 text-center">
+            <img
+              id="fotoProfilCard"
+              src="assets/user/Profile.png"
+              alt="Foto Profil"
+              class="rounded-circle mx-auto"
+              style="width: 120px; height: 120px; object-fit: cover"
+            />
+
+            <h6 class="mt-3 mb-0" id="namaPegawaiCard">Nama Pegawai</h6>
+            <!-- <small class="text-muted">Jabatan Pegawai</small> -->
+          </div>
+        </div>
+        <div class="col-md-9">
+          <!-- Dashboard Cards -->
+          <div class="row g-4">
+            <!-- Sisa Cuti -->
+            <div class="col-md-4">
               <div
-                id="cutiProgress"
-                class="progress-bar bg-success"
-                style="width: 0%"
-              ></div>
+                class="card p-4 text-center position-relative overflow-hidden"
+                style="
+                  background: linear-gradient(135deg, #4ade80, #22d3ee);
+                  color: #fff;
+                "
+              >
+                <i
+                  class="fa-solid fa-calendar-check"
+                  style="font-size: 2rem"
+                ></i>
+                <h5 class="mt-3 fw-semibold">Dashboard</h5>
+                <h2 class="fw-bold" id="sisaCuti">0</h2>
+                <span class="badge bg-white text-dark mt-2" id="cutiTerpakai"
+                  >Cuti Terpakai: 0</span
+                >
+                <div
+                  class="progress mt-3"
+                  style="height: 8px; border-radius: 6px"
+                >
+                  <div
+                    id="cutiProgress"
+                    class="progress-bar bg-success"
+                    style="width: 0%"
+                  ></div>
+                </div>
+                <div
+                  style="
+                    position: absolute;
+                    top: -20px;
+                    right: -20px;
+                    font-size: 4rem;
+                    opacity: 0.2;
+                  "
+                >
+                  <i class="fa-solid fa-calendar-check"></i>
+                </div>
+              </div>
             </div>
-            <div
-              style="
-                position: absolute;
-                top: -20px;
-                right: -20px;
-                font-size: 4rem;
-                opacity: 0.2;
-              "
-            >
-              <i class="fa-solid fa-calendar-check"></i>
+            <!-- Ajukan Cuti -->
+            <div class="col-md-4">
+              <div
+                class="card p-4 text-center position-relative overflow-hidden"
+                style="
+                  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+                  color: #fff;
+                  cursor: pointer;
+                "
+                onclick="window.location.href='input-cuti.html'"
+              >
+                <i
+                  class="fa-solid fa-pen-to-square"
+                  style="font-size: 2rem"
+                ></i>
+                <h5 class="mt-3 fw-semibold">Ajukan Cuti</h5>
+                <p class="mb-0">Isi form pengajuan cuti</p>
+                <div
+                  style="
+                    position: absolute;
+                    top: -20px;
+                    right: -20px;
+                    font-size: 4rem;
+                    opacity: 0.2;
+                  "
+                >
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-        <!-- Ajukan Cuti -->
-        <div class="col-md-4">
-          <div
-            class="card p-4 text-center position-relative overflow-hidden"
-            style="
-              background: linear-gradient(135deg, #60a5fa, #3b82f6);
-              color: #fff;
-              cursor: pointer;
-            "
-            onclick="window.location.href='input-cuti.html'"
-          >
-            <i class="fa-solid fa-pen-to-square" style="font-size: 2rem"></i>
-            <h5 class="mt-3 fw-semibold">Ajukan Cuti</h5>
-            <p class="mb-0">Isi form pengajuan cuti</p>
-            <div
-              style="
-                position: absolute;
-                top: -20px;
-                right: -20px;
-                font-size: 4rem;
-                opacity: 0.2;
-              "
-            >
-              <i class="fa-solid fa-pen-to-square"></i>
-            </div>
-          </div>
-        </div>
-        <!-- Status -->
-        <div class="col-md-4">
-          <div
-            class="card p-4 text-center position-relative overflow-hidden"
-            style="
-              background: linear-gradient(135deg, #facc15, #f97316);
-              color: #fff;
-            "
-          >
-            <i
-              class="fa-solid fa-clock-rotate-left"
-              style="font-size: 2rem"
-            ></i>
-            <p class="mt-3 fw-semibold">Status Pengajuan Terakhir</p>
-            <p class="mb-0" id="statusPengajuan">Memuat...</p>
-            <div
-              style="
-                position: absolute;
-                top: -20px;
-                right: -20px;
-                font-size: 4rem;
-                opacity: 0.2;
-              "
-            >
-              <i class="fa-solid fa-clock-rotate-left"></i>
+            <!-- Status -->
+            <div class="col-md-4">
+              <div
+                class="card p-4 text-center position-relative overflow-hidden"
+                style="
+                  background: linear-gradient(135deg, #facc15, #f97316);
+                  color: #fff;
+                "
+              >
+                <i
+                  class="fa-solid fa-clock-rotate-left"
+                  style="font-size: 2rem"
+                ></i>
+                <p class="mt-3 fw-semibold">Status Pengajuan Terakhir</p>
+                <p class="mb-0" id="statusPengajuan">Memuat...</p>
+                <div
+                  style="
+                    position: absolute;
+                    top: -20px;
+                    right: -20px;
+                    font-size: 4rem;
+                    opacity: 0.2;
+                  "
+                >
+                  <i class="fa-solid fa-clock-rotate-left"></i>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -466,12 +493,39 @@
         if (!userData) return (window.location.href = "index.html");
 
         const user = JSON.parse(userData);
+        console.log("User data:", user);
+        console.log("Isi kolom pic:", user.pic);
         const namaPegawai = document.getElementById("namaPegawai");
+        // const avatar = document.querySelector(".avatar");
         const avatar = document.querySelector(".avatar");
+        // === Siapkan URL foto profil ===
+        let picUrl = "assets/user/Profile.png"; // default fallback
+        if (user.pic && user.pic.trim() !== "") {
+          picUrl = `assets/user/${user.pic}`;
+        }
 
+        // === Avatar kecil (navbar/sidebar) ===
+        if (avatar) {
+          avatar.innerHTML = `<img src="${picUrl}" 
+    alt="Foto Profil" 
+    style="width:100%;height:100%;object-fit:cover;border-radius:50%;" 
+    onerror="this.src='assets/user/Profile.png'" />`;
+        }
+
+        // === Nama di navbar ===
         if (namaPegawai) namaPegawai.textContent = user.nama || "Pegawai";
-        if (avatar)
-          avatar.textContent = (user.nama || "P").charAt(0).toUpperCase();
+
+        // === Foto di card profil ===
+        const fotoProfil = document.querySelector("#fotoProfilCard");
+        if (fotoProfil) {
+          fotoProfil.src = picUrl;
+          fotoProfil.onerror = () =>
+            (fotoProfil.src = "assets/user/Profile.png");
+        }
+
+        const namaPegawaiCard = document.getElementById("namaPegawaiCard");
+        if (namaPegawaiCard)
+          namaPegawaiCard.textContent = user.nama || "Nama Pegawai";
 
         const role = (user.role || "").toLowerCase();
         const menuPengajuan = document.getElementById("menuPengajuan");
@@ -580,31 +634,31 @@
 
           // ===== Badge Pengajuan (Realtime) =====
           if (bolehAksesPengajuan) {
-          const pengajuanMenunggu = data.filter((c) => {
-  const st = (c["Status"] || "").toLowerCase();
-  return st.includes("menunggu"); // lebih fleksibel
-}).length;
+            const pengajuanMenunggu = data.filter((c) => {
+              const st = (c["Status"] || "").toLowerCase();
+              return st.includes("menunggu"); // lebih fleksibel
+            }).length;
 
-function setBadge(el) {
-  if (!el) return;
-  const oldBadge = el.querySelector(".badge-baru");
-  if (oldBadge) oldBadge.remove();
+            function setBadge(el) {
+              if (!el) return;
+              const oldBadge = el.querySelector(".badge-baru");
+              if (oldBadge) oldBadge.remove();
 
-  if (pengajuanMenunggu > 0) {
-    const span = document.createElement("span");
-    span.className = "badge bg-danger badge-baru ms-auto";
-    span.textContent = pengajuanMenunggu;
+              if (pengajuanMenunggu > 0) {
+                const span = document.createElement("span");
+                span.className = "badge bg-danger badge-baru ms-auto";
+                span.textContent = pengajuanMenunggu;
 
-    // Pastikan flex agar badge ke kanan
-    el.style.display = "flex";
-    el.style.alignItems = "center";
-    el.style.justifyContent = "space-between";
+                // Pastikan flex agar badge ke kanan
+                el.style.display = "flex";
+                el.style.alignItems = "center";
+                el.style.justifyContent = "space-between";
 
-    el.appendChild(span);
-  }
-}
-setBadge(menuPengajuan);
-setBadge(menuPengajuanMobile);
+                el.appendChild(span);
+              }
+            }
+            setBadge(menuPengajuan);
+            setBadge(menuPengajuanMobile);
           }
 
           // Hide loading

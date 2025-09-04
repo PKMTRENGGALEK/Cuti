@@ -120,7 +120,17 @@
               />
             </div>
             <div class="col-md-6">
-              <label class="form-label">Nip</label>
+              <label class="form-label">NIP</label>
+              <input
+                type="text"
+                class="form-control"
+                id="nip"
+                readonly
+                style="border-radius: 12px"
+              />
+            </div>
+            <div class="col-md-12">
+              <label class="form-label">Jabatan</label>
               <input
                 type="text"
                 class="form-control"
@@ -129,6 +139,7 @@
                 style="border-radius: 12px"
               />
             </div>
+
             <div class="col-md-6">
               <label class="form-label">Tanggal Mulai</label>
               <input
@@ -446,7 +457,7 @@
                 toastBody.textContent = "✅ Pengajuan cuti berhasil disimpan!";
                 // bisa otomatis hide setelah 3 detik
                 setTimeout(() => toast.hide(), 3000);
-                 window.location.href = "dashboard.html"; // halaman badge
+                window.location.href = "dashboard.html"; // halaman badge
                 document.getElementById("formCuti").reset();
                 document.getElementById("lamaCuti").value = "";
               } else {
