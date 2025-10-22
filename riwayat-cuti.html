@@ -122,7 +122,7 @@
   </head>
   <body>
     <!-- Sidebar Desktop -->
-    <aside class="sidebar d-none d-lg-flex flex-column">
+    <aside class="sidebar d-none d-lg-flex flex-column shadow-lg">
       <div class="text-center mb-4">
         <div class="brand">
           <i class="fa-solid fa-hospital text-success me-2"></i>Puskesmas
@@ -498,7 +498,26 @@
               url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/id.json",
             },
           });
+          // ===== Badge Pengajuan =====
+          const pengajuanMenunggu = data.filter(
+            (c) => (c["Status"] || "").trim() === "Menunggu Persetujuan"
+          ).length;
+          function setBadge(el) {
+            if (!el) return;
+            const oldBadge = el.querySelector(".badge-baru");
+            if (oldBadge) oldBadge.remove();
+            if (pengajuanMenunggu > 0) {
+              const span = document.createElement("span");
+              span.className = "badge bg-danger badge-baru ms-auto";
+              span.textContent = pengajuanMenunggu;
+              el.appendChild(span);
+            }
+          }
 
+          setBadge(document.getElementById("menuPengajuan"));
+          setBadge(document.getElementById("menuPengajuanMobile"));
+
+          $("#loadingOverlay").hide();
           document.getElementById("loadingOverlay").style.display = "none";
         }
 

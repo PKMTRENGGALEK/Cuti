@@ -157,7 +157,7 @@
   </head>
   <body>
     <!-- Sidebar (Desktop) -->
-    <aside class="sidebar d-none d-lg-flex flex-column">
+    <aside class="sidebar d-none d-lg-flex flex-column shadow-lg">
       <div class="text-center mb-4">
         <div class="brand">
           <i class="fa-solid fa-hospital text-success me-2"></i>Puskesmas
@@ -200,7 +200,11 @@
     </aside>
 
     <!-- Offcanvas (Mobile) -->
-    <div class="offcanvas offcanvas-start" tabindex="-1" id="mobileSidebar">
+    <div
+      class="offcanvas offcanvas-start shadow-lg"
+      tabindex="-1"
+      id="mobileSidebar"
+    >
       <div class="offcanvas-header border-bottom">
         <h5 class="offcanvas-title fw-bold">
           <i class="fa-solid fa-hospital text-primary me-2"></i>Puskesmas
@@ -281,7 +285,7 @@
     <!-- Content -->
     <main class="content">
       <!-- Navbar -->
-      <nav class="navbar navbar-expand-lg rounded mb-4 px-3">
+      <nav class="navbar navbar-expand-lg rounded mb-4 px-3 shadow-lg">
         <div class="container-fluid">
           <button
             class="btn btn-outline-primary d-lg-none me-2"
@@ -351,9 +355,9 @@
           <!-- Dashboard Cards -->
           <div class="row g-4">
             <!-- Sisa Cuti -->
-            <div class="col-md-4">
+            <div class="col-md-4 d-flex">
               <div
-                class="card p-4 text-center position-relative overflow-hidden"
+                class="card p-4 text-center position-relative overflow-hidden h-100 w-100"
                 style="
                   background: linear-gradient(135deg, #4ade80, #22d3ee);
                   color: #fff;
@@ -363,7 +367,7 @@
                   class="fa-solid fa-calendar-check"
                   style="font-size: 2rem"
                 ></i>
-                <h5 class="mt-3 fw-semibold">Dashboard</h5>
+                <h5 class="mt-3 fw-semibold" id="judulSisaCuti">Sisa Cuti</h5>
                 <h2 class="fw-bold" id="sisaCuti">0</h2>
                 <span class="badge bg-white text-dark mt-2" id="cutiTerpakai"
                   >Cuti Terpakai: 0</span
@@ -391,10 +395,73 @@
                 </div>
               </div>
             </div>
-            <!-- Ajukan Cuti -->
-            <div class="col-md-4">
+
+            <!-- Sisa Cuti Tahun Lalu -->
+            <div class="col-md-4 d-flex">
               <div
-                class="card p-4 text-center position-relative overflow-hidden"
+                class="card p-4 text-center position-relative overflow-hidden h-100 w-100"
+                style="
+                  background: linear-gradient(135deg, #34d399, #10b981);
+                  color: #fff;
+                "
+              >
+                <i
+                  class="fa-solid fa-calendar-minus"
+                  style="font-size: 2rem"
+                ></i>
+                <h5 class="mt-3 fw-semibold" id="judulSisaCutiLalu">
+                  Sisa Cuti Tahun Lalu
+                </h5>
+                <h2 class="fw-bold" id="sisaCutiLalu">0</h2>
+                <div
+                  style="
+                    position: absolute;
+                    top: -20px;
+                    right: -20px;
+                    font-size: 4rem;
+                    opacity: 0.2;
+                  "
+                >
+                  <i class="fa-solid fa-calendar-minus"></i>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sisa Cuti 2 Tahun Lalu -->
+            <div class="col-md-4 d-flex">
+              <div
+                class="card p-4 text-center position-relative overflow-hidden h-100 w-100"
+                style="
+                  background: linear-gradient(135deg, #38bdf8, #0284c7);
+                  color: #fff;
+                "
+              >
+                <i
+                  class="fa-solid fa-calendar-days"
+                  style="font-size: 2rem"
+                ></i>
+                <h5 class="mt-3 fw-semibold" id="judulSisaCutiDua">
+                  Sisa Cuti 2 Tahun Lalu
+                </h5>
+                <h2 class="fw-bold" id="sisaCutiDua">0</h2>
+                <div
+                  style="
+                    position: absolute;
+                    top: -20px;
+                    right: -20px;
+                    font-size: 4rem;
+                    opacity: 0.2;
+                  "
+                >
+                  <i class="fa-solid fa-calendar-days"></i>
+                </div>
+              </div>
+            </div>
+
+            <!-- Ajukan Cuti -->
+            <div class="col-md-4 d-flex">
+              <div
+                class="card p-4 text-center position-relative overflow-hidden h-100 w-100"
                 style="
                   background: linear-gradient(135deg, #60a5fa, #3b82f6);
                   color: #fff;
@@ -421,10 +488,11 @@
                 </div>
               </div>
             </div>
+
             <!-- Status -->
-            <div class="col-md-4">
+            <div class="col-md-4 d-flex">
               <div
-                class="card p-4 text-center position-relative overflow-hidden"
+                class="card p-4 text-center position-relative overflow-hidden h-100 w-100"
                 style="
                   background: linear-gradient(135deg, #facc15, #f97316);
                   color: #fff;
@@ -488,45 +556,43 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+      // === Inisialisasi judul tahun ===
+      const tahunSekarang = new Date().getFullYear();
+      document.getElementById(
+        "judulSisaCuti"
+      ).textContent = `Sisa Cuti ${tahunSekarang}`;
+
       document.addEventListener("DOMContentLoaded", () => {
         const userData = localStorage.getItem("userData");
         if (!userData) return (window.location.href = "index.html");
-
         const user = JSON.parse(userData);
         console.log("User data:", user);
-        console.log("Isi kolom pic:", user.pic);
+
+        // === Tampilkan nama dan foto profil ===
         const namaPegawai = document.getElementById("namaPegawai");
-        // const avatar = document.querySelector(".avatar");
         const avatar = document.querySelector(".avatar");
-        // === Siapkan URL foto profil ===
-        let picUrl = "assets/user/Profile.png"; // default fallback
-        if (user.pic && user.pic.trim() !== "") {
+        let picUrl = "assets/user/Profile.png";
+        if (user.pic && user.pic.trim() !== "")
           picUrl = `assets/user/${user.pic}`;
-        }
 
-        // === Avatar kecil (navbar/sidebar) ===
         if (avatar) {
-          avatar.innerHTML = `<img src="${picUrl}" 
-    alt="Foto Profil" 
-    style="width:100%;height:100%;object-fit:cover;border-radius:50%;" 
-    onerror="this.src='assets/user/Profile.png'" />`;
+          avatar.innerHTML = `<img src="${picUrl}" alt="Foto Profil" 
+            style="width:100%;height:100%;object-fit:cover;border-radius:50%;" 
+            onerror="this.src='assets/user/Profile.png'" />`;
         }
-
-        // === Nama di navbar ===
         if (namaPegawai) namaPegawai.textContent = user.nama || "Pegawai";
 
-        // === Foto di card profil ===
         const fotoProfil = document.querySelector("#fotoProfilCard");
         if (fotoProfil) {
           fotoProfil.src = picUrl;
           fotoProfil.onerror = () =>
             (fotoProfil.src = "assets/user/Profile.png");
         }
-
         const namaPegawaiCard = document.getElementById("namaPegawaiCard");
         if (namaPegawaiCard)
           namaPegawaiCard.textContent = user.nama || "Nama Pegawai";
 
+        // === Role akses menu ===
         const role = (user.role || "").toLowerCase();
         const menuPengajuan = document.getElementById("menuPengajuan");
         const menuPengajuanMobile = document.getElementById(
@@ -534,37 +600,18 @@
         );
         const menuRiwayat = document.getElementById("menuRiwayat");
         const menuRiwayatMobile = document.getElementById("menuRiwayatMobile");
-
-        // Hanya tampilkan kalau role Admin / Supervisi
         const bolehAksesPengajuan = role === "admin" || role === "supervisi";
-
-        // Kalau bukan admin/supervisi → hapus elemen dari DOM
         if (!bolehAksesPengajuan) {
-          if (menuPengajuan) menuPengajuan.remove();
-          if (menuPengajuanMobile) menuPengajuanMobile.remove();
-          if (menuRiwayat) menuRiwayat.remove();
-          if (menuRiwayatMobile) menuRiwayatMobile.remove();
+          menuPengajuan?.remove();
+          menuPengajuanMobile?.remove();
+          menuRiwayat?.remove();
+          menuRiwayatMobile?.remove();
         }
 
-        const cacheKey = "cutiDashboardCache";
-
+        // === Render Data Dashboard ===
         function renderDashboard(data) {
           if (!Array.isArray(data)) data = data.data || [];
 
-          // === Tampilkan menu hanya jika role cocok ===
-          if (bolehAksesPengajuan) {
-            if (menuPengajuan) menuPengajuan.style.display = "flex";
-            if (menuPengajuanMobile) menuPengajuanMobile.style.display = "flex";
-            if (menuRiwayat) menuRiwayat.style.display = "flex";
-            if (menuRiwayatMobile) menuRiwayatMobile.style.display = "flex";
-          } else {
-            if (menuPengajuan) menuPengajuan.style.display = "none";
-            if (menuPengajuanMobile) menuPengajuanMobile.style.display = "none";
-            if (menuRiwayat) menuRiwayat.style.display = "none";
-            if (menuRiwayatMobile) menuRiwayatMobile.style.display = "none";
-          }
-
-          // Data milik user
           const semuaCutiPegawai = data.filter(
             (c) =>
               (c["Nama Pegawai"] || "").trim().toLowerCase() ===
@@ -606,10 +653,11 @@
 
           const statusEl = document.getElementById("statusPengajuan");
           if (statusEl) {
-            statusEl.innerHTML = `<span class="badge ${badgeClass}">${statusTerakhir}</span><small class="d-block mt-1">Tanggal Pengajuan: ${tanggalPengajuanTerakhir}</small>`;
+            statusEl.innerHTML = `<span class="badge ${badgeClass}">${statusTerakhir}</span>
+              <small class="d-block mt-1">Tanggal Pengajuan: ${tanggalPengajuanTerakhir}</small>`;
           }
 
-          // Hitung cuti tahunan
+          // Hitung cuti tahunan dari data Cuti
           const userCutiTahunan = data.filter(
             (c) =>
               (c["Nama Pegawai"] || "").trim().toLowerCase() ===
@@ -625,19 +673,23 @@
 
           const totalCutiTahunan = 12;
           const sisa = Math.max(totalCutiTahunan - totalTerpakai, 0);
-          document.getElementById("sisaCuti").textContent = sisa;
           document.getElementById(
             "cutiTerpakai"
           ).textContent = `Cuti Terpakai: ${totalTerpakai}`;
           document.getElementById("cutiProgress").style.width =
             (totalTerpakai / totalCutiTahunan) * 100 + "%";
 
-          // ===== Badge Pengajuan (Realtime) =====
+          // Jika sheet SisaCuti belum dimuat, tampilkan default sisa hitung manual
+          const sisaEl = document.getElementById("sisaCuti");
+          if (sisaEl.textContent.trim() === "" || sisaEl.textContent === "0") {
+            sisaEl.textContent = sisa;
+          }
+
+          // Badge pengajuan
           if (bolehAksesPengajuan) {
-            const pengajuanMenunggu = data.filter((c) => {
-              const st = (c["Status"] || "").toLowerCase();
-              return st.includes("menunggu"); // lebih fleksibel
-            }).length;
+            const pengajuanMenunggu = data.filter((c) =>
+              (c["Status"] || "").toLowerCase().includes("menunggu")
+            ).length;
 
             function setBadge(el) {
               if (!el) return;
@@ -648,12 +700,9 @@
                 const span = document.createElement("span");
                 span.className = "badge bg-danger badge-baru ms-auto";
                 span.textContent = pengajuanMenunggu;
-
-                // Pastikan flex agar badge ke kanan
                 el.style.display = "flex";
                 el.style.alignItems = "center";
                 el.style.justifyContent = "space-between";
-
                 el.appendChild(span);
               }
             }
@@ -661,18 +710,15 @@
             setBadge(menuPengajuanMobile);
           }
 
-          // Hide loading
+          // Sembunyikan loading
           const loadingOverlay = document.getElementById("loadingOverlay");
           if (loadingOverlay) loadingOverlay.style.display = "none";
         }
 
+        // === Ambil data Cuti ===
         function ambilData() {
           window.handleCutiData = function (data) {
             const finalData = Array.isArray(data) ? data : data.data || [];
-            localStorage.setItem(
-              cacheKey,
-              JSON.stringify({ data: finalData, timestamp: Date.now() })
-            );
             renderDashboard(finalData);
           };
 
@@ -680,7 +726,7 @@
           if (oldScript) oldScript.remove();
 
           const scriptURL =
-            "https://script.google.com/macros/s/AKfycbzt6xv3yHqeRiTrNcmghTwAq5cgpJ873CF3S4t4XC5qQTa60fcUFILFIdOk9KFaO0o2/exec?callback=handleCutiData&_t=" +
+            "https://script.google.com/macros/s/AKfycbzt6xv3yHqeRiTrNcmghTwAq5cgpJ873CF3S4t4XC5qQTa60fcUFILFIdOk9KFaO0o2/exec?sheet=Cuti&callback=handleCutiData&_t=" +
             Date.now();
           const s = document.createElement("script");
           s.id = "jsonpDashboard";
@@ -689,27 +735,148 @@
           document.body.appendChild(s);
         }
 
-        // ====== Render dari cache kalau ada ======
-        const cache = localStorage.getItem(cacheKey);
-        if (cache) {
-          try {
-            const parsed = JSON.parse(cache);
-            renderDashboard(parsed.data || []);
-          } catch (e) {
-            console.error("Cache rusak:", e);
-          }
+        // === Ambil data SisaCuti (JSONP) ===
+        function ambilSisaCuti() {
+          // buat handler global (JSONP will call this)
+          window.handleSisaCuti = function (data) {
+            try {
+              console.log("[handleSisaCuti] raw data:", data);
+
+              // data bisa berupa array atau {data: [...]}
+              const arr = Array.isArray(data) ? data : data.data || [];
+              console.log(
+                "[handleSisaCuti] normalized array length:",
+                arr.length
+              );
+
+              const tahunIni = new Date().getFullYear();
+              const tahunLalu = tahunIni - 1;
+              const duaTahunLalu = tahunIni - 2;
+
+              const user = JSON.parse(localStorage.getItem("userData") || "{}");
+              const nipUser = (user.nip || "").toString().trim();
+              if (!nipUser) {
+                console.warn("[handleSisaCuti] NIP user kosong.");
+                return;
+              }
+
+              // cari baris yang cocok dengan nip
+              const baris = arr.find(
+                (r) =>
+                  ((r.nip || r.NIP || r["NIP"] || "") + "")
+                    .toString()
+                    .trim() === nipUser
+              );
+
+              if (!baris) {
+                console.warn(
+                  "[handleSisaCuti] baris tidak ditemukan untuk NIP:",
+                  nipUser
+                );
+                // sembunyikan loading jika ada
+                const ld = document.getElementById("loadingOverlay");
+                if (ld) ld.style.display = "none";
+                return;
+              }
+
+              // ambil kolom tahun — beberapa sheet punya header '2025' sebagai string key
+              const sisaTahunIni =
+                Number(baris[tahunIni] || baris[tahunIni.toString()] || 0) || 0;
+              const sisaTahunLalu =
+                Number(baris[tahunLalu] || baris[tahunLalu.toString()] || 0) ||
+                0;
+              const sisaDuaTahunLalu =
+                Number(
+                  baris[duaTahunLalu] || baris[duaTahunLalu.toString()] || 0
+                ) || 0;
+
+              console.log(
+                "[handleSisaCuti] sisa:",
+                sisaTahunIni,
+                sisaTahunLalu,
+                sisaDuaTahunLalu
+              );
+
+              // update DOM (cek eksistensi dulu)
+              const elJudul = document.getElementById("judulSisaCuti");
+              const elJudulLalu = document.getElementById("judulSisaCutiLalu");
+              const elJudulDua = document.getElementById("judulSisaCutiDua");
+              const elSisa = document.getElementById("sisaCuti");
+              const elSisaLalu = document.getElementById("sisaCutiLalu");
+              const elSisaDua = document.getElementById("sisaCutiDua");
+              const elTerpakai = document.getElementById("cutiTerpakai");
+              const elProgress = document.getElementById("cutiProgress");
+              const badgeMenu = document.getElementById("badgeCutiMenu"); // optional badge in menu
+
+              if (elJudul) elJudul.textContent = `Sisa Cuti ${tahunIni}`;
+              if (elJudulLalu)
+                elJudulLalu.textContent = `Sisa Cuti ${tahunLalu}`;
+              if (elJudulDua)
+                elJudulDua.textContent = `Sisa Cuti ${duaTahunLalu}`;
+
+              if (elSisa) elSisa.textContent = sisaTahunIni;
+              if (elSisaLalu) elSisaLalu.textContent = sisaTahunLalu;
+              if (elSisaDua) elSisaDua.textContent = sisaDuaTahunLalu;
+
+              const totalCuti = 12;
+              const cutiTerpakai = Math.max(totalCuti - sisaTahunIni, 0);
+              const persen = Math.min(
+                Math.max((cutiTerpakai / totalCuti) * 100, 0),
+                100
+              );
+
+              if (elTerpakai)
+                elTerpakai.textContent = `Cuti Terpakai: ${cutiTerpakai}`;
+              if (elProgress) elProgress.style.width = `${persen}%`;
+
+              // update badge menu (jika ada)
+              if (badgeMenu) {
+                badgeMenu.textContent = sisaTahunIni;
+                badgeMenu.style.display =
+                  sisaTahunIni > 0 ? "inline-block" : "none";
+              }
+
+              // sembunyikan loading overlay kalau ada
+              const ld = document.getElementById("loadingOverlay");
+              if (ld) ld.style.display = "none";
+            } catch (err) {
+              console.error("[handleSisaCuti] error:", err);
+              const ld = document.getElementById("loadingOverlay");
+              if (ld) ld.style.display = "none";
+            }
+          }; // end handleSisaCuti
+
+          // hapus script lama jika ada
+          const old = document.getElementById("jsonpSisaCuti");
+          if (old) old.remove();
+
+          // panggil Apps Script JSONP (pastikan callback param = handleSisaCuti)
+          const scriptURL =
+            "https://script.google.com/macros/s/AKfycbzt6xv3yHqeRiTrNcmghTwAq5cgpJ873CF3S4t4XC5qQTa60fcUFILFIdOk9KFaO0o2/exec" +
+            "?action=getSisa&callback=handleSisaCuti&_t=" +
+            Date.now();
+
+          const s = document.createElement("script");
+          s.id = "jsonpSisaCuti";
+          s.src = scriptURL;
+          s.async = true;
+          s.onerror = function (e) {
+            console.error("[ambilSisaCuti] gagal load JSONP", e);
+            const ld = document.getElementById("loadingOverlay");
+            if (ld) ld.style.display = "none";
+          };
+          document.body.appendChild(s);
         }
 
-        // Tetap ambil data terbaru sekali
+        // === Jalankan ===
         ambilData();
-
-        // Update otomatis tiap 10 detik
+        ambilSisaCuti();
         setInterval(() => ambilData(), 10000);
       });
 
+      // === Logout ===
       function logout() {
         localStorage.removeItem("userData");
-        localStorage.removeItem("cutiDashboardCache");
         window.location.href = "index.html";
       }
     </script>
