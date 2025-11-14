@@ -10,7 +10,7 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
-    <!-- Flatpickr -->
+    <!-- Flatpickr CSS -->
     <link
       href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
       rel="stylesheet"
@@ -22,20 +22,23 @@
     />
 
     <style>
+      /* Layout & theme (minimal perubahan, responsif) */
       body {
         min-height: 100vh;
         display: flex;
         flex-direction: column;
         background: linear-gradient(135deg, #dbeafe 0%, #f0fdfa 100%);
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding-bottom: 3.5rem;
       }
       .card {
         border: none;
-        border-radius: 20px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border-radius: 16px;
+        box-shadow: 0 6px 30px rgba(0, 0, 0, 0.08);
         background: linear-gradient(135deg, #4ade80, #22d3ee);
         color: #fff;
-        padding: 2rem;
+        padding: 1.5rem;
       }
       .form-label {
         font-weight: 600;
@@ -45,13 +48,14 @@
       select.form-select,
       textarea.form-control {
         border-radius: 12px;
-        transition: all 0.2s;
+        transition: all 0.14s;
+        background: #fff;
       }
       input.form-control:focus,
       select.form-select:focus,
       textarea.form-control:focus {
         border-color: #4f46e5;
-        box-shadow: 0 0 0 0.2rem rgba(79, 70, 229, 0.25);
+        box-shadow: 0 0 0 0.18rem rgba(79, 70, 229, 0.15);
       }
       .btn-primary {
         border-radius: 12px;
@@ -61,16 +65,35 @@
       footer {
         margin-top: auto;
         text-align: center;
-        padding: 1rem;
+        padding: 0.75rem;
         color: #111827;
         font-size: 0.9rem;
       }
+
+      /* Mobile tweaks */
+      @media (max-width: 576px) {
+        .card {
+          padding: 1rem;
+          border-radius: 12px;
+        }
+        .container.py-5 {
+          padding-top: 1.25rem;
+          padding-bottom: 1.25rem;
+        }
+        h3 {
+          font-size: 1.05rem;
+        }
+        .form-label {
+          font-size: 0.9rem;
+        }
+      }
     </style>
   </head>
+
   <body>
-    <div class="container py-5">
-      <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3>
+    <div class="container py-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="m-0">
           <i class="fa-solid fa-pen-to-square text-primary me-2"></i>Form Input
           Cuti
         </h3>
@@ -84,9 +107,9 @@
           <i class="fa-solid fa-circle-info me-2"></i>Informasi Pegawai
         </h5>
 
-        <form id="formCuti">
+        <form id="formCuti" autocomplete="off" novalidate>
           <div class="row g-3">
-            <div class="col-md-6">
+            <div class="col-12 col-md-6">
               <label class="form-label">Nama Pegawai</label>
               <input
                 type="text"
@@ -95,33 +118,39 @@
                 readonly
               />
             </div>
-            <div class="col-md-6">
+
+            <div class="col-12 col-md-6">
               <label class="form-label">NIP</label>
               <input type="text" class="form-control" id="nip" readonly />
             </div>
-            <div class="col-md-4">
+
+            <div class="col-12 col-md-4">
               <label class="form-label">Jabatan</label>
               <input type="text" class="form-control" id="jabatan" readonly />
             </div>
-            <div class="col-md-4">
+
+            <div class="col-12 col-md-4">
               <label class="form-label">Jenis Cuti</label>
               <select class="form-select" id="jenisCuti" required>
                 <option value="">-- Pilih Jenis Cuti --</option>
-                <option>Cuti Tahunan</option>
-                <option>Cuti Sakit</option>
-                <option>Cuti Melahirkan</option>
-                <option>Cuti Besar</option>
-                <option>Cuti Alasan Penting</option>
+                <option value="Cuti Tahunan">Cuti Tahunan</option>
+                <option value="Cuti Sakit">Cuti Sakit</option>
+                <option value="Cuti Melahirkan">Cuti Melahirkan</option>
+                <option value="Cuti Besar">Cuti Besar</option>
+                <option value="Cuti Alasan Penting">Cuti Alasan Penting</option>
               </select>
             </div>
-          </div>
 
-          <div class="row mt-2">
-            <div class="col-md-4">
+            <div class="col-12 col-md-4">
+              <!-- kosong untuk spacing pada desktop -->
+            </div>
+
+            <div class="col-12 col-md-4">
               <label class="form-label">Tanggal Mulai</label>
               <input type="text" class="form-control" id="tglMulai" required />
             </div>
-            <div class="col-md-4">
+
+            <div class="col-12 col-md-4">
               <label class="form-label">Tanggal Selesai</label>
               <input
                 type="text"
@@ -130,7 +159,8 @@
                 required
               />
             </div>
-            <div class="col-md-2">
+
+            <div class="col-12 col-md-2">
               <label class="form-label">Lama Cuti (hari)</label>
               <input
                 type="text"
@@ -140,7 +170,7 @@
               />
             </div>
 
-            <div class="col-6 mt-2">
+            <div class="col-12 col-md-6 mt-2">
               <label class="form-label">Keterangan</label>
               <textarea
                 class="form-control"
@@ -150,7 +180,7 @@
               ></textarea>
             </div>
 
-            <div class="col-6 mt-2">
+            <div class="col-12 col-md-6 mt-2">
               <label class="form-label">Alamat Selama Cuti</label>
               <textarea
                 class="form-control"
@@ -160,7 +190,7 @@
               ></textarea>
             </div>
 
-            <div class="col-4 mt-2" id="filePendukungWrapper">
+            <div class="col-12 col-md-4 mt-2" id="filePendukungWrapper">
               <label class="form-label">Upload File Pendukung (opsional)</label>
               <input
                 type="file"
@@ -170,7 +200,7 @@
               />
             </div>
 
-            <div class="col-4 mt-2">
+            <div class="col-12 col-md-4 mt-2">
               <label class="form-label">Nomor Telepon Selama Cuti</label>
               <input
                 type="text"
@@ -183,253 +213,313 @@
                 placeholder="Masukkan nomor telepon (max 12 digit)"
               />
             </div>
-          </div>
 
-          <div class="mt-4 text-end">
-            <button
-              type="submit"
-              class="btn btn-light fw-bold text-success shadow-sm"
+            <div
+              class="col-12 col-md-4 d-flex align-items-end mt-2 justify-content-end"
             >
-              <i class="fa-solid fa-paper-plane me-1"></i>Ajukan Cuti
-            </button>
+              <button
+                type="submit"
+                id="btnSubmit"
+                class="btn btn-light fw-bold text-success shadow-sm w-100"
+              >
+                <i class="fa-solid fa-paper-plane me-1"></i>Ajukan Cuti
+              </button>
+            </div>
           </div>
         </form>
+      </div>
+
+      <div class="mt-3 small text-muted">
+        * Catatan: setelah submit tetap berada di halaman; cek Console (F12)
+        untuk log detail.
       </div>
     </div>
 
     <footer>System Cuti Pegawai Puskesmas Trenggalek | @yoga</footer>
+
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- Bootstrap & Flatpickr -->
+    <!-- Bootstrap & Flatpickr JS (pastikan load flatpickr.min.js) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.js"></script>
 
     <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        const userData = localStorage.getItem("userData");
-        if (!userData) {
-          window.location.href = "index.html";
-          return;
-        }
-        const user = JSON.parse(userData);
-        document.getElementById("namaPegawai").value = user.nama || "";
-        document.getElementById("nip").value = user.nip || "";
-        document.getElementById("jabatan").value = user.jabatan || "";
+      (function () {
+        // ====== CONFIG ======
+        const GAS_ENDPOINT =
+          "https://script.google.com/macros/s/AKfycbyPP_a_WHUCLoCQbC119U335ddf7VZG3qxvqx9RoAddxRqXhRpVsj-WZOaP-78jxB4j/exec";
 
-        const holidays = [
-          "2025-01-01",
-          "2025-01-27",
-          "2025-01-28",
-          "2025-01-29",
-          "2025-03-28",
-          "2025-03-29",
-          "2025-03-31",
-          "2025-04-01",
-          "2025-04-02",
-          "2025-04-03",
-          "2025-04-04",
-          "2025-04-07",
-          "2025-04-18",
-          "2025-04-20",
-          "2025-05-01",
-          "2025-05-12",
-          "2025-05-13",
-          "2025-05-29",
-          "2025-05-30",
-          "2025-06-01",
-          "2025-06-06",
-          "2025-06-09",
-          "2025-06-27",
-          "2025-08-17",
-          "2025-08-18",
-          "2025-09-05",
-          "2025-12-25",
-          "2025-12-26",
-        ];
-
-        flatpickr("#tglMulai", { dateFormat: "Y-m-d" });
-        flatpickr("#tglSelesai", { dateFormat: "Y-m-d" });
-        // === Sembunyikan/lihat input file tergantung jenis cuti ===
-        const jenisCutiSelect = document.getElementById("jenisCuti");
-        const filePendukungWrapper = document.getElementById(
-          "filePendukungWrapper"
-        );
-
-        // Sembunyikan dulu di awal
-        filePendukungWrapper.style.display = "none";
-
-        // Saat pilihan berubah
-        jenisCutiSelect.addEventListener("change", () => {
-          const selected = jenisCutiSelect.value.trim().toLowerCase();
-          if (selected === "cuti tahunan" || selected === "") {
-            filePendukungWrapper.style.display = "none";
-            document.getElementById("filePendukung").value = ""; // reset file
-          } else {
-            filePendukungWrapper.style.display = "block";
-          }
-        });
-
-        function hitungLama() {
-          const start = document.getElementById("tglMulai").value;
-          const end = document.getElementById("tglSelesai").value;
-          if (start && end) {
-            const s = new Date(start);
-            const e = new Date(end);
-            let count = 0;
-            for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
-              const day = d.getDay();
-              const tgl = d.toISOString().split("T")[0];
-              if (day !== 0 && day !== 6 && !holidays.includes(tgl)) count++;
-            }
-            document.getElementById("lamaCuti").value = count;
-          }
+        // ====== UTILS ======
+        function log(...args) {
+          console.log("[FORM-CUTI]", ...args);
         }
 
-        document
-          .getElementById("tglMulai")
-          .addEventListener("change", hitungLama);
-        document
-          .getElementById("tglSelesai")
-          .addEventListener("change", hitungLama);
+        function showAlert(type, title, text) {
+          return Swal.fire({ icon: type, title, text });
+        }
 
-        function fileToBase64(file) {
-          return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result.split(",")[1]);
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
+        // ====== INIT ======
+        document.addEventListener("DOMContentLoaded", () => {
+          const userData = localStorage.getItem("userData");
+          if (!userData) {
+            console.warn("userData not found, redirecting to index.html");
+            window.location.href = "index.html";
+            return;
+          }
+
+          const user = JSON.parse(userData);
+          document.getElementById("namaPegawai").value = user.nama || "";
+          document.getElementById("nip").value = user.nip || "";
+          document.getElementById("jabatan").value = user.jabatan || "";
+
+          // ====== Holiday Dates ======
+          const holidays = [
+            "2025-01-01",
+            "2025-01-27",
+            "2025-01-28",
+            "2025-01-29",
+            "2025-03-28",
+            "2025-03-29",
+            "2025-03-31",
+            "2025-04-01",
+            "2025-04-02",
+            "2025-04-03",
+            "2025-04-04",
+            "2025-04-07",
+            "2025-04-18",
+            "2025-04-20",
+            "2025-05-01",
+            "2025-05-12",
+            "2025-05-13",
+            "2025-05-29",
+            "2025-05-30",
+            "2025-06-01",
+            "2025-06-06",
+            "2025-06-09",
+            "2025-06-27",
+            "2025-08-17",
+            "2025-08-18",
+            "2025-09-05",
+            "2025-12-25",
+            "2025-12-26",
+          ];
+
+          // ====== Flatpickr Fix Mobile ======
+          flatpickr("#tglMulai", {
+            dateFormat: "Y-m-d",
+            allowInput: false,
+            disableMobile: true, // <= mobile tetap pakai UI Flatpickr
           });
-        }
 
-        document
-          .getElementById("formCuti")
-          .addEventListener("submit", async (e) => {
-            e.preventDefault();
+          flatpickr("#tglSelesai", {
+            dateFormat: "Y-m-d",
+            allowInput: false,
+            disableMobile: true,
+          });
 
-            // Ambil semua nilai input
-            const jenisCuti = document.getElementById("jenisCuti").value.trim();
-            const tglMulai = document.getElementById("tglMulai").value.trim();
-            const tglSelesai = document
-              .getElementById("tglSelesai")
-              .value.trim();
-            const lamaCuti = document.getElementById("lamaCuti").value.trim();
-            const keterangan = document
-              .getElementById("keterangan")
-              .value.trim();
-            const alamat = document.getElementById("alamat").value.trim();
-            const noTelp = document.getElementById("noTelp").value.trim();
-            const fileInput = document.getElementById("filePendukung");
+          // ====== Show / Hide File Input ======
+          const jenisCutiSelect = document.getElementById("jenisCuti");
+          const filePendukungWrapper = document.getElementById(
+            "filePendukungWrapper"
+          );
+          filePendukungWrapper.style.display = "none";
 
-            // 🔍 Validasi manual
-            if (
-              !jenisCuti ||
-              !tglMulai ||
-              !tglSelesai ||
-              !lamaCuti ||
-              !keterangan ||
-              !alamat ||
-              !noTelp
-            ) {
-              Swal.fire({
-                icon: "warning",
-                title: "Lengkapi Data!",
-                text: "Semua kolom wajib diisi sebelum mengajukan cuti.",
-              });
-              return;
+          jenisCutiSelect.addEventListener("change", () => {
+            const selected = jenisCutiSelect.value.trim().toLowerCase();
+            if (selected === "cuti tahunan" || selected === "") {
+              filePendukungWrapper.style.display = "none";
+              document.getElementById("filePendukung").value = "";
+            } else {
+              filePendukungWrapper.style.display = "block";
             }
+          });
 
-            // 🔍 Validasi nomor telepon (harus angka & minimal 8 digit)
-            if (!/^[0-9]{8,12}$/.test(noTelp)) {
-              Swal.fire({
-                icon: "warning",
-                title: "Nomor Telepon Tidak Valid!",
-                text: "Masukkan nomor telepon 8–12 digit angka tanpa spasi atau simbol.",
-              });
-              return;
-            }
+          // ====== Hitung Lama Cuti ======
+          function hitungLama() {
+            const start = document.getElementById("tglMulai").value;
+            const end = document.getElementById("tglSelesai").value;
 
-            // 🔍 Validasi file pendukung
-            if (jenisCuti.toLowerCase() !== "cuti tahunan") {
-              if (fileInput.files.length === 0) {
-                Swal.fire({
-                  icon: "warning",
-                  title: "File Pendukung Wajib!",
-                  text: "Jenis cuti ini memerlukan file pendukung (PDF/JPG/PNG).",
-                });
+            if (start && end) {
+              const s = new Date(start);
+              const e = new Date(end);
+
+              if (e < s) {
+                document.getElementById("lamaCuti").value = "";
                 return;
               }
-            }
 
-            // Jika semua validasi lolos, tampilkan loading
-            Swal.fire({
-              title: "Mengirim Data...",
-              text: "Mohon tunggu sebentar",
-              allowOutsideClick: false,
-              didOpen: () => Swal.showLoading(),
+              let count = 0;
+              for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
+                const day = d.getDay();
+                const tgl = d.toISOString().split("T")[0];
+                if (day !== 0 && day !== 6 && !holidays.includes(tgl)) {
+                  count++;
+                }
+              }
+              document.getElementById("lamaCuti").value = count;
+            }
+          }
+
+          document
+            .getElementById("tglMulai")
+            .addEventListener("change", hitungLama);
+          document
+            .getElementById("tglSelesai")
+            .addEventListener("change", hitungLama);
+
+          // ====== File to Base64 ======
+          function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result.split(",")[1]);
+              reader.onerror = reject;
+              reader.readAsDataURL(file);
             });
+          }
 
-            // Konversi file ke base64
-            let fileBase64 = "",
-              fileName = "";
-            if (fileInput.files.length > 0) {
-              fileName = fileInput.files[0].name;
-              fileBase64 = await fileToBase64(fileInput.files[0]);
-            }
+          // ====== Submit Form ======
+          const form = document.getElementById("formCuti");
 
-            // Buat payload
-            const payload = {
-              nip: user.nip || "",
-              namaPegawai: user.nama || "",
-              jabatan: user.jabatan || "",
-              tglMulai,
-              tglSelesai,
-              lamaCuti,
-              jenisCuti,
-              keterangan,
-              alamat,
-              noTelp,
-              fileBase64,
-              fileName,
-            };
+          form.addEventListener("submit", async (ev) => {
+            ev.preventDefault();
+            const btn = document.getElementById("btnSubmit");
+            btn.disabled = true;
 
             try {
-              const res = await fetch(
-                "https://script.google.com/macros/s/AKfycbzt6xv3yHqeRiTrNcmghTwAq5cgpJ873CF3S4t4XC5qQTa60fcUFILFIdOk9KFaO0o2/exec",
-                {
-                  method: "POST",
-                  body: JSON.stringify(payload),
-                }
-              );
+              const jenisCuti = document
+                .getElementById("jenisCuti")
+                .value.trim();
+              const tglMulai = document.getElementById("tglMulai").value.trim();
+              const tglSelesai = document
+                .getElementById("tglSelesai")
+                .value.trim();
+              const lamaCuti = document.getElementById("lamaCuti").value.trim();
+              const keterangan = document
+                .getElementById("keterangan")
+                .value.trim();
+              const alamat = document.getElementById("alamat").value.trim();
+              const noTelp = document.getElementById("noTelp").value.trim();
+              const fileInput = document.getElementById("filePendukung");
+
+              if (
+                !jenisCuti ||
+                !tglMulai ||
+                !tglSelesai ||
+                !lamaCuti ||
+                !keterangan ||
+                !alamat ||
+                !noTelp
+              ) {
+                await showAlert(
+                  "warning",
+                  "Lengkapi Data!",
+                  "Semua kolom wajib diisi."
+                );
+                btn.disabled = false;
+                return;
+              }
+
+              if (lamaCuti === "0") {
+                await showAlert(
+                  "warning",
+                  "Tanggal Tidak Valid!",
+                  "Tanggal mulai dan selesai tidak boleh 0 hari."
+                );
+                btn.disabled = false;
+                return;
+              }
+
+              if (!/^[0-9]{8,12}$/.test(noTelp)) {
+                await showAlert(
+                  "warning",
+                  "Nomor Telepon Tidak Valid!",
+                  "Masukkan nomor telepon 8–12 digit."
+                );
+                btn.disabled = false;
+                return;
+              }
+
+              if (
+                jenisCuti.toLowerCase() !== "cuti tahunan" &&
+                fileInput.files.length === 0
+              ) {
+                await showAlert(
+                  "warning",
+                  "File Pendukung Wajib!",
+                  "Jenis cuti ini memerlukan file."
+                );
+                btn.disabled = false;
+                return;
+              }
+
+              Swal.fire({
+                title: "Mengirim Data...",
+                text: "Mohon tunggu sebentar",
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading(),
+              });
+
+              let fileBase64 = "",
+                fileName = "";
+              if (fileInput.files.length > 0) {
+                fileName = fileInput.files[0].name;
+                fileBase64 = await fileToBase64(fileInput.files[0]);
+              }
+
+              const payload = {
+                nip: user.nip || "",
+                namaPegawai: user.nama || "",
+                jabatan: user.jabatan || "",
+                tglMulai,
+                tglSelesai,
+                lamaCuti,
+                jenisCuti,
+                keterangan,
+                alamat,
+                noTelp,
+                fileBase64,
+                fileName,
+              };
+
+              log("payload:", payload);
+
+              const res = await fetch(GAS_ENDPOINT, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(payload),
+              });
 
               const data = await res.json();
-              if (data.status === "success") {
+              console.log("[FORM-CUTI] Response:", data);
+
+              if (res.ok && data.status === "success") {
                 Swal.fire({
                   icon: "success",
                   title: "Berhasil!",
-                  text: "Pengajuan cuti berhasil dikirim.",
+                  text: "Pengajuan cuti berhasil diajukan.",
+                  timer: 1800,
                   showConfirmButton: false,
-                  timer: 2000,
                 });
 
                 setTimeout(() => {
                   window.location.href = "dashboard.html";
-                }, 2000);
+                }, 1800);
               } else {
                 Swal.fire({
                   icon: "error",
-                  title: "Gagal!",
-                  text: data.message || "Terjadi kesalahan saat mengirim data.",
+                  title: "Gagal Submit!",
+                  text: data.message || "Server error.",
                 });
               }
             } catch (err) {
-              Swal.fire({
-                icon: "error",
-                title: "Error!",
-                text: err.message,
-              });
+              console.error("[FORM-CUTI] Error:", err);
+              Swal.fire({ icon: "error", title: "Error!", text: err.message });
+            } finally {
+              btn.disabled = false;
             }
           });
-      });
+        });
+      })();
     </script>
   </body>
 </html>
