@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Formulir Permohonan Cuti</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        font-size: 12px;
+      }
+      table td,
+      table th {
+        border: 2px solid black;
+        word-wrap: break-word;
+        padding: 5px;
+      }
+      .garis-tengah {
+        text-decoration: line-through;
+      }
+      .ttd-img,
+      .ttd-kapus {
+        height: 90px;
+        width: auto;
+        object-fit: contain;
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 2;
+      }
+      .ttd-kapus {
+        bottom: 40px;
+        height: 170px;
+        transform: translate(-60%, -20%);
+      }
+      .pdf-mode {
+        font-size: 8px !important;
+      }
+      .pdf-mode table,
+      .pdf-mode td,
+      .pdf-mode th {
+        border: 1px solid black !important;
+        border-collapse: collapse !important;
+      }
+      .pdf-mode th,
+      .pdf-mode td {
+        padding: 6px !important;
+      }
+      .pdf-mode .table,
+      .pdf-mode .formulir-cuti {
+        font-size: 10px !important;
+      }
+      @media print {
+        html,
+        body {
+          width: 216mm;
+          height: 356mm;
+          margin: 0;
+          padding: 0;
+          font-size: 10px;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+          zoom: 0.7;
+        }
+        #formulir-cuti {
+          width: 216mm;
+          min-height: 356mm;
+          padding: 10mm;
+          box-sizing: border-box;
+          background: white;
+          position: relative;
+        }
+        table,
+        tr,
+        td,
+        th {
+          page-break-inside: avoid !important;
+          font-size: 8px !important;
+          padding: 4px 3px !important;
+        }
+        #btnDownloadPDF,
+        .btn {
+          display: none !important;
+        }
+        .ttd-img,
+        .ttd-kapus {
+          width: 60px !important;
+          height: 40px !important;
+          object-fit: contain !important;
+          display: block;
+          margin: 0 auto;
+        }
+        #kepala {
+          position: absolute !important;
+          top: -10px !important;
+          right: 0 !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container-fluid my-3 formulir-cuti" id="formulir-cuti">
+      <div class="d-print-none mb-3">
+        <button
+          id="btnDownloadPDF"
+          class="btn btn-success"
+          onclick="downloadPDF()"
+        >
+          Download PDF
+        </button>
+      </div>
+
+      <div
+        style="
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+          margin-bottom: 10px;
+        "
+      >
+        <div
+          id="kepala"
+          style="
+            font-size: 11px;
+            text-align: left;
+            line-height: 1.5;
+            width: 300px;
+          "
+        >
+          ANAK LAMPIRAN 1.b<br />
+          PERATURAN BADAN KEPEGAWAIAN NEGARA<br />
+          REPUBLIK INDONESIA<br />
+          NOMOR 24 TAHUN 2017<br />
+          TENTANG CARA PEMBERIAN CUTI PEGAWAI NEGERI SIPIL<br />
+          Trenggalek, <span id="tgl_input">-</span><br />
+          Kepada<br />
+          Yth, Bapak Bupati Trenggalek<br />
+          &nbsp;&nbsp;&nbsp;di<br />
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;TRENGGALEK
+        </div>
+      </div>
+
+      <br />
+      <div class="text-center fw-bold fs-6">
+        FORMULIR PERMINTAAN DAN PEMBERIAN CUTI
+      </div>
+
+      <!-- I. DATA PEGAWAI -->
+      <table class="table table-bordered mt-3">
+        <tr>
+          <th colspan="4">I. DATA PEGAWAI</th>
+        </tr>
+        <tr>
+          <td>Nama</td>
+          <td id="data-nama">-</td>
+          <td>NIP</td>
+          <td id="data-nip">-</td>
+        </tr>
+        <tr>
+          <td>Jabatan</td>
+          <td id="data-jabatan">-</td>
+          <td>Masa Kerja</td>
+          <td id="lama_kerja">-</td>
+        </tr>
+        <tr>
+          <td>Unit Kerja</td>
+          <td colspan="3">
+            Puskesmas Trenggalek, Dinas Kesehatan Pengendalian Penduduk dan
+            Keluarga Berencana
+          </td>
+        </tr>
+      </table>
+
+      <!-- II. JENIS CUTI YANG DIAMBIL -->
+      <table class="table table-bordered">
+        <tr>
+          <th colspan="4">II. JENIS CUTI YANG DIAMBIL</th>
+        </tr>
+        <tr>
+          <td>1. Cuti Tahunan</td>
+          <td class="text-center" width="50px" id="ck-cutiTahunan">-</td>
+          <td>2. Cuti Besar</td>
+          <td class="text-center" width="50px" id="ck-cutiBesar">-</td>
+        </tr>
+        <tr>
+          <td>3. Cuti Sakit</td>
+          <td class="text-center" id="ck-cutiSakit">-</td>
+          <td>4. Cuti Melahirkan</td>
+          <td class="text-center" id="ck-cutiMelahirkan">-</td>
+        </tr>
+        <tr>
+          <td>5. Cuti Karena Alasan Penting</td>
+          <td class="text-center" id="ck-cutiAlasanPenting">-</td>
+          <td>6. Cuti di Luar Tanggungan Negara</td>
+          <td class="text-center" id="ck-cutiLuarTN">-</td>
+        </tr>
+      </table>
+
+      <!-- III. ALASAN CUTI -->
+      <table class="table table-bordered">
+        <tr>
+          <th>III. ALASAN CUTI</th>
+        </tr>
+        <tr>
+          <td id="data-keterangan">-</td>
+        </tr>
+      </table>
+
+      <!-- IV. LAMANYA CUTI -->
+      <table class="table table-bordered">
+        <tr>
+          <th colspan="7">IV. LAMANYA CUTI</th>
+        </tr>
+        <tr>
+          <td>Selama</td>
+          <td class="text-center" id="lama-cuti-hari">-</td>
+          <td>
+            Hari / <span class="garis-tengah">Bulan</span> /
+            <span class="garis-tengah">Tahun</span>
+          </td>
+          <td>Mulai tanggal</td>
+          <td class="text-center" id="tgl-awal">-</td>
+          <td class="text-center">s/d</td>
+          <td class="text-center" id="tgl-akhir">-</td>
+        </tr>
+      </table>
+
+      <!-- V. CATATAN CUTI -->
+      <table class="table table-bordered">
+        <tr>
+          <th colspan="6">V. CATATAN CUTI</th>
+        </tr>
+        <tr>
+          <td colspan="3">1. CUTI TAHUNAN</td>
+          <td>2.</td>
+          <td>CUTI BESAR</td>
+          <td class="text-white">‐</td>
+        </tr>
+        <tr>
+          <td>Tahun</td>
+          <td id="sisa-cuti-N2">-</td>
+          <td>Ket</td>
+          <td>3.</td>
+          <td>CUTI SAKIT</td>
+          <td>-</td>
+        </tr>
+        <tr>
+          <td>N-2</td>
+          <td id="sisa-cuti-N3">-</td>
+          <td>-</td>
+          <td>4.</td>
+          <td>CUTI MELAHIRKAN</td>
+          <td>-</td>
+        </tr>
+        <tr>
+          <td>N-1</td>
+          <td id="sisa-cuti-N1">-</td>
+          <td>-</td>
+          <td>5.</td>
+          <td>CUTI KARENA ALASAN PENTING</td>
+          <td>-</td>
+        </tr>
+        <tr>
+          <td>N</td>
+          <td id="sisa-cuti-N">-</td>
+          <td>-</td>
+          <td>6.</td>
+          <td>CUTI DI LUAR TANGGUNGAN NEGARA</td>
+          <td>-</td>
+        </tr>
+      </table>
+
+      <!-- VI. ALAMAT -->
+      <table class="table table-bordered">
+        <tr>
+          <th colspan="3">VI. ALAMAT SELAMA MENJALANKAN CUTI</th>
+        </tr>
+        <tr>
+          <td>&nbsp;</td>
+          <td>TELP.</td>
+          <td id="telp-cuti">-</td>
+        </tr>
+        <tr>
+          <td class="text-center" id="alamat-cuti">-</td>
+          <td
+            colspan="2"
+            class="text-center position-relative"
+            style="height: 90px"
+          >
+            Hormat saya,<br /><br /><br />
+            <img
+              src=""
+              id="ttd-pemohon"
+              class="ttd-img"
+              style="display: none"
+            /><br />
+            <strong><u id="ttd-nama-pemohon">-</u></strong
+            ><br />
+            <strong>NIP. <span id="ttd-nip-pemohon">-</span></strong>
+          </td>
+        </tr>
+      </table>
+
+      <!-- VII. PERTIMBANGAN ATASAN -->
+      <table class="table table-bordered">
+        <tr>
+          <th colspan="4">VII. PERTIMBANGAN ATASAN LANGSUNG</th>
+        </tr>
+        <tr>
+          <td>DISETUJUI</td>
+          <td>PERUBAHAN</td>
+          <td>DITANGGUHKAN</td>
+          <td>TIDAK DISETUJUI</td>
+        </tr>
+        <tr>
+          <td id="ck-atasan-disetujui">-</td>
+          <td>-</td>
+          <td>-</td>
+          <td>-</td>
+        </tr>
+        <tr>
+          <td colspan="3" class="no-border"></td>
+          <td class="text-center position-relative" style="height: 120px">
+            <br /><br />
+            <img
+              src=""
+              id="ttd-kapus"
+              class="ttd-kapus"
+              style="display: none"
+            /><br />
+            <div class="nama-kapus mt-2">
+              <br /><strong><u id="nama-kapus-text">-</u></strong
+              ><br /><span id="nip-kapus-text">-</span>
+            </div>
+          </td>
+        </tr>
+      </table>
+
+      <!-- VIII. KEPUTUSAN PEJABAT YANG BERWENANG MEMBERIKAN CUTI -->
+      <table class="table table-bordered">
+        <tr>
+          <th colspan="4">
+            VIII. KEPUTUSAN PEJABAT YANG BERWENANG MEMBERIKAN CUTI
+          </th>
+        </tr>
+        <tr>
+          <td>DISETUJUI</td>
+          <td>PERUBAHAN</td>
+          <td>DITANGGUHKAN</td>
+          <td>TIDAK DISETUJUI</td>
+        </tr>
+        <tr>
+          <td id="ck-pejabat-disetujui">-</td>
+          <td>-</td>
+          <td>-</td>
+          <td>-</td>
+        </tr>
+        <tr>
+          <td colspan="4" class="no-border"></td>
+        </tr>
+      </table>
+    </div>
+
+    <script>
+      const API_URL =
+        "https://script.google.com/macros/s/AKfycbzt6xv3yHqeRiTrNcmghTwAq5cgpJ873CF3S4t4XC5qQTa60fcUFILFIdOk9KFaO0o2/exec";
+
+      function formatDate(dateString) {
+        if (!dateString) return "-";
+        const d = new Date(dateString);
+        if (isNaN(d)) return dateString;
+        return d.toLocaleDateString("id-ID", {
+          day: "2-digit",
+          month: "long",
+          year: "numeric",
+        });
+      }
+
+      function hitungMasaKerja(nip) {
+        if (!nip || nip.length !== 18) return "-";
+        const tahunPengangkatan = parseInt(nip.substring(8, 12), 10);
+        if (isNaN(tahunPengangkatan))
+          return "Tahun pengangkatan dalam NIP tidak valid";
+
+        const tanggalPengangkatan = new Date(`${tahunPengangkatan}-01-01`);
+        const sekarang = new Date();
+        let tahun = sekarang.getFullYear() - tanggalPengangkatan.getFullYear();
+        let bulan = sekarang.getMonth() - tanggalPengangkatan.getMonth();
+        if (bulan < 0) {
+          tahun--;
+          bulan += 12;
+        }
+        return `${tahun} Tahun ${bulan} Bulan`;
+      }
+
+      function fetchCutiData(no) {
+        return new Promise((resolve, reject) => {
+          const callbackName = "handleFormPengajuan_" + Date.now();
+          const script = document.createElement("script");
+          script.src = `${API_URL}?callback=${callbackName}&t=${Date.now()}`;
+          window[callbackName] = (response) => {
+            if (response.error) reject(response.error);
+            else resolve(response.find((item) => item["No"] == no));
+            document.body.removeChild(script);
+            delete window[callbackName];
+          };
+          script.onerror = () => {
+            reject("Gagal memuat data dari server");
+            document.body.removeChild(script);
+            delete window[callbackName];
+          };
+          document.body.appendChild(script);
+        });
+      }
+
+      // PERBAIKAN: ambil sisa cuti dari API_URL yang sama
+      function fetchSisaCuti(nip) {
+        return new Promise((resolve, reject) => {
+          const callbackName = "handleSisaCuti_" + Date.now();
+          const script = document.createElement("script");
+          script.src = `${API_URL}?action=getSisa&callback=${callbackName}&t=${Date.now()}`;
+          window[callbackName] = (response) => {
+            if (!response || response.error)
+              reject(response?.error || "Gagal memuat data sisa cuti");
+            else {
+              // nama kolom di sheet: harus sama dengan yang ada di Sheet "Sisa"
+              const row = response.find(
+                (r) => r["NIP"] === nip || r["nip"] === nip
+              );
+              resolve(row || null);
+            }
+            document.body.removeChild(script);
+            delete window[callbackName];
+          };
+          script.onerror = () => {
+            reject("Gagal memuat data sisa cuti dari server");
+            document.body.removeChild(script);
+            delete window[callbackName];
+          };
+          document.body.appendChild(script);
+        });
+      }
+
+      document.addEventListener("DOMContentLoaded", async function () {
+        const params = new URLSearchParams(window.location.search);
+        const no = params.get("no");
+        if (!no) {
+          alert("❗ Kode cuti tidak ditemukan di URL.");
+          return;
+        }
+
+        try {
+          const data = await fetchCutiData(no);
+          if (!data) {
+            alert("❗ Data cuti tidak ditemukan.");
+            return;
+          }
+
+          // Tampilkan data pegawai
+          document.getElementById("data-nama").textContent =
+            data["Nama Pegawai"] || "-";
+          document.getElementById("data-nip").textContent = data["NIP"] || "-";
+          document.getElementById("data-jabatan").textContent =
+            data["Jabatan"] || "-";
+          document.getElementById("lama_kerja").textContent = hitungMasaKerja(
+            data["NIP"]
+          );
+          document.getElementById("tgl_input").textContent = formatDate(
+            data["Tanggal Pengajuan"]
+          );
+          document.getElementById("data-keterangan").textContent =
+            data["Keterangan"] || "-";
+          document.getElementById("lama-cuti-hari").textContent = data[
+            "Lama Cuti"
+          ]
+            ? data["Lama Cuti"] + " Hari"
+            : "-";
+          document.getElementById("tgl-awal").textContent = formatDate(
+            data["Tanggal Mulai"]
+          );
+          document.getElementById("tgl-akhir").textContent = formatDate(
+            data["Tanggal Selesai"]
+          );
+          document.getElementById("alamat-cuti").textContent =
+            data["Alamat"] || "-";
+          document.getElementById("telp-cuti").textContent =
+            data["Telp"] || "-";
+
+          // Jenis cuti
+          const jenisCutiIdMap = {
+            "Cuti Tahunan": "ck-cutiTahunan",
+            "Cuti Besar": "ck-cutiBesar",
+            "Cuti Sakit": "ck-cutiSakit",
+            "Cuti Melahirkan": "ck-cutiMelahirkan",
+            "Cuti Karena Alasan Penting": "ck-cutiAlasanPenting",
+            "Cuti di Luar Tanggungan Negara": "ck-cutiLuarTN",
+          };
+          if (jenisCutiIdMap[data["Jenis Cuti"]]) {
+            document.getElementById(
+              jenisCutiIdMap[data["Jenis Cuti"]]
+            ).textContent = "✔️";
+          }
+
+          // Tanda tangan pemohon
+          if (data["TTD Pemohon URL"]) {
+            const imgPem = document.getElementById("ttd-pemohon");
+            imgPem.src = data["TTD Pemohon URL"];
+            imgPem.style.display = "block";
+          }
+          document.getElementById("ttd-nama-pemohon").textContent =
+            data["Nama Pegawai"] || "-";
+          document.getElementById("ttd-nip-pemohon").textContent =
+            data["NIP"] || "-";
+
+          // Tanda tangan atasan (Kapus)
+          const namaKapusEl = document.getElementById("nama-kapus-text");
+          const nipKapusEl = document.getElementById("nip-kapus-text");
+
+          namaKapusEl.textContent = "dr. Murti Rukiyandari";
+          nipKapusEl.textContent = "NIP. 19800611 200903 2 004";
+          nipKapusEl.style.fontWeight = "bold"; // bikin NIP tebal
+
+          if ((data["Status Override"] || "").toLowerCase() === "disetujui") {
+            document.getElementById("ck-atasan-disetujui").textContent = "✔️";
+
+            if (data["TTD Kapus URL"]) {
+              const imgKapus = document.getElementById("ttd-kapus");
+              imgKapus.src = data["TTD Kapus URL"];
+              imgKapus.style.display = "block";
+            }
+          } else {
+            // Sembunyikan tanda tangan jika belum disetujui
+            const imgKapus = document.getElementById("ttd-kapus");
+            if (imgKapus) imgKapus.style.display = "none";
+            document.getElementById("ck-atasan-disetujui").textContent = "";
+          }
+
+          // Ambil sisa cuti
+          try {
+            const sisaCutiData = await fetchSisaCuti(data["NIP"]);
+            if (sisaCutiData) {
+              const tahunSekarang = new Date().getFullYear();
+              document.getElementById("sisa-cuti-N").textContent =
+                sisaCutiData[tahunSekarang] ?? "-";
+              document.getElementById("sisa-cuti-N1").textContent =
+                sisaCutiData[tahunSekarang - 1] ?? "-";
+              document.getElementById("sisa-cuti-N2").textContent =
+                sisaCutiData[tahunSekarang - 2] ?? "-";
+              document.getElementById("sisa-cuti-N3").textContent =
+                sisaCutiData[tahunSekarang - 3] ?? "-";
+            }
+          } catch (err) {
+            console.error("Gagal memuat data sisa cuti:", err);
+          }
+        } catch (err) {
+          console.error(err);
+          alert("❗ Terjadi kesalahan memuat data.");
+        }
+      });
+      function downloadPDF() {
+        const el = document.getElementById("formulir-cuti");
+        const btn = document.getElementById("btnDownloadPDF");
+
+        el.classList.add("pdf-mode");
+        btn.style.display = "none";
+        const namaPegawai = data["Nama Pegawai"] || "pegawai";
+        const opt = {
+          margin: 0,
+          filename: `formulir-cuti-${namaPegawai}.pdf`, // <-- template literal
+          image: { type: "jpeg", quality: 1 },
+          html2canvas: {
+            scale: 3,
+            useCORS: true,
+          },
+          jsPDF: {
+            unit: "mm",
+            format: [216, 356], // Ukuran F4 manual
+            orientation: "portrait",
+          },
+          pagebreak: { mode: ["avoid-all", "css", "legacy"] },
+        };
+
+        html2pdf()
+          .set(opt)
+          .from(el)
+          .save()
+          .then(() => {
+            el.classList.remove("pdf-mode");
+            btn.style.display = "inline-block";
+          })
+          .catch((err) => {
+            console.error("Error generating PDF:", err);
+            el.classList.remove("pdf-mode");
+            btn.style.display = "inline-block";
+          });
+      }
+    </script>
+  </body>
+</html>

@@ -368,6 +368,7 @@
                 <th>Lama</th>
                 <th>Status</th>
                 <th width="300px">Keterangan</th>
+                <th>File Permohonan</th>
                 <th>File</th>
                 <th>Tanggal Pengajuan</th>
                 <th width="150px">Aksi</th>
@@ -416,6 +417,31 @@
         </div>
       </div>
     </div>
+    <!-- Modal Form Permohonan -->
+    <div class="modal fade" id="modalFormPermohonan" tabindex="-1">
+      <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title">Form Permohonan Cuti</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body p-0">
+            <!-- iframe untuk load halaman form -->
+            <iframe
+              id="iframeFormPermohonan"
+              src=""
+              frameborder="0"
+              style="width: 100%; height: 600px"
+            ></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Script -->
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
     <!-- SweetAlert2 -->
@@ -447,7 +473,14 @@
         const year = d.getFullYear();
         return `${day}/${month}/${year}`;
       }
-
+      function openFormPermohonan(no) {
+        const iframe = document.getElementById("iframeFormPermohonan");
+        iframe.src = `form_permohonan.html?no=${no}`;
+        const modal = new bootstrap.Modal(
+          document.getElementById("modalFormPermohonan")
+        );
+        modal.show();
+      }
       // Render baris tabel
       function renderRow(row, i) {
         let statusBadge = `<span class="badge bg-secondary">Menunggu</span>`;
@@ -480,6 +513,15 @@
             <td>${row["Lama Cuti"]} Hari</td>
             <td>${statusBadge}</td>
             <td>${row["Keterangan"] || "-"}</td>
+            <td>
+              <a href="javascript:void(0);" 
+                class="text-danger" 
+                onclick="openFormPermohonan('${row["No"]}')"
+                title="Lihat Form Permohonan">
+                <i class="fa-solid fa-file-pdf fa-lg"></i>
+              </a>
+            </td>
+
             <td>${
               row["File Pendukung"]
                 ? `<a href="${row["File Pendukung"]}" target="_blank"><i class="fa fa-file-pdf text-danger"></i></a>`
