@@ -29,12 +29,13 @@
         width: auto;
         object-fit: contain;
         position: absolute;
+        top: 0; /* dari atas parent */
         left: 50%;
         transform: translateX(-50%);
         z-index: 2;
       }
       .ttd-kapus {
-        bottom: 40px;
+        bottom: 20px;
         height: 170px;
         transform: translate(-60%, -20%);
       }
@@ -370,6 +371,9 @@
       const API_URL =
         "https://script.google.com/macros/s/AKfycbzt6xv3yHqeRiTrNcmghTwAq5cgpJ873CF3S4t4XC5qQTa60fcUFILFIdOk9KFaO0o2/exec";
 
+      // variabel global untuk menyimpan data cuti
+      let formDataCuti = null;
+
       function formatDate(dateString) {
         if (!dateString) return "-";
         const d = new Date(dateString);
@@ -384,9 +388,7 @@
       function hitungMasaKerja(nip) {
         if (!nip || nip.length !== 18) return "-";
         const tahunPengangkatan = parseInt(nip.substring(8, 12), 10);
-        if (isNaN(tahunPengangkatan))
-          return "Tahun pengangkatan dalam NIP tidak valid";
-
+        if (isNaN(tahunPengangkatan)) return "-";
         const tanggalPengangkatan = new Date(`${tahunPengangkatan}-01-01`);
         const sekarang = new Date();
         let tahun = sekarang.getFullYear() - tanggalPengangkatan.getFullYear();
@@ -418,7 +420,6 @@
         });
       }
 
-      // PERBAIKAN: ambil sisa cuti dari API_URL yang sama
       function fetchSisaCuti(nip) {
         return new Promise((resolve, reject) => {
           const callbackName = "handleSisaCuti_" + Date.now();
@@ -428,7 +429,6 @@
             if (!response || response.error)
               reject(response?.error || "Gagal memuat data sisa cuti");
             else {
-              // nama kolom di sheet: harus sama dengan yang ada di Sheet "Sisa"
               const row = response.find(
                 (r) => r["NIP"] === nip || r["nip"] === nip
               );
@@ -460,6 +460,7 @@
             alert("❗ Data cuti tidak ditemukan.");
             return;
           }
+          formDataCuti = data; // simpan global
 
           // Tampilkan data pegawai
           document.getElementById("data-nama").textContent =
@@ -506,41 +507,35 @@
             ).textContent = "✔️";
           }
 
-          // Tanda tangan pemohon
-          if (data["TTD Pemohon URL"]) {
-            const imgPem = document.getElementById("ttd-pemohon");
-            imgPem.src = data["TTD Pemohon URL"];
-            imgPem.style.display = "block";
-          }
+          // TTD Pemohon: ambil dari URL atau dari NIP
+          const imgPem = document.getElementById("ttd-pemohon");
+          if (data["TTD Pemohon URL"]) imgPem.src = data["TTD Pemohon URL"];
+          else imgPem.src = `ttd/ttd_${data["NIP"]}.png`;
+          imgPem.style.display = "block";
           document.getElementById("ttd-nama-pemohon").textContent =
             data["Nama Pegawai"] || "-";
           document.getElementById("ttd-nip-pemohon").textContent =
             data["NIP"] || "-";
 
-          // Tanda tangan atasan (Kapus)
+          // TTD Kapus
           const namaKapusEl = document.getElementById("nama-kapus-text");
           const nipKapusEl = document.getElementById("nip-kapus-text");
-
           namaKapusEl.textContent = "dr. Murti Rukiyandari";
           nipKapusEl.textContent = "NIP. 19800611 200903 2 004";
-          nipKapusEl.style.fontWeight = "bold"; // bikin NIP tebal
+          nipKapusEl.style.fontWeight = "bold";
 
           if ((data["Status Override"] || "").toLowerCase() === "disetujui") {
             document.getElementById("ck-atasan-disetujui").textContent = "✔️";
-
-            if (data["TTD Kapus URL"]) {
-              const imgKapus = document.getElementById("ttd-kapus");
-              imgKapus.src = data["TTD Kapus URL"];
-              imgKapus.style.display = "block";
-            }
+            const imgKapus = document.getElementById("ttd-kapus");
+            if (data["TTD Kapus URL"]) imgKapus.src = data["TTD Kapus URL"];
+            imgKapus.style.display = "block";
           } else {
-            // Sembunyikan tanda tangan jika belum disetujui
             const imgKapus = document.getElementById("ttd-kapus");
             if (imgKapus) imgKapus.style.display = "none";
             document.getElementById("ck-atasan-disetujui").textContent = "";
           }
 
-          // Ambil sisa cuti
+          // Ambil sisa cuti (N, N1, N2, N3)
           try {
             const sisaCutiData = await fetchSisaCuti(data["NIP"]);
             if (sisaCutiData) {
@@ -562,26 +557,26 @@
           alert("❗ Terjadi kesalahan memuat data.");
         }
       });
+
+      // Fungsi download PDF
       function downloadPDF() {
+        if (!formDataCuti) {
+          alert("❗ Data belum dimuat.");
+          return;
+        }
+
         const el = document.getElementById("formulir-cuti");
         const btn = document.getElementById("btnDownloadPDF");
-
         el.classList.add("pdf-mode");
         btn.style.display = "none";
-        const namaPegawai = data["Nama Pegawai"] || "pegawai";
+
+        const namaPegawai = formDataCuti["Nama Pegawai"] || "pegawai";
         const opt = {
           margin: 0,
-          filename: `formulir-cuti-${namaPegawai}.pdf`, // <-- template literal
+          filename: `formulir-cuti-${namaPegawai}.pdf`,
           image: { type: "jpeg", quality: 1 },
-          html2canvas: {
-            scale: 3,
-            useCORS: true,
-          },
-          jsPDF: {
-            unit: "mm",
-            format: [216, 356], // Ukuran F4 manual
-            orientation: "portrait",
-          },
+          html2canvas: { scale: 3, useCORS: true },
+          jsPDF: { unit: "mm", format: [216, 356], orientation: "portrait" },
           pagebreak: { mode: ["avoid-all", "css", "legacy"] },
         };
 
