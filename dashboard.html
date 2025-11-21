@@ -181,10 +181,13 @@
           ><i class="fa-solid fa-users"></i
           ><span>Lihat Riwayat Cuti Pegawai</span></a
         >
+
+        <!-- pengajuan menu: disembunyikan default, akan tampil jika role sesuai -->
         <a
           href="pengajuan-cuti.html"
           id="menuPengajuan"
           class="d-flex justify-content-between align-items-center"
+          style="display: none"
         >
           <span><i class="fa-solid fa-user-check me-2"></i>Pengajuan Cuti</span>
         </a>
@@ -233,10 +236,13 @@
             ><i class="fa-solid fa-users"></i
             ><span>Lihat Riwayat Cuti Pegawai</span></a
           >
+          <!-- pengajuan mobile: disembunyikan default -->
+
           <a
             href="pengajuan-cuti.html"
             id="menuPengajuanMobile"
             class="d-flex justify-content-between align-items-center"
+            style="display: none"
           >
             <span
               ><i class="fa-solid fa-book-open me-2"></i>Pengajuan Cuti</span
@@ -282,7 +288,8 @@
         Memuat data...
       </div>
     </div>
-    <!-- Content -->
+
+    <!-- Content (sama seperti milik Anda) -->
     <main class="content">
       <!-- Navbar -->
       <nav class="navbar navbar-expand-lg rounded mb-4 px-3 shadow-lg">
@@ -304,12 +311,11 @@
             </div>
             <div class="dropdown">
               <div
-                class="avatar dropdown-toggle"
-                id="avatarDropdown"
+                class="avatar dropdown-toggle d-flex align-items-center justify-content-center"
+                id="avatarInitial"
                 data-bs-toggle="dropdown"
-              >
-                P
-              </div>
+              ></div>
+
               <ul
                 class="dropdown-menu dropdown-menu-end"
                 aria-labelledby="avatarDropdown"
@@ -555,89 +561,246 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- ===== Script utama (perbaikan penuh) ===== -->
     <script>
+      // ----- Global state -----
+      let globalSisaCutiTahunIni = null;
+
+      let globalSisaTahunIniBase = null; // nilai dari sheet Sisa (kolom 2025)
+      let globalSisaTahunLalu = null;
+      let globalSisaDuaTahunLalu = null;
+      let globalCutiData = []; // data dari sheet "Cuti" (dipakai untuk status / badge)
+      const TOTAL_CUTI_TAHUNAN = 12;
+      const TARGET_TAHUN = 2025; // fokus tahun 2025
+
+      // load flags - pastikan kita hitung setelah kedua data ter-load
+      let isCutiLoaded = false;
+      let isSisaLoaded = false;
+
       // === Inisialisasi judul tahun ===
       const tahunSekarang = new Date().getFullYear();
-      document.getElementById(
-        "judulSisaCuti"
-      ).textContent = `Sisa Cuti ${tahunSekarang}`;
+      const judulSisaEl = document.getElementById("judulSisaCuti");
+      if (judulSisaEl) judulSisaEl.textContent = `Sisa Cuti ${tahunSekarang}`;
 
-      document.addEventListener("DOMContentLoaded", () => {
-        const userData = localStorage.getItem("userData");
-        if (!userData) return (window.location.href = "index.html");
-        const user = JSON.parse(userData);
-        console.log("User data:", user);
+      // Normalisasi nama: trim, lowercase, collapse whitespace
+      function normalizeName(s) {
+        if (!s && s !== 0) return "";
+        return String(s)
+          .normalize("NFKD") // lepaskan diakritik jika ada
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/\s+/g, " ")
+          .trim()
+          .toLowerCase();
+      }
 
-        // === Tampilkan nama dan foto profil ===
-        const namaPegawai = document.getElementById("namaPegawai");
-        const avatar = document.querySelector(".avatar");
-        let picUrl = "assets/user/Profile.png";
-        if (user.pic && user.pic.trim() !== "")
-          picUrl = `assets/user/${user.pic}`;
-
-        if (avatar) {
-          avatar.innerHTML = `<img src="${picUrl}" alt="Foto Profil" 
-            style="width:100%;height:100%;object-fit:cover;border-radius:50%;" 
-            onerror="this.src='assets/user/Profile.png'" />`;
+      // Helper: aman parse date (fallback)
+      function parseDateSafe(v) {
+        if (!v && v !== 0) return null;
+        if (v instanceof Date) return isNaN(v.getTime()) ? null : v;
+        // Accept timestamps / numbers
+        if (typeof v === "number") {
+          const dt = new Date(v);
+          return isNaN(dt.getTime()) ? null : dt;
         }
-        if (namaPegawai) namaPegawai.textContent = user.nama || "Pegawai";
-
-        const fotoProfil = document.querySelector("#fotoProfilCard");
-        if (fotoProfil) {
-          fotoProfil.src = picUrl;
-          fotoProfil.onerror = () =>
-            (fotoProfil.src = "assets/user/Profile.png");
+        const s = String(v).trim();
+        // Try ISO / browser parse first
+        const d1 = new Date(s);
+        if (!isNaN(d1.getTime())) return d1;
+        // dd/mm/yyyy or dd/mm/yyyy hh:mm:ss
+        const partsSlash = s.split(" ");
+        const datePart = partsSlash[0];
+        const dp = datePart.split("/");
+        if (dp.length === 3) {
+          const [dd, mm, yyyy] = dp;
+          const dt = new Date(
+            parseInt(yyyy, 10),
+            parseInt(mm, 10) - 1,
+            parseInt(dd, 10)
+          );
+          if (!isNaN(dt.getTime())) return dt;
         }
-        const namaPegawaiCard = document.getElementById("namaPegawaiCard");
-        if (namaPegawaiCard)
-          namaPegawaiCard.textContent = user.nama || "Nama Pegawai";
+        // dd-mm-yyyy
+        const dp2 = datePart.split("-");
+        if (dp2.length === 3) {
+          // detect whether first part is year
+          const p0 = parseInt(dp2[0], 10);
+          if (p0 > 1000) {
+            const dt = new Date(s);
+            if (!isNaN(dt.getTime())) return dt;
+          } else {
+            const [dd, mm, yyyy] = dp2;
+            const dt = new Date(
+              parseInt(yyyy, 10),
+              parseInt(mm, 10) - 1,
+              parseInt(dd, 10)
+            );
+            if (!isNaN(dt.getTime())) return dt;
+          }
+        }
+        return null;
+      }
 
-        // === Role akses menu ===
-        const role = (user.role || "").toLowerCase();
-        const menuPengajuan = document.getElementById("menuPengajuan");
-        const menuPengajuanMobile = document.getElementById(
-          "menuPengajuanMobile"
-        );
+      // Hitung total hari cuti tahunan yang DISSETUJUI untuk tahun tertentu
+      // menghitung hari per tanggal (inklusif) yang jatuh pada tahun target
+      function hitungCutiTahunanDisetujuiTahun(
+        daftarCuti,
+        namaPegawai,
+        tahunTarget
+      ) {
+        if (!Array.isArray(daftarCuti) || !namaPegawai) return 0;
+        let total = 0;
+        const namaLower = normalizeName(namaPegawai);
+
+        for (let i = 0; i < daftarCuti.length; i++) {
+          const c = daftarCuti[i] || {};
+          // multiple possible keys for name
+          const namaRaw =
+            c["Nama Pegawai"] || c["Nama"] || c["nama"] || c["Employee"] || "";
+          const nama = normalizeName(namaRaw);
+          if (nama !== namaLower) continue;
+
+          // jenis cuti: terima variasi, e.g. "Cuti Tahunan", "cuti tahunan", "Tahunan"
+          const jenis = (c["Jenis Cuti"] || c["Jenis"] || c["jenis"] || "")
+            .toString()
+            .toLowerCase();
+          if (!jenis.includes("tahunan")) continue; // hanya cuti tahunan
+
+          // status: terima variasi, cek beberapa kata kunci 'disetujui', 'approve', 'approved'
+          const statusRaw = (c["Status"] || c["status"] || "")
+            .toString()
+            .toLowerCase();
+          const acceptedStatus =
+            statusRaw.includes("disetujui") ||
+            statusRaw.includes("approve") ||
+            statusRaw.includes("approved") ||
+            statusRaw.includes("setuju") ||
+            statusRaw === "ya" ||
+            statusRaw === "1";
+          if (!acceptedStatus) continue;
+
+          const mulai = parseDateSafe(
+            c["Tanggal Mulai"] || c["Mulai"] || c["Start"] || c["tanggal mulai"]
+          );
+          const selesai = parseDateSafe(
+            c["Tanggal Selesai"] ||
+              c["Selesai"] ||
+              c["End"] ||
+              c["tanggal selesai"]
+          );
+
+          // fallback: bila ada kolom Tanggal yang sama (untuk cuti 1 hari)
+          let mulaiFinal = mulai;
+          let selesaiFinal = selesai;
+          if (!mulaiFinal && !selesaiFinal && (c["Tanggal"] || c["tanggal"])) {
+            const t = parseDateSafe(c["Tanggal"] || c["tanggal"]);
+            if (t) {
+              mulaiFinal = t;
+              selesaiFinal = t;
+            }
+          }
+
+          if (!mulaiFinal || !selesaiFinal) continue;
+          if (selesaiFinal < mulaiFinal) continue;
+
+          // iterate inclusive
+          const cur = new Date(
+            mulaiFinal.getFullYear(),
+            mulaiFinal.getMonth(),
+            mulaiFinal.getDate()
+          );
+          const end = new Date(
+            selesaiFinal.getFullYear(),
+            selesaiFinal.getMonth(),
+            selesaiFinal.getDate()
+          );
+          while (cur <= end) {
+            if (cur.getFullYear() === tahunTarget) total++;
+            cur.setDate(cur.getDate() + 1);
+          }
+        }
+        return total;
+      }
+      // === KONTROL MENU BERDASARKAN ROLE ===
+      function kontrolMenu() {
+        const ud = JSON.parse(localStorage.getItem("userData"));
+        if (!ud) return;
+
+        const role = (ud.role || "").toLowerCase();
+        const boleh = role === "admin" || role === "supervisi";
+
+        const menuPeng = document.getElementById("menuPengajuan");
+        const menuPengMobile = document.getElementById("menuPengajuanMobile");
         const menuRiwayat = document.getElementById("menuRiwayat");
         const menuRiwayatMobile = document.getElementById("menuRiwayatMobile");
-        const bolehAksesPengajuan = role === "admin" || role === "supervisi";
-        if (!bolehAksesPengajuan) {
-          menuPengajuan?.remove();
-          menuPengajuanMobile?.remove();
+
+        if (!boleh) {
+          menuPeng?.remove();
+          menuPengMobile?.remove();
           menuRiwayat?.remove();
           menuRiwayatMobile?.remove();
         }
+      }
 
-        // === Render Data Dashboard ===
-        function renderDashboard(data) {
+      // === RENDER UI ===
+      function renderUI() {
+        document.getElementById("sisaDuaTahunLalu").textContent =
+          globalSisaDuaTahunLalu;
+        document.getElementById("sisaTahunLalu").textContent =
+          globalSisaTahunLalu;
+        document.getElementById("sisaTahunIni").textContent =
+          globalSisaTahunIniBase;
+
+        document.getElementById("cutiDipakai").textContent = totalDiambil;
+        document.getElementById("totalSisaCuti").textContent = totalSisa;
+      }
+      // Render dashboard (status, badge, sisa berdasarkan koreksi)
+      // renderDashboard sekarang lebih defensif: memeriksa apakah base sisa sudah ada
+      function renderDashboard(data, user) {
+        try {
           if (!Array.isArray(data)) data = data.data || [];
+          globalCutiData = Array.isArray(data) ? data : [];
 
-          const semuaCutiPegawai = data.filter(
+          const semuaCutiPegawai = globalCutiData.filter(
             (c) =>
-              (c["Nama Pegawai"] || "").trim().toLowerCase() ===
-              (user.nama || "").trim().toLowerCase()
+              normalizeName(
+                c["Nama Pegawai"] || c["Nama"] || c["nama"] || ""
+              ) === normalizeName(user.nama || "")
           );
 
           // Status terakhir
           let statusTerakhir = "Belum ada pengajuan";
           let tanggalPengajuanTerakhir = "-";
           if (semuaCutiPegawai.length > 0) {
-            semuaCutiPegawai.sort(
-              (a, b) =>
-                new Date(b["Tanggal Mulai"]) - new Date(a["Tanggal Mulai"])
-            );
+            semuaCutiPegawai.sort((a, b) => {
+              const da =
+                parseDateSafe(a["Tanggal Mulai"] || a["Mulai"] || a["Start"]) ||
+                new Date(0);
+              const db =
+                parseDateSafe(b["Tanggal Mulai"] || b["Mulai"] || b["Start"]) ||
+                new Date(0);
+              return db - da;
+            });
             statusTerakhir =
-              semuaCutiPegawai[0]["Status"] || "Belum ada status";
-            const tglRaw = semuaCutiPegawai[0]["Tanggal Pengajuan"] || "-";
+              semuaCutiPegawai[0]["Status"] ||
+              semuaCutiPegawai[0]["status"] ||
+              "Belum ada status";
+            const tglRaw =
+              semuaCutiPegawai[0]["Tanggal Pengajuan"] ||
+              semuaCutiPegawai[0]["Tanggal"] ||
+              semuaCutiPegawai[0]["tanggal"] ||
+              "-";
             if (tglRaw !== "-") {
-              const tgl = new Date(tglRaw);
-              tanggalPengajuanTerakhir = tgl.toLocaleDateString("id-ID", {
-                day: "2-digit",
-                month: "long",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              });
+              const tgl = parseDateSafe(tglRaw);
+              if (tgl) {
+                tanggalPengajuanTerakhir = tgl.toLocaleDateString("id-ID", {
+                  day: "2-digit",
+                  month: "long",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                });
+              }
             }
           }
 
@@ -648,7 +811,8 @@
           };
           let badgeClass = "bg-secondary";
           Object.keys(statusMap).forEach((k) => {
-            if (statusTerakhir.includes(k)) badgeClass = statusMap[k];
+            if (String(statusTerakhir).toLowerCase().includes(k.toLowerCase()))
+              badgeClass = statusMap[k];
           });
 
           const statusEl = document.getElementById("statusPengajuan");
@@ -657,38 +821,23 @@
               <small class="d-block mt-1">Tanggal Pengajuan: ${tanggalPengajuanTerakhir}</small>`;
           }
 
-          // Hitung cuti tahunan dari data Cuti
-          const userCutiTahunan = data.filter(
-            (c) =>
-              (c["Nama Pegawai"] || "").trim().toLowerCase() ===
-                (user.nama || "").trim().toLowerCase() &&
-              (c["Jenis Cuti"] || "").trim() === "Cuti Tahunan" &&
-              (c["Status"] || "").trim() === "Disetujui"
-          );
-          let totalTerpakai = 0;
-          userCutiTahunan.forEach((c) => {
-            const lama = parseFloat(c["Lama Cuti"]);
-            totalTerpakai += isNaN(lama) ? 0 : lama;
-          });
+          // Handle menu pengajuan visibility (desktop + mobile)
+          const role = (user.role || "").toString().toLowerCase();
+          const bolehAksesPengajuan = role === "admin" || role === "supervisi";
+          const menuPeng = document.getElementById("menuPengajuan");
+          const menuPengMobile = document.getElementById("menuPengajuanMobile");
+          if (menuPeng)
+            menuPeng.style.display = bolehAksesPengajuan ? "" : "none";
+          if (menuPengMobile)
+            menuPengMobile.style.display = bolehAksesPengajuan ? "" : "none";
 
-          const totalCutiTahunan = 12;
-          const sisa = Math.max(totalCutiTahunan - totalTerpakai, 0);
-          document.getElementById(
-            "cutiTerpakai"
-          ).textContent = `Cuti Terpakai: ${totalTerpakai}`;
-          document.getElementById("cutiProgress").style.width =
-            (totalTerpakai / totalCutiTahunan) * 100 + "%";
-
-          // Jika sheet SisaCuti belum dimuat, tampilkan default sisa hitung manual
-          const sisaEl = document.getElementById("sisaCuti");
-          if (sisaEl.textContent.trim() === "" || sisaEl.textContent === "0") {
-            sisaEl.textContent = sisa;
-          }
-
-          // Badge pengajuan
+          // Jika role boleh akses, hitung jumlah pengajuan menunggu dan tampilkan badge
           if (bolehAksesPengajuan) {
-            const pengajuanMenunggu = data.filter((c) =>
-              (c["Status"] || "").toLowerCase().includes("menunggu")
+            const pengajuanMenunggu = globalCutiData.filter((c) =>
+              (c["Status"] || c["status"] || "")
+                .toString()
+                .toLowerCase()
+                .includes("menunggu")
             ).length;
 
             function setBadge(el) {
@@ -706,172 +855,296 @@
                 el.appendChild(span);
               }
             }
-            setBadge(menuPengajuan);
-            setBadge(menuPengajuanMobile);
+            setBadge(menuPeng);
+            setBadge(menuPengMobile);
           }
 
-          // Sembunyikan loading
+          // --- Sisa cuti untuk tahun TARGET_TAHUN ---
+          // Pastikan base sisa telah di-load dari sheet Sisa. Jika belum, jangan hitung final.
+          if (globalSisaTahunIniBase === null || !isSisaLoaded) {
+            // Tampilkan loading / placeholder sampai data Sisa tersedia
+            const elSisa = document.getElementById("sisaCuti");
+            if (elSisa) elSisa.textContent = "…";
+            const elTerpakai = document.getElementById("cutiTerpakai");
+            if (elTerpakai) elTerpakai.textContent = `Cuti Terpakai: …`;
+            const elProgress = document.getElementById("cutiProgress");
+            if (elProgress) elProgress.style.width = `0%`;
+            // jangan lanjutkan sampai sisa base ada
+            return;
+          }
+
+          let baseSisa = Number(globalSisaTahunIniBase) || 0;
+
+          // Hitung total hari cuti tahunan disetujui di tahun TARGET_TAHUN
+          const hariCutiTahunanDisetujui = hitungCutiTahunanDisetujuiTahun(
+            globalCutiData,
+            user.nama || "",
+            TARGET_TAHUN
+          );
+
+          // Koreksi sisa: base minus approved annual days in that year
+          const sisaAdjusted = Math.max(baseSisa - hariCutiTahunanDisetujui, 0);
+
+          // Set global final sisa agar bagian lain bisa membaca
+          globalSisaCutiTahunIni = sisaAdjusted;
+
+          // Persentase berdasarkan SISA
+          const persen = Math.min(
+            Math.max((sisaAdjusted / TOTAL_CUTI_TAHUNAN) * 100, 0),
+            100
+          );
+
+          // Update DOM
+          const elSisa = document.getElementById("sisaCuti");
+          if (elSisa) elSisa.textContent = sisaAdjusted;
+
+          const elSisaLalu = document.getElementById("sisaCutiLalu");
+          if (elSisaLalu && globalSisaTahunLalu !== null)
+            elSisaLalu.textContent = globalSisaTahunLalu;
+
+          const elSisaDua = document.getElementById("sisaCutiDua");
+          if (elSisaDua && globalSisaDuaTahunLalu !== null)
+            elSisaDua.textContent = globalSisaDuaTahunLalu;
+
+          const elSisaText = document.getElementById("sisaCutiText");
+          if (elSisaText) elSisaText.textContent = sisaAdjusted;
+
+          const elProgress = document.getElementById("cutiProgress");
+          if (elProgress) elProgress.style.width = `${persen}%`;
+          const elProgressAlt = document.getElementById("progressBar");
+          if (elProgressAlt) elProgressAlt.style.width = `${persen}%`;
+
+          // Info terpakai (hanya info)
+          const terpakaiInfo = Math.max(TOTAL_CUTI_TAHUNAN - sisaAdjusted, 0);
+          const elTerpakai = document.getElementById("cutiTerpakai");
+          if (elTerpakai)
+            elTerpakai.textContent = `Cuti Terpakai: ${terpakaiInfo}`;
+
+          // Badge kecil di menu
+          const badgeMenu = document.getElementById("badgeCutiMenu");
+          if (badgeMenu) {
+            badgeMenu.textContent = sisaAdjusted;
+            badgeMenu.style.display =
+              sisaAdjusted > 0 ? "inline-block" : "none";
+          }
+
+          // Sembunyikan loading overlay jika ada
           const loadingOverlay = document.getElementById("loadingOverlay");
           if (loadingOverlay) loadingOverlay.style.display = "none";
+        } catch (err) {
+          console.error("[renderDashboard] error:", err);
         }
+      } // end renderDashboard
 
-        // === Ambil data Cuti ===
-        function ambilData() {
-          window.handleCutiData = function (data) {
+      // fungsi pembantu: panggil render kalau kedua dataset sudah tersedia
+      function tryRenderIfReady(user) {
+        // renderDashboard dapat dipanggil kapan saja, tetapi sekarang kita pastikan
+        // sisa sudah ter-load (isSisaLoaded) agar hasil akhir akurat.
+        renderDashboard(globalCutiData || [], user);
+      }
+
+      // Ambil data Cuti (sheet "Cuti") via JSONP Apps Script
+      function ambilData() {
+        window.handleCutiData = function (data) {
+          try {
             const finalData = Array.isArray(data) ? data : data.data || [];
-            renderDashboard(finalData);
-          };
-
-          const oldScript = document.getElementById("jsonpDashboard");
-          if (oldScript) oldScript.remove();
-
-          const scriptURL =
-            "https://script.google.com/macros/s/AKfycbzt6xv3yHqeRiTrNcmghTwAq5cgpJ873CF3S4t4XC5qQTa60fcUFILFIdOk9KFaO0o2/exec?sheet=Cuti&callback=handleCutiData&_t=" +
-            Date.now();
-          const s = document.createElement("script");
-          s.id = "jsonpDashboard";
-          s.src = scriptURL;
-          s.async = true;
-          document.body.appendChild(s);
-        }
-
-        // === Ambil data SisaCuti (JSONP) ===
-        function ambilSisaCuti() {
-          // buat handler global (JSONP will call this)
-          window.handleSisaCuti = function (data) {
-            try {
-              console.log("[handleSisaCuti] raw data:", data);
-
-              // data bisa berupa array atau {data: [...]}
-              const arr = Array.isArray(data) ? data : data.data || [];
-              console.log(
-                "[handleSisaCuti] normalized array length:",
-                arr.length
-              );
-
-              const tahunIni = new Date().getFullYear();
-              const tahunLalu = tahunIni - 1;
-              const duaTahunLalu = tahunIni - 2;
-
-              const user = JSON.parse(localStorage.getItem("userData") || "{}");
-              const nipUser = (user.nip || "").toString().trim();
-              if (!nipUser) {
-                console.warn("[handleSisaCuti] NIP user kosong.");
-                return;
-              }
-
-              // cari baris yang cocok dengan nip
-              const baris = arr.find(
-                (r) =>
-                  ((r.nip || r.NIP || r["NIP"] || "") + "")
-                    .toString()
-                    .trim() === nipUser
-              );
-
-              if (!baris) {
-                console.warn(
-                  "[handleSisaCuti] baris tidak ditemukan untuk NIP:",
-                  nipUser
-                );
-                // sembunyikan loading jika ada
-                const ld = document.getElementById("loadingOverlay");
-                if (ld) ld.style.display = "none";
-                return;
-              }
-
-              // ambil kolom tahun — beberapa sheet punya header '2025' sebagai string key
-              const sisaTahunIni =
-                Number(baris[tahunIni] || baris[tahunIni.toString()] || 0) || 0;
-              const sisaTahunLalu =
-                Number(baris[tahunLalu] || baris[tahunLalu.toString()] || 0) ||
-                0;
-              const sisaDuaTahunLalu =
-                Number(
-                  baris[duaTahunLalu] || baris[duaTahunLalu.toString()] || 0
-                ) || 0;
-
-              console.log(
-                "[handleSisaCuti] sisa:",
-                sisaTahunIni,
-                sisaTahunLalu,
-                sisaDuaTahunLalu
-              );
-
-              // update DOM (cek eksistensi dulu)
-              const elJudul = document.getElementById("judulSisaCuti");
-              const elJudulLalu = document.getElementById("judulSisaCutiLalu");
-              const elJudulDua = document.getElementById("judulSisaCutiDua");
-              const elSisa = document.getElementById("sisaCuti");
-              const elSisaLalu = document.getElementById("sisaCutiLalu");
-              const elSisaDua = document.getElementById("sisaCutiDua");
-              const elTerpakai = document.getElementById("cutiTerpakai");
-              const elProgress = document.getElementById("cutiProgress");
-              const badgeMenu = document.getElementById("badgeCutiMenu"); // optional badge in menu
-
-              if (elJudul) elJudul.textContent = `Sisa Cuti ${tahunIni}`;
-              if (elJudulLalu)
-                elJudulLalu.textContent = `Sisa Cuti ${tahunLalu}`;
-              if (elJudulDua)
-                elJudulDua.textContent = `Sisa Cuti ${duaTahunLalu}`;
-
-              if (elSisa) elSisa.textContent = sisaTahunIni;
-              if (elSisaLalu) elSisaLalu.textContent = sisaTahunLalu;
-              if (elSisaDua) elSisaDua.textContent = sisaDuaTahunLalu;
-
-              const totalCuti = 12;
-              const cutiTerpakai = Math.max(totalCuti - sisaTahunIni, 0);
-              const persen = Math.min(
-                Math.max((cutiTerpakai / totalCuti) * 100, 0),
-                100
-              );
-
-              if (elTerpakai)
-                elTerpakai.textContent = `Cuti Terpakai: ${cutiTerpakai}`;
-              if (elProgress) elProgress.style.width = `${persen}%`;
-
-              // update badge menu (jika ada)
-              if (badgeMenu) {
-                badgeMenu.textContent = sisaTahunIni;
-                badgeMenu.style.display =
-                  sisaTahunIni > 0 ? "inline-block" : "none";
-              }
-
-              // sembunyikan loading overlay kalau ada
-              const ld = document.getElementById("loadingOverlay");
-              if (ld) ld.style.display = "none";
-            } catch (err) {
-              console.error("[handleSisaCuti] error:", err);
-              const ld = document.getElementById("loadingOverlay");
-              if (ld) ld.style.display = "none";
+            globalCutiData = finalData;
+            isCutiLoaded = true;
+            const userData = localStorage.getItem("userData");
+            if (userData) {
+              const user = JSON.parse(userData);
+              tryRenderIfReady(user);
             }
-          }; // end handleSisaCuti
+          } catch (err) {
+            console.error("[handleCutiData] error:", err);
+          }
+        };
 
-          // hapus script lama jika ada
-          const old = document.getElementById("jsonpSisaCuti");
-          if (old) old.remove();
+        const oldScript = document.getElementById("jsonpDashboard");
+        if (oldScript) oldScript.remove();
 
-          // panggil Apps Script JSONP (pastikan callback param = handleSisaCuti)
-          const scriptURL =
-            "https://script.google.com/macros/s/AKfycbzt6xv3yHqeRiTrNcmghTwAq5cgpJ873CF3S4t4XC5qQTa60fcUFILFIdOk9KFaO0o2/exec" +
-            "?action=getSisa&callback=handleSisaCuti&_t=" +
-            Date.now();
+        const scriptURL =
+          "https://script.google.com/macros/s/AKfycbzt6xv3yHqeRiTrNcmghTwAq5cgpJ873CF3S4t4XC5qQTa60fcUFILFIdOk9KFaO0o2/exec?sheet=Cuti&callback=handleCutiData&_t=" +
+          Date.now();
+        const s = document.createElement("script");
+        s.id = "jsonpDashboard";
+        s.src = scriptURL;
+        s.async = true;
+        s.onerror = function (e) {
+          console.error("[ambilData] gagal load JSONP", e);
+          const ld = document.getElementById("loadingOverlay");
+          if (ld) ld.style.display = "none";
+        };
+        document.body.appendChild(s);
+      }
 
-          const s = document.createElement("script");
-          s.id = "jsonpSisaCuti";
-          s.src = scriptURL;
-          s.async = true;
-          s.onerror = function (e) {
-            console.error("[ambilSisaCuti] gagal load JSONP", e);
+      // Ambil data SisaCuti (sheet "Sisa") via JSONP Apps Script
+      function ambilSisaCuti() {
+        window.handleSisaCuti = function (data) {
+          try {
+            const arr = Array.isArray(data) ? data : data.data || [];
+
+            const user = JSON.parse(localStorage.getItem("userData") || "{}");
+            const nipUser = (user.nip || "").toString().trim();
+            if (!nipUser) {
+              console.warn("[handleSisaCuti] NIP user kosong.");
+              const ld = document.getElementById("loadingOverlay");
+              if (ld) ld.style.display = "none";
+              return;
+            }
+
+            const baris = arr.find((r) => {
+              const val = (
+                r.nip ||
+                r.NIP ||
+                r["NIP"] ||
+                r.NIP_NUMBER ||
+                r.NIK ||
+                ""
+              )
+                .toString()
+                .trim();
+              return val === nipUser;
+            });
+
+            if (!baris) {
+              console.warn(
+                "[handleSisaCuti] baris tidak ditemukan untuk NIP:",
+                nipUser
+              );
+              const ld = document.getElementById("loadingOverlay");
+              if (ld) ld.style.display = "none";
+              // tetap set flag agar renderDashboard tahu tidak ada data sisa
+              isSisaLoaded = true;
+              globalSisaTahunIniBase = 0;
+              tryRenderIfReady(user);
+              return;
+            }
+
+            // Ambil nilai base dari kolom 2025 (bisa key '2025' atau number 2025)
+            const sisaKol2025 =
+              baris["2025"] !== undefined
+                ? baris["2025"]
+                : baris[2025] !== undefined
+                ? baris[2025]
+                : baris["sisa2025"] !== undefined
+                ? baris["sisa2025"]
+                : baris["sisa"] !== undefined
+                ? baris["sisa"]
+                : 0;
+            const sisaTahunIniBase = Number(sisaKol2025) || 0;
+
+            // Ambil kolom tahun sebelumnya jika ada
+            const tahunIni = new Date().getFullYear();
+            const tahunLalu = tahunIni - 1;
+            const duaTahunLalu = tahunIni - 2;
+            const sisaTahunLalu =
+              Number(baris[tahunLalu] || baris[tahunLalu.toString()] || 0) || 0;
+            const sisaDuaTahunLalu =
+              Number(
+                baris[duaTahunLalu] || baris[duaTahunLalu.toString()] || 0
+              ) || 0;
+
+            // Set global base
+            globalSisaTahunIniBase = sisaTahunIniBase;
+            globalSisaTahunLalu = sisaTahunLalu;
+            globalSisaDuaTahunLalu = sisaDuaTahunLalu;
+
+            isSisaLoaded = true;
+
+            // Update some UI titles
+            const elJudul = document.getElementById("judulSisaCuti");
+            if (elJudul) elJudul.textContent = `Sisa Cuti ${TARGET_TAHUN}`;
+            const elJudulLalu = document.getElementById("judulSisaCutiLalu");
+            if (elJudulLalu) elJudulLalu.textContent = `Sisa Cuti ${tahunLalu}`;
+            const elJudulDua = document.getElementById("judulSisaCutiDua");
+            if (elJudulDua)
+              elJudulDua.textContent = `Sisa Cuti ${duaTahunLalu}`;
+
+            // After loading base, recalc renderDashboard
+            tryRenderIfReady(user);
+
+            // Hide loading (renderDashboard will also hide)
             const ld = document.getElementById("loadingOverlay");
             if (ld) ld.style.display = "none";
-          };
-          document.body.appendChild(s);
+          } catch (err) {
+            console.error("[handleSisaCuti] error:", err);
+            const ld = document.getElementById("loadingOverlay");
+            if (ld) ld.style.display = "none";
+          }
+        }; // end handleSisaCuti
+
+        // remove old script if exists
+        const old = document.getElementById("jsonpSisaCuti");
+        if (old) old.remove();
+
+        // JSONP URL (sheet Sisa)
+        const scriptURL =
+          "https://script.google.com/macros/s/AKfycbzt6xv3yHqeRiTrNcmghTwAq5cgpJ873CF3S4t4XC5qQTa60fcUFILFIdOk9KFaO0o2/exec" +
+          "?action=getSisa&callback=handleSisaCuti&_t=" +
+          Date.now();
+
+        const s = document.createElement("script");
+        s.id = "jsonpSisaCuti";
+        s.src = scriptURL;
+        s.async = true;
+        s.onerror = function (e) {
+          console.error("[ambilSisaCuti] gagal load JSONP", e);
+          const ld = document.getElementById("loadingOverlay");
+          if (ld) ld.style.display = "none";
+        };
+        document.body.appendChild(s);
+      }
+
+      // Main init on DOMContentLoaded
+      document.addEventListener("DOMContentLoaded", () => {
+        // load user data and run initial calls
+        const userData = localStorage.getItem("userData");
+        if (!userData) {
+          return (window.location.href = "index.html");
+        }
+        const user = JSON.parse(userData);
+
+        // Render initial UI from local user (avatar, name) - keep behavior
+        const namaPegawai = document.getElementById("namaPegawai");
+        if (namaPegawai) namaPegawai.textContent = user.nama || "namaPegawai";
+        // Initial Avatar dari Nama (bukan username)
+        const avatarInitial = document.getElementById("avatarInitial");
+        if (avatarInitial) {
+          let initial = "";
+          if (user.nama && user.nama.trim() !== "") {
+            // Ambil huruf pertama dari nama lengkap
+            initial = user.nama.trim().charAt(0).toUpperCase();
+          }
+          avatarInitial.textContent = initial || "?";
         }
 
-        // === Jalankan ===
-        ambilData();
-        ambilSisaCuti();
+        const fotoProfil = document.querySelector("#fotoProfilCard");
+        if (fotoProfil) {
+          let picUrl = "assets/user/Profile.png";
+          if (user.pic && user.pic.trim() !== "")
+            picUrl = `assets/user/${user.pic}`;
+          fotoProfil.src = picUrl;
+          fotoProfil.onerror = () =>
+            (fotoProfil.src = "assets/user/Profile.png");
+        }
+        const namaPegawaiCard = document.getElementById("namaPegawaiCard");
+        if (namaPegawaiCard)
+          namaPegawaiCard.textContent = user.nama || "Nama Pegawai";
+
+        // set menu pengajuan visibility to default (hidden) until renderDashboard decides
+        const menuPeng = document.getElementById("menuPengajuan");
+        const menuPengMobile = document.getElementById("menuPengajuanMobile");
+        if (menuPeng) menuPeng.style.display = "none";
+        if (menuPengMobile) menuPengMobile.style.display = "none";
+
+        // initial fetches
+        ambilData(); // pulls sheet Cuti
+        ambilSisaCuti(); // pulls sheet Sisa
+
+        // refresh data cuti every 10 seconds as original
         setInterval(() => ambilData(), 10000);
+        kontrolMenu();
       });
 
       // === Logout ===
