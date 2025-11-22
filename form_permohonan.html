@@ -366,6 +366,7 @@
         </tr>
       </table>
     </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <script>
       const API_URL =
@@ -524,16 +525,24 @@
           nipKapusEl.textContent = "NIP. 19800611 200903 2 004";
           nipKapusEl.style.fontWeight = "bold";
 
-          if ((data["Status Override"] || "").toLowerCase() === "disetujui") {
+        // ==== TTD Kapus berdasarkan status ====
+          const statusCuti = (data["Status"] || "").trim().toLowerCase();
+          const imgKapus = document.getElementById("ttd-kapus");
+
+          if (statusCuti === "disetujui") {
             document.getElementById("ck-atasan-disetujui").textContent = "✔️";
-            const imgKapus = document.getElementById("ttd-kapus");
-            if (data["TTD Kapus URL"]) imgKapus.src = data["TTD Kapus URL"];
+
+            // prioritas pakai URL dari spreadsheet, jika kosong ambil default
+            imgKapus.src = data["TTD Kapus URL"] 
+              ? data["TTD Kapus URL"] 
+              : "ttd/ttdkapus.png";
+
             imgKapus.style.display = "block";
           } else {
-            const imgKapus = document.getElementById("ttd-kapus");
-            if (imgKapus) imgKapus.style.display = "none";
+            imgKapus.style.display = "none";
             document.getElementById("ck-atasan-disetujui").textContent = "";
           }
+
 
           // Ambil sisa cuti (N, N1, N2, N3)
           try {
@@ -559,41 +568,53 @@
       });
 
       // Fungsi download PDF
-      function downloadPDF() {
-        if (!formDataCuti) {
-          alert("❗ Data belum dimuat.");
-          return;
-        }
+    async function downloadPDF() {
+  if (!formDataCuti) return alert("❗ Data belum dimuat.");
 
-        const el = document.getElementById("formulir-cuti");
-        const btn = document.getElementById("btnDownloadPDF");
-        el.classList.add("pdf-mode");
-        btn.style.display = "none";
+  const el = document.getElementById("formulir-cuti");
+  const btn = document.getElementById("btnDownloadPDF");
 
-        const namaPegawai = formDataCuti["Nama Pegawai"] || "pegawai";
-        const opt = {
-          margin: 0,
-          filename: `formulir-cuti-${namaPegawai}.pdf`,
-          image: { type: "jpeg", quality: 1 },
-          html2canvas: { scale: 3, useCORS: true },
-          jsPDF: { unit: "mm", format: [216, 356], orientation: "portrait" },
-          pagebreak: { mode: ["avoid-all", "css", "legacy"] },
-        };
+  // sembunyikan tombol dulu
+  btn.style.display = "none";
+  el.classList.add("pdf-mode");
 
-        html2pdf()
-          .set(opt)
-          .from(el)
-          .save()
-          .then(() => {
-            el.classList.remove("pdf-mode");
-            btn.style.display = "inline-block";
-          })
-          .catch((err) => {
-            console.error("Error generating PDF:", err);
-            el.classList.remove("pdf-mode");
-            btn.style.display = "inline-block";
-          });
-      }
+  await new Promise(resolve => setTimeout(resolve, 400)); // tunggu layout stabil
+
+  const namaPegawai = formDataCuti["Nama Pegawai"]?.replace(/\s+/g, "_") || "pegawai";
+
+  const opt = {
+    margin: 5,
+    filename: `Formulir_Cuti_${namaPegawai}.pdf`,
+    image: { type: "jpeg", quality: 1.0 },
+    html2canvas: {
+      scale: 3, // aman untuk tanda tangan agar tidak blur
+      useCORS: true,
+      letterRendering: true,
+      scrollY: 0,
+      backgroundColor: "#ffffff"
+    },
+    jsPDF: {
+      unit: "mm",
+      format: "f4",  // ukuran kertas resmi
+      orientation: "portrait"
+    },
+    pagebreak: { mode: ["css", "avoid-all"] }
+  };
+
+  try {
+    await html2pdf().set(opt).from(el).save();
+  } catch (err) {
+    console.error("Gagal membuat PDF:", err);
+    alert("⚠ Terjadi kesalahan saat membuat PDF.");
+  }
+
+  // restore tampilan
+  setTimeout(() => {
+    el.classList.remove("pdf-mode");
+    btn.style.display = "inline-block";
+  }, 500);
+}
+
     </script>
   </body>
 </html>
