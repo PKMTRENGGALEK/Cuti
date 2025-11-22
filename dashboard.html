@@ -196,6 +196,17 @@
         <a href="profile.html"
           ><i class="fa-solid fa-user"></i><span>Profile</span></a
         >
+         <a
+            href="reportbulanan.html"
+            target ="_blank"
+            id="menuReport"
+            class="d-flex justify-content-between align-items-center"
+            style="display: none"
+          >
+            <span
+              ><i class="fa-solid fa-book-open me-2"></i>Report</span
+            >
+          </a>
         <a href="#" onclick="logout()" class="text-danger"
           ><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a
         >
@@ -253,6 +264,17 @@
           <a href="profile.html"
             ><i class="fa-solid fa-user"></i><span>Profile</span></a
           >
+          <a
+            href="reportbulanan.html"
+            target ="_blank"
+            id="menuReport"
+            class="d-flex justify-content-between align-items-center"
+            style="display: none"
+          >
+            <span
+              ><i class="fa-solid fa-book-open me-2"></i>Report</span
+            >
+          </a>
           <a
             href="#"
             class="text-danger"
@@ -728,7 +750,7 @@
 
         const role = (ud.role || "").toLowerCase();
         const boleh = role === "admin" || role === "supervisi";
-
+        const Report = document.getElementById("menureport");
         const menuPeng = document.getElementById("menuPengajuan");
         const menuPengMobile = document.getElementById("menuPengajuanMobile");
         const menuRiwayat = document.getElementById("menuRiwayat");
@@ -739,6 +761,7 @@
           menuPengMobile?.remove();
           menuRiwayat?.remove();
           menuRiwayatMobile?.remove();
+          menuReport?.remove();
         }
       }
 
