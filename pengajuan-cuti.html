@@ -38,6 +38,13 @@
         top: 0;
         left: 0;
       }
+      #tabelPengajuan {
+  font-size: 0.65rem !important;
+}
+
+#tabelPengajuan thead {
+  font-size: 0.63rem !important;
+}
       .sidebar .brand {
         font-weight: 700;
         color: #1f2937;
@@ -368,16 +375,15 @@
             <thead class="table-light">
               <tr class="text-center">
                 <th>No</th>
-                <th>Nama Pegawai</th>
+                <th >Nama Pegawai</th>
                 <th>Jenis Cuti</th>
                 <th>Tanggal Cuti</th>
                 <th>Lama</th>
                 <th>Status</th>
                 <th width="300px">Keterangan</th>
-                <th>File Permohonan</th>
-                <th>File</th>
+                <th width="200px">Dokumen</th>
                 <th>Tanggal Pengajuan</th>
-                <th width="150px">Aksi</th>
+                <th width="250px">Aksi</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -519,20 +525,24 @@
             <td>${row["Lama Cuti"]} Hari</td>
             <td>${statusBadge}</td>
             <td>${row["Keterangan"] || "-"}</td>
-            <td>
+            <td class="text-center">
+              <!-- Form Permohonan -->
               <a href="javascript:void(0);" 
-                class="text-danger" 
-                onclick="openFormPermohonan('${row["No"]}')"
-                title="Lihat Form Permohonan">
-                <i class="fa-solid fa-file-pdf fa-lg"></i>
+                 title="Form Permohonan"
+                 onclick="openFormPermohonan('${row["No"]}')">
+                 <i class="fa-solid fa-file-contract text-primary me-2 fs-5"></i>
               </a>
+
+              <!-- File Pendukung -->
+              ${
+                row["File Pendukung"]
+                  ? `<a href="${row["File Pendukung"]}" target="_blank" title="File Pendukung">
+                        <i class="fa-solid fa-paperclip text-danger fs-5"></i>
+                     </a>`
+                  : ``
+              }
             </td>
 
-            <td>${
-              row["File Pendukung"]
-                ? `<a href="${row["File Pendukung"]}" target="_blank"><i class="fa fa-file-pdf text-danger"></i></a>`
-                : "-"
-            }</td>
             <td>${formatDate(row["Tanggal Pengajuan"])}</td>
             <td>${actionBtn}</td>
           </tr>
