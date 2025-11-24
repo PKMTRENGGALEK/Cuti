@@ -902,8 +902,8 @@
           );
 
           // Koreksi sisa: base minus approved annual days in that year
-          const sisaAdjusted = Math.max(baseSisa - hariCutiTahunanDisetujui, 0);
-
+          // const sisaAdjusted = Math.max(baseSisa - hariCutiTahunanDisetujui, 0);
+          const sisaAdjusted = Number(globalSisaTahunIniBase) || 0;
           // Set global final sisa agar bagian lain bisa membaca
           globalSisaCutiTahunIni = sisaAdjusted;
 

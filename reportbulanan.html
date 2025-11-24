@@ -482,6 +482,40 @@
         setLoading(false);
       }
     };
+    function daysInYearUntilMonth(
+      startDate,
+      endDate,
+      selectedMonth,
+      selectedYear
+    ) {
+      if (!startDate || !endDate) return [];
+
+      const from = new Date(startDate);
+      const to = new Date(endDate);
+
+      const yearStart = new Date(selectedYear, 0, 1);
+      const monthEnd = new Date(
+        selectedYear,
+        selectedMonth,
+        0 // hari terakhir bulan terpilih
+      );
+
+      const start = from > yearStart ? from : yearStart;
+      const end = to < monthEnd ? to : monthEnd;
+
+      if (start > end) return [];
+
+      const days = [];
+      let cur = new Date(start);
+
+      while (cur <= end) {
+        const d = cur.getDay();
+        if (d !== 0 && d !== 6) days.push(1); // 1 = counted
+        cur.setDate(cur.getDate() + 1);
+      }
+
+      return days;
+    }
 
     function processDataAndRender() {
       try {
@@ -525,12 +559,18 @@
           if (!pegawaiMap[nip])
             pegawaiMap[nip] = { nama, jabatan, cutiDays: [] };
 
+          // Hitung cuti HANYA di bulan dipilih
           const days = daysInMonthFromRange(start, end, bulan, tahun);
           days.forEach((d) => {
             if (!pegawaiMap[nip].cutiDays.includes(d)) {
               pegawaiMap[nip].cutiDays.push(d);
             }
           });
+
+          // Hitung cuti akumulasi Jan → bulan terpilih
+          const yearDays = daysInYearUntilMonth(start, end, bulan, tahun);
+          if (!pegawaiMap[nip].totalCutiYear) pegawaiMap[nip].totalCutiYear = 0;
+          pegawaiMap[nip].totalCutiYear += yearDays.length;
         });
 
         Object.values(pegawaiMap).forEach((p) => {
@@ -599,9 +639,10 @@
         Number(
           row[String(tahun - 1)] || row[String(tahun - 1).toString()] || 0
         ) || 0;
-      const jatah =
-        Number(row[String(tahun)] || row[String(tahun).toString()] || 0) || 0;
+      // jatah tahun ini FIX 12 hari
+      const jatah = 12;
 
+      // sisa = 12 - total cuti sampai bulan terpilih
       return { tahun_lalu: tahunLalu, jatah, sisa: jatah - cutiDiambil };
     }
 
@@ -671,7 +712,7 @@
         let no = 1;
 
         entries.forEach(([nip, p]) => {
-          const cutiDiambil = p.totalCuti || 0;
+          const cutiDiambil = p.totalCutiYear || 0;
           const sisa = getSisaCutiFromSheet(nip, data.tahun, cutiDiambil);
           const duaTahun = getSisaDuaTahunLalu(nip, data.tahun);
 
@@ -697,7 +738,7 @@
 
           tbody += `
             <td class="text-center">${cutiDiambil}</td>
-            <td class="text-center">${sisa.jatah}</td>
+           <td class="text-center">${12 - cutiDiambil}</td>
             <td class="text-center">${sisa.tahun_lalu}</td>
             <td class="text-center">${duaTahun}</td>
           </tr>`;
