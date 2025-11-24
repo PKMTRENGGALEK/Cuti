@@ -490,27 +490,27 @@
     ) {
       if (!startDate || !endDate) return [];
 
-      const from = new Date(startDate);
-      const to = new Date(endDate);
+      const start = new Date(startDate);
+      const end = new Date(endDate);
 
-      const yearStart = new Date(selectedYear, 0, 1);
-      const monthEnd = new Date(
-        selectedYear,
-        selectedMonth,
-        0 // hari terakhir bulan terpilih
-      );
+      // batas maksimal hanya sampai akhir bulan terpilih
+      const limit = new Date(selectedYear, selectedMonth, 0);
 
-      const start = from > yearStart ? from : yearStart;
-      const end = to < monthEnd ? to : monthEnd;
+      const from = start;
+      const to = end < limit ? end : limit;
 
-      if (start > end) return [];
+      if (from > to) return [];
 
       const days = [];
-      let cur = new Date(start);
+      let cur = new Date(from);
 
-      while (cur <= end) {
+      while (cur <= to) {
         const d = cur.getDay();
-        if (d !== 0 && d !== 6) days.push(1); // 1 = counted
+
+        // hari kerja saja dihitung
+        if (d !== 0 && d !== 6) {
+          days.push(cur.getDate());
+        }
         cur.setDate(cur.getDate() + 1);
       }
 
@@ -569,6 +569,8 @@
 
           // Hitung cuti akumulasi Jan → bulan terpilih
           const yearDays = daysInYearUntilMonth(start, end, bulan, tahun);
+
+          // jangan hitung sampai akhir bulan, cukup range asli tanggal cuti saja
           if (!pegawaiMap[nip].totalCutiYear) pegawaiMap[nip].totalCutiYear = 0;
           pegawaiMap[nip].totalCutiYear += yearDays.length;
         });
@@ -620,7 +622,7 @@
       }
     }
 
-    function getSisaCutiFromSheet(nip, tahun, cutiDiambil) {
+    function getSisaCuti(nip, tahun) {
       const row = sisaList.find((r) => {
         const rnipRaw =
           r["NIP"] ||
@@ -633,29 +635,19 @@
         return rnip === nip;
       });
 
-      if (!row) return { tahun_lalu: 0, jatah: 0, sisa: 0 };
+      if (!row) {
+        return {
+          dua_tahun_lalu: 0,
+          tahun_lalu: 0,
+          tahun_ini: 0,
+        };
+      }
 
-      const tahunLalu =
-        Number(
-          row[String(tahun - 1)] || row[String(tahun - 1).toString()] || 0
-        ) || 0;
-      // jatah tahun ini FIX 12 hari
-      const jatah = 12;
-
-      // sisa = 12 - total cuti sampai bulan terpilih
-      return { tahun_lalu: tahunLalu, jatah, sisa: jatah - cutiDiambil };
-    }
-
-    function getSisaDuaTahunLalu(nip, tahun) {
-      const row = sisaList.find((r) => {
-        const rnipRaw = r["NIP"] || r["Nip"] || r["nip"] || r["NIP/NIP"] || "";
-        const rnip = String(rnipRaw).trim().replace(/\D/g, "");
-        return rnip === nip;
-      });
-
-      if (!row) return 0;
-
-      return Number(row[String(tahun - 2)]) || 0;
+      return {
+        dua_tahun_lalu: Number(row[String(tahun - 2)]) || 0,
+        tahun_lalu: Number(row[String(tahun - 1)]) || 0,
+        tahun_ini: Number(row[String(tahun)]) || 0,
+      };
     }
 
     function renderTable() {
@@ -673,6 +665,7 @@
             <th rowspan="2" style="white-space:nowrap;">NIK</th>
             <th colspan="${data.jumlahHari}" style="width:40px;">TANGGAL</th>
             <th rowspan="2" style="white-space:nowrap;">TOTAL</th>
+            
             <th rowspan="2" style="white-space:nowrap;">SISA CUTI ${
               data.tahun
             }</th>
@@ -713,8 +706,7 @@
 
         entries.forEach(([nip, p]) => {
           const cutiDiambil = p.totalCutiYear || 0;
-          const sisa = getSisaCutiFromSheet(nip, data.tahun, cutiDiambil);
-          const duaTahun = getSisaDuaTahunLalu(nip, data.tahun);
+          const s = getSisaCuti(nip, data.tahun);
 
           tbody += `<tr>
             <td class="text-center">${no++}</td>
@@ -738,9 +730,10 @@
 
           tbody += `
             <td class="text-center">${cutiDiambil}</td>
-           <td class="text-center">${12 - cutiDiambil}</td>
-            <td class="text-center">${sisa.tahun_lalu}</td>
-            <td class="text-center">${duaTahun}</td>
+         <td class="text-center">${s.tahun_ini}</td>
+<td class="text-center">${s.tahun_lalu}</td>
+<td class="text-center">${s.dua_tahun_lalu}</td>
+
           </tr>`;
         });
 
