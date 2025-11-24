@@ -881,14 +881,19 @@
           // --- Sisa cuti untuk tahun TARGET_TAHUN ---
           // Pastikan base sisa telah di-load dari sheet Sisa. Jika belum, jangan hitung final.
           if (globalSisaTahunIniBase === null || !isSisaLoaded) {
-            // Tampilkan loading / placeholder sampai data Sisa tersedia
             const elSisa = document.getElementById("sisaCuti");
             if (elSisa) elSisa.textContent = "…";
+
             const elTerpakai = document.getElementById("cutiTerpakai");
             if (elTerpakai) elTerpakai.textContent = `Cuti Terpakai: …`;
+
             const elProgress = document.getElementById("cutiProgress");
             if (elProgress) elProgress.style.width = `0%`;
-            // jangan lanjutkan sampai sisa base ada
+
+            // 🟢 FIX: SEMBUNYIKAN OVERLAY!
+            const overlay = document.getElementById("loadingOverlay");
+            if (overlay) overlay.style.display = "none";
+
             return;
           }
 
