@@ -3,6 +3,10 @@
   rel="stylesheet"
 />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+/>
 
 <style>
   body {
@@ -56,6 +60,18 @@
   #thead th:nth-child(n + 4) {
     width: 22px;
   }
+
+  #loadingBtn {
+    display: none;
+  }
+  #btnTampil,
+  #loadingBtn {
+    min-width: 120px; /* bikin lebar stabil */
+    height: 38px; /* tinggi seragam */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 </style>
 
 <div class="container-fluid p-4">
@@ -68,19 +84,40 @@
 
       <form id="filterForm" method="GET" class="row mb-3">
         <input type="hidden" name="page" value="report" />
-        <div class="col-auto">
-          <select name="bulan" id="bulanSelect" class="form-select"></select>
-        </div>
-        <div class="col-auto">
-          <select name="tahun" id="tahunSelect" class="form-select"></select>
-        </div>
-        <div class="col-auto">
-          <button class="btn btn-success">Tampilkan</button>
-        </div>
-        <div class="col-auto">
-          <button type="button" class="btn btn-primary" id="btnExport">
-            Export Excel
-          </button>
+        <div class="row mb-3 d-flex align-items-center justify-content-between">
+          <!-- Bagian kiri -->
+          <div class="col-auto d-flex align-items-center gap-2">
+            <select name="bulan" id="bulanSelect" class="form-select"></select>
+            <select name="tahun" id="tahunSelect" class="form-select"></select>
+
+            <button
+              type="submit"
+              class="btn btn-primary btn-sm shadow"
+              id="btnTampil"
+            >
+              Tampilkan
+            </button>
+
+            <button
+              id="loadingBtn"
+              class="btn btn-success btn-sm shadow"
+              type="button"
+              disabled
+            >
+              loading....
+            </button>
+          </div>
+
+          <!-- Bagian kanan -->
+          <div class="col-auto">
+            <button
+              type="button"
+              class="btn btn-success btn-sm shadow"
+              id="btnExport"
+            >
+              <i class="fa-solid fa-file-excel"></i> Export Excel
+            </button>
+          </div>
         </div>
       </form>
 
@@ -93,398 +130,609 @@
     </div>
   </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 
 <script>
-  /* ========== CONFIG ========== */
-  const url =
-    "https://script.google.com/macros/s/AKfycbyPP_a_WHUCLoCQbC119U335ddf7VZG3qxvqx9RoAddxRqXhRpVsj-WZOaP-78jxB4j/exec";
+  document.addEventListener("DOMContentLoaded", () => {
+    /* ========== CONFIG ========== */
+    const url =
+      "https://script.google.com/macros/s/AKfycbyPP_a_WHUCLoCQbC119U335ddf7VZG3qxvqx9RoAddxRqXhRpVsj-WZOaP-78jxB4j/exec";
 
-  /* ========== STATE ========== */
-  let params = new URLSearchParams(window.location.search);
-  let bulan = Number(params.get("bulan")) || new Date().getMonth() + 1;
-  let tahun = Number(params.get("tahun")) || new Date().getFullYear();
+    /* ========== STATE ========== */
+    let params = new URLSearchParams(window.location.search);
+    let bulan = Number(params.get("bulan")) || new Date().getMonth() + 1;
+    let tahun = Number(params.get("tahun")) || new Date().getFullYear();
 
-  window.orderMap = {};
-
-  const bulanSelect = document.getElementById("bulanSelect");
-  const tahunSelect = document.getElementById("tahunSelect");
-  for (let i = 1; i <= 12; i++) {
-    bulanSelect.innerHTML += `<option value="${i}" ${
-      i === bulan ? "selected" : ""
-    }>${new Date(2025, i - 1, 1).toLocaleString("id", {
-      month: "long",
-    })}</option>`;
-  }
-  for (let t = tahun - 2; t <= tahun; t++) {
-    tahunSelect.innerHTML += `<option value="${t}" ${
-      t === tahun ? "selected" : ""
-    }>${t}</option>`;
-  }
-
-  /* global data containers fetched from GAS */
-  let cutiList = [];
-  let sisaList = [];
-  let data = null;
-
-  /* ========== HELPERS ========== */
-
-  function parseDateFlexible(v) {
-    if (!v && v !== 0) return null;
-    if (v instanceof Date && !isNaN(v)) return v;
-    try {
-      let s = String(v).trim();
-      let d = new Date(s);
-      if (!isNaN(d)) return d;
-      d = new Date(s.replace(/-/g, "/"));
-      if (!isNaN(d)) return d;
-    } catch (e) {}
-    return null;
-  }
-
-  function daysInMonthFromRange(startDate, endDate, month, year) {
-    if (!startDate || !endDate) return [];
-
-    startDate = new Date(
-      startDate.getFullYear(),
-      startDate.getMonth(),
-      startDate.getDate()
-    );
-    endDate = new Date(
-      endDate.getFullYear(),
-      endDate.getMonth(),
-      endDate.getDate()
-    );
-
-    const monthStart = new Date(year, month - 1, 1);
-    const monthEnd = new Date(
-      year,
-      month - 1,
-      new Date(year, month, 0).getDate()
-    );
-
-    const from = startDate > monthStart ? startDate : monthStart;
-    const to = endDate < monthEnd ? endDate : monthEnd;
-
-    if (from > to) return [];
-
-    const days = [];
-    let cur = new Date(from);
-
-    while (cur <= to) {
-      const day = cur.getDay();
-      // Skip Saturday(6) & Sunday(0)
-      if (day !== 0 && day !== 6) {
-        days.push(cur.getDate());
-      }
-      cur.setDate(cur.getDate() + 1);
-    }
-
-    return days;
-  }
-
-  /* ========== PROCESS & RENDER ========== */
-
-  window.handleAll = function (result) {
-    cutiList = Array.isArray(result.cuti)
-      ? result.cuti
-      : (result || []).cuti || [];
-    sisaList = Array.isArray(result.sisa)
-      ? result.sisa
-      : (result || []).sisa || [];
-
-    // Generate orderMap berdasarkan sheet Sisa
     window.orderMap = {};
-    sisaList.forEach((row, index) => {
-      const nipRaw =
-        row["NIP"] ||
-        row["Nip"] ||
-        row["nip"] ||
-        row["No. Induk"] ||
-        row["NIP/NIP"] ||
-        "";
 
-      const nip = String(nipRaw).trim().replace(/\D/g, "");
-      if (nip) orderMap[nip] = index;
-    });
+    const bulanSelect = document.getElementById("bulanSelect");
+    const tahunSelect = document.getElementById("tahunSelect");
 
-    processDataAndRender();
-  };
-
-  function processDataAndRender() {
-    const jumlahHari = new Date(tahun, bulan, 0).getDate();
-    const namaBulan = new Date(tahun, bulan - 1, 1).toLocaleString("id", {
-      month: "long",
-    });
-
-    const pegawaiMap = {};
-
-    /* ========== PROSES CUTI ========== */
-    cutiList.forEach((row) => {
-      // === FILTER: HANYA CUTI TAHUNAN ===
-      const jenis = (row["Jenis Cuti"] || row["jenis"] || "").toLowerCase();
-      if (!jenis.includes("tahunan")) return;
-
-      const nipRaw =
-        row["NIP"] || row["Nip"] || row["nip"] || row["No. Induk"] || "";
-
-      const nip = String(nipRaw).trim().replace(/\D/g, "");
-      if (!nip) return;
-
-      const nama = row["Nama Pegawai"] || row["Nama"] || row["nama"] || "";
-      const jabatan = row["Jabatan"] || row["jabatan"] || "";
-
-      const tglMulai =
-        row["Tanggal Mulai"] ||
-        row["Tgl Mulai"] ||
-        row["Mulai"] ||
-        row["tanggal_mulai"] ||
-        "";
-      const tglSelesai =
-        row["Tanggal Selesai"] ||
-        row["Tgl Selesai"] ||
-        row["Selesai"] ||
-        row["tanggal_selesai"] ||
-        "";
-
-      const start = parseDateFlexible(tglMulai);
-      const end = parseDateFlexible(tglSelesai) || start;
-
-      if (!pegawaiMap[nip]) pegawaiMap[nip] = { nama, jabatan, cutiDays: [] };
-
-      const days = daysInMonthFromRange(start, end, bulan, tahun);
-      days.forEach((d) => {
-        if (!pegawaiMap[nip].cutiDays.includes(d)) {
-          pegawaiMap[nip].cutiDays.push(d);
-        }
-      });
-    });
-
-    Object.values(pegawaiMap).forEach((p) => {
-      p.cutiDays.sort((a, b) => a - b);
-      p.totalCuti = p.cutiDays.length;
-    });
-
-    /* ========== TAMBAHKAN YANG TIDAK PUNYA CUTI ========== */
-    sisaList.forEach((row) => {
-      const nipRaw =
-        row["NIP"] ||
-        row["Nip"] ||
-        row["nip"] ||
-        row["No. Induk"] ||
-        row["NIP/NIP"] ||
-        "";
-
-      const nip = String(nipRaw).trim().replace(/\D/g, "");
-
-      const nama =
-        row["Nama Pegawai"] ||
-        row["Nama"] ||
-        row["Nama Lengarakat"] ||
-        row["Nama Pegawai Lengkap"] ||
-        row["nama"] ||
-        "";
-
-      const jabatan = row["Jabatan"] || "";
-
-      if (nip && !pegawaiMap[nip]) {
-        pegawaiMap[nip] = {
-          nama,
-          jabatan,
-          cutiDays: [],
-          totalCuti: 0,
-        };
-      }
-    });
-
-    data = { namaBulan, tahun, jumlahHari, pegawaiMap, sisaList };
-    renderTable();
-  }
-
-  function getSisaCutiFromSheet(nip, tahun, cutiDiambil) {
-    const row = sisaList.find((r) => {
-      const rnipRaw =
-        r["NIP"] ||
-        r["Nip"] ||
-        r["nip"] ||
-        r["NIP/NIP"] ||
-        r["No. Induk"] ||
-        "";
-      const rnip = String(rnipRaw).trim().replace(/\D/g, "");
-      return rnip === nip;
-    });
-
-    if (!row) return { tahun_lalu: 0, jatah: 0, sisa: 0 };
-
-    const tahunLalu =
-      Number(
-        row[String(tahun - 1)] || row[String(tahun - 1).toString()] || 0
-      ) || 0;
-    const jatah =
-      Number(row[String(tahun)] || row[String(tahun).toString()] || 0) || 0;
-
-    return { tahun_lalu: tahunLalu, jatah, sisa: jatah - cutiDiambil };
-  }
-
-  function getSisaDuaTahunLalu(nip, tahun) {
-    const row = sisaList.find((r) => {
-      const rnipRaw = r["NIP"] || r["Nip"] || r["nip"] || r["NIP/NIP"] || "";
-      const rnip = String(rnipRaw).trim().replace(/\D/g, "");
-      return rnip === nip;
-    });
-
-    if (!row) return 0;
-
-    return Number(row[String(tahun - 2)]) || 0;
-  }
-
-  function renderTable() {
-    document.getElementById(
-      "judulBulan"
-    ).textContent = `BULAN ${data.namaBulan.toUpperCase()} TAHUN ${data.tahun}`;
-
-    let thead = `
-    <tr class="table-primary text-center">
-      <th rowspan="2" style="width:40px; white-space:nowrap;">No</th>
-      <th rowspan="2" style="white-space:nowrap;">NAMA PEGAWAI</th>
-      <th rowspan="2" style="white-space:nowrap;">JABATAN</th>
-      <th colspan="${data.jumlahHari}" style="width:40px;">TANGGAL</th>
-      <th rowspan="2" style="white-space:nowrap;">TOTAL CUTI BULAN INI</th>
-      <th rowspan="2" style="white-space:nowrap;">SISA CUTI TAHUN INI</th>
-      <th rowspan="2" style="white-space:nowrap;">SISA CUTI TAHUN LALU</th>
-      <th rowspan="2" style="white-space:nowrap;">SISA CUTI 2 TAHUN LALU</th>
-    </tr>
-
-    <tr class="table-secondary">`;
-
-    for (let i = 1; i <= data.jumlahHari; i++) {
-      const date = new Date(tahun, bulan - 1, i);
-      const day = date.getDay();
-      const isWeekend = day === 0 || day === 6;
-      const weekendStyle = isWeekend ? 'style="background:#fce4e4;"' : "";
-
-      thead += `<th class="text-center" ${weekendStyle}>${String(i).padStart(
-        2,
-        "0"
-      )}</th>`;
+    // fallback safety: kalau elemen belum ada, stop
+    if (!bulanSelect || !tahunSelect) {
+      console.error("Elemen bulanSelect/tahunSelect tidak ditemukan.");
+      return;
     }
 
-    thead += "</tr>";
+    for (let i = 1; i <= 12; i++) {
+      bulanSelect.innerHTML += `<option value="${i}" ${
+        i === bulan ? "selected" : ""
+      }>${new Date(2025, i - 1, 1).toLocaleString("id", {
+        month: "long",
+      })}</option>`;
+    }
+    for (let t = tahun - 2; t <= tahun; t++) {
+      tahunSelect.innerHTML += `<option value="${t}" ${
+        t === tahun ? "selected" : ""
+      }>${t}</option>`;
+    }
 
-    document.getElementById("thead").innerHTML = thead;
+    /* global data containers fetched from GAS */
+    let cutiList = [];
+    let sisaList = [];
+    let data = null;
 
-    const entries = Object.entries(data.pegawaiMap).sort((a, b) => {
-      const orderA = orderMap[a[0]] ?? 9999;
-      const orderB = orderMap[b[0]] ?? 9999;
-      return orderA - orderB;
-    });
+    /* ========== UI HELPERS ========== */
+    const form = document.getElementById("filterForm");
+    const btnTampil =
+      document.getElementById("btnTampil") ||
+      document.querySelector("#filterForm button[type='submit']");
+    const btnLoad = document.getElementById("loadingBtn");
+    const btnExport = document.getElementById("btnExport");
 
-    let tbody = "";
-    let no = 1;
+    function setLoading(isLoading) {
+      try {
+        if (isLoading) {
+          if (btnTampil) btnTampil.style.display = "none";
+          if (btnLoad) {
+            // isi spinner + teks
+            btnLoad.innerHTML = `
+              <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+              Loading...
+            `;
 
-    entries.forEach(([nip, p]) => {
-      const cutiDiambil = p.totalCuti || 0;
-      const sisa = getSisaCutiFromSheet(nip, data.tahun, cutiDiambil);
-      const duaTahun = getSisaDuaTahunLalu(nip, data.tahun);
+            btnLoad.style.display = "inline-block";
+          }
+          // disable selects & export while loading
+          bulanSelect.disabled = true;
+          tahunSelect.disabled = true;
+          if (btnExport) btnExport.disabled = true;
+        } else {
+          if (btnTampil) btnTampil.style.display = "inline-block";
+          if (btnLoad) {
+            btnLoad.style.display = "none";
+            // restore text (optional)
+            btnLoad.innerHTML = `Memuat...`;
+          }
+          bulanSelect.disabled = false;
+          tahunSelect.disabled = false;
+          if (btnExport) btnExport.disabled = false;
+        }
+      } catch (e) {
+        console.error("setLoading error", e);
+      }
+    }
 
-      tbody += `<tr>
-        <td class="text-center">${no++}</td>
-        <td>${p.nama}</td>
-        <td>${p.jabatan}</td>`;
+    /* ========== HELPERS ========== */
 
-      for (let i = 1; i <= data.jumlahHari; i++) {
-        const date = new Date(tahun, bulan - 1, i);
-        const day = date.getDay();
-        const isWeekend = day === 0 || day === 6;
-        const weekendStyle = isWeekend ? 'style="background:#fce4e4;"' : "";
+    function parseDateFlexible(v) {
+      if (!v && v !== 0) return null;
+      if (v instanceof Date && !isNaN(v)) return v;
+      try {
+        let s = String(v).trim();
+        let d = new Date(s);
+        if (!isNaN(d)) return d;
+        d = new Date(s.replace(/-/g, "/"));
+        if (!isNaN(d)) return d;
+      } catch (e) {}
+      return null;
+    }
 
-        const isCuti = p.cutiDays.includes(i);
-        const cls = isCuti ? "bg-cuti text-center" : "";
+    function daysInMonthFromRange(startDate, endDate, month, year) {
+      if (!startDate || !endDate) return [];
 
-        tbody += `<td ${weekendStyle} class="${cls}">${isCuti ? "1" : ""}</td>`;
+      startDate = new Date(
+        startDate.getFullYear(),
+        startDate.getMonth(),
+        startDate.getDate()
+      );
+      endDate = new Date(
+        endDate.getFullYear(),
+        endDate.getMonth(),
+        endDate.getDate()
+      );
+
+      const monthStart = new Date(year, month - 1, 1);
+      const monthEnd = new Date(
+        year,
+        month - 1,
+        new Date(year, month, 0).getDate()
+      );
+
+      const from = startDate > monthStart ? startDate : monthStart;
+      const to = endDate < monthEnd ? endDate : monthEnd;
+
+      if (from > to) return [];
+
+      const days = [];
+      let cur = new Date(from);
+
+      while (cur <= to) {
+        const day = cur.getDay();
+        // Skip Saturday(6) & Sunday(0)
+        if (day !== 0 && day !== 6) {
+          days.push(cur.getDate());
+        }
+        cur.setDate(cur.getDate() + 1);
       }
 
-      tbody += `
-        <td class="text-center">${cutiDiambil}</td>
-        <td class="text-center">${sisa.jatah}</td>
-        <td class="text-center">${sisa.tahun_lalu}</td>
-        <td class="text-center">${duaTahun}</td>
-      </tr>`;
-    });
+      return days;
+    }
 
-    document.getElementById("tbody").innerHTML = tbody;
-  }
+    /* ========== PROCESS & RENDER ========== */
 
-  /* ========== FETCH ========== */
-  function fetchAllData() {
-    const callbackName = "handleAll";
-    const src = `${url}?action=getAll&callback=${callbackName}`;
-    const script = document.createElement("script");
-    script.src = src;
-    script.onerror = () => console.error("GAS request failed");
-    document.body.appendChild(script);
-  }
+    // JSONP callback
+    window.handleAll = function (result) {
+      try {
+        cutiList = Array.isArray(result.cuti)
+          ? result.cuti
+          : (result || []).cuti || [];
+        sisaList = Array.isArray(result.sisa)
+          ? result.sisa
+          : (result || []).sisa || [];
 
-  /* ========== EXPORT ========== */
-  function exportExcel() {
-    const table = document.getElementById("reportTable");
-    if (!table) return alert("Tabel belum tersedia.");
+        // Generate orderMap berdasarkan sheet Sisa
+        window.orderMap = {};
+        sisaList.forEach((row, index) => {
+          const nipRaw =
+            row["NIP"] ||
+            row["Nip"] ||
+            row["nip"] ||
+            row["No. Induk"] ||
+            row["NIP/NIP"] ||
+            "";
+          const nip = String(nipRaw).trim().replace(/\D/g, "");
+          if (nip) orderMap[nip] = index;
+        });
 
-    const theadEl = table.querySelector("thead");
-    const headerRows = Array.from(theadEl.querySelectorAll("tr"));
-    const aoa = [];
+        processDataAndRender();
+      } catch (e) {
+        console.error("handleAll error", e);
+        setLoading(false);
+      }
+    };
 
-    headerRows.forEach((hr) => {
-      const cells = Array.from(hr.children).map((td) => td.textContent.trim());
-      aoa.push(cells);
-    });
+    function processDataAndRender() {
+      try {
+        const jumlahHari = new Date(tahun, bulan, 0).getDate();
+        const namaBulan = new Date(tahun, bulan - 1, 1).toLocaleString("id", {
+          month: "long",
+        });
 
-    const bodyRows = Array.from(table.querySelectorAll("tbody tr"));
-    bodyRows.forEach((tr) => {
-      const cells = Array.from(tr.children).map((td) => td.textContent.trim());
-      aoa.push(cells);
-    });
+        const pegawaiMap = {};
 
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.aoa_to_sheet(aoa);
+        /* ========== PROSES CUTI ========== */
+        cutiList.forEach((row) => {
+          // === FILTER: HANYA CUTI TAHUNAN ===
+          const jenis = (row["Jenis Cuti"] || row["jenis"] || "").toLowerCase();
+          if (!jenis.includes("tahunan")) return;
 
-    const colCount = aoa.reduce((max, r) => Math.max(max, r.length), 0);
-    const colWidths = new Array(colCount).fill(10).map((_, idx) => {
-      let max = 10;
-      aoa.forEach((row) => {
-        const len = (row[idx] || "").length;
-        if (len > max) max = len;
+          const nipRaw =
+            row["NIP"] || row["Nip"] || row["nip"] || row["No. Induk"] || "";
+          const nip = String(nipRaw).trim().replace(/\D/g, "");
+          if (!nip) return;
+
+          const nama = row["Nama Pegawai"] || row["Nama"] || row["nama"] || "";
+          const jabatan = row["Jabatan"] || row["jabatan"] || "";
+
+          const tglMulai =
+            row["Tanggal Mulai"] ||
+            row["Tgl Mulai"] ||
+            row["Mulai"] ||
+            row["tanggal_mulai"] ||
+            "";
+          const tglSelesai =
+            row["Tanggal Selesai"] ||
+            row["Tgl Selesai"] ||
+            row["Selesai"] ||
+            row["tanggal_selesai"] ||
+            "";
+
+          const start = parseDateFlexible(tglMulai);
+          const end = parseDateFlexible(tglSelesai) || start;
+
+          if (!pegawaiMap[nip])
+            pegawaiMap[nip] = { nama, jabatan, cutiDays: [] };
+
+          const days = daysInMonthFromRange(start, end, bulan, tahun);
+          days.forEach((d) => {
+            if (!pegawaiMap[nip].cutiDays.includes(d)) {
+              pegawaiMap[nip].cutiDays.push(d);
+            }
+          });
+        });
+
+        Object.values(pegawaiMap).forEach((p) => {
+          p.cutiDays.sort((a, b) => a - b);
+          p.totalCuti = p.cutiDays.length;
+        });
+
+        /* ========== TAMBAHKAN YANG TIDAK PUNYA CUTI ========== */
+        sisaList.forEach((row) => {
+          const nipRaw =
+            row["NIP"] ||
+            row["Nip"] ||
+            row["nip"] ||
+            row["No. Induk"] ||
+            row["NIP/NIP"] ||
+            "";
+          const nip = String(nipRaw).trim().replace(/\D/g, "");
+
+          const nama =
+            row["Nama Pegawai"] ||
+            row["Nama"] ||
+            row["Nama Lengarakat"] ||
+            row["Nama Pegawai Lengkap"] ||
+            row["nama"] ||
+            "";
+          const jabatan = row["Jabatan"] || "";
+
+          if (nip && !pegawaiMap[nip]) {
+            pegawaiMap[nip] = {
+              nama,
+              jabatan,
+              cutiDays: [],
+              totalCuti: 0,
+            };
+          }
+        });
+
+        data = { namaBulan, tahun, jumlahHari, pegawaiMap, sisaList };
+
+        // Render table
+        renderTable();
+      } catch (e) {
+        console.error("processDataAndRender error", e);
+      } finally {
+        // matikan loading setelah render selesai (pasti dieksekusi)
+        setLoading(false);
+      }
+    }
+
+    function getSisaCutiFromSheet(nip, tahun, cutiDiambil) {
+      const row = sisaList.find((r) => {
+        const rnipRaw =
+          r["NIP"] ||
+          r["Nip"] ||
+          r["nip"] ||
+          r["NIP/NIP"] ||
+          r["No. Induk"] ||
+          "";
+        const rnip = String(rnipRaw).trim().replace(/\D/g, "");
+        return rnip === nip;
       });
-      return { wch: Math.min(Math.max(max + 2, 10), 50) };
-    });
-    ws["!cols"] = colWidths;
-    ws["!freeze"] = { xSplit: 0, ySplit: 2 };
 
-    XLSX.utils.book_append_sheet(
-      wb,
-      ws,
-      `Data Cuti ${data.namaBulan} ${data.tahun}`
-    );
+      if (!row) return { tahun_lalu: 0, jatah: 0, sisa: 0 };
 
-    XLSX.writeFile(
-      wb,
-      `Data_Cuti_${data.namaBulan}_${data.tahun}.xlsx`.replace(/\s+/g, "_")
-    );
-  }
+      const tahunLalu =
+        Number(
+          row[String(tahun - 1)] || row[String(tahun - 1).toString()] || 0
+        ) || 0;
+      const jatah =
+        Number(row[String(tahun)] || row[String(tahun).toString()] || 0) || 0;
 
-  /* ========== EVENTS ========== */
-  document.getElementById("filterForm").addEventListener("submit", (ev) => {
-    ev.preventDefault();
-    bulan = Number(bulanSelect.value);
-    tahun = Number(tahunSelect.value);
+      return { tahun_lalu: tahunLalu, jatah, sisa: jatah - cutiDiambil };
+    }
+
+    function getSisaDuaTahunLalu(nip, tahun) {
+      const row = sisaList.find((r) => {
+        const rnipRaw = r["NIP"] || r["Nip"] || r["nip"] || r["NIP/NIP"] || "";
+        const rnip = String(rnipRaw).trim().replace(/\D/g, "");
+        return rnip === nip;
+      });
+
+      if (!row) return 0;
+
+      return Number(row[String(tahun - 2)]) || 0;
+    }
+
+    function renderTable() {
+      try {
+        document.getElementById(
+          "judulBulan"
+        ).textContent = `BULAN ${data.namaBulan.toUpperCase()} TAHUN ${
+          data.tahun
+        }`;
+
+        let thead = `
+        <tr class="table-primary text-center">
+          <th rowspan="2" style="width:40px; white-space:nowrap;">No</th>
+          <th rowspan="2" style="white-space:nowrap;">NAMA PEGAWAI</th>
+          <th rowspan="2" style="white-space:nowrap;">JABATAN</th>
+          <th colspan="${data.jumlahHari}" style="width:40px;">TANGGAL</th>
+          <th rowspan="2" style="white-space:nowrap;">TOTAL CUTI BULAN INI</th>
+          <th rowspan="2" style="white-space:nowrap;">SISA CUTI TAHUN INI</th>
+          <th rowspan="2" style="white-space:nowrap;">SISA CUTI TAHUN LALU</th>
+          <th rowspan="2" style="white-space:nowrap;">SISA CUTI 2 TAHUN LALU</th>
+        </tr>
+  
+        <tr class="table-secondary">`;
+
+        for (let i = 1; i <= data.jumlahHari; i++) {
+          const date = new Date(tahun, bulan - 1, i);
+          const day = date.getDay();
+          const isWeekend = day === 0 || day === 6;
+          const weekendStyle = isWeekend ? 'style="background:#fce4e4;"' : "";
+
+          thead += `<th class="text-center" ${weekendStyle}>${String(
+            i
+          ).padStart(2, "0")}</th>`;
+        }
+
+        thead += "</tr>";
+
+        document.getElementById("thead").innerHTML = thead;
+
+        const entries = Object.entries(data.pegawaiMap).sort((a, b) => {
+          const orderA = orderMap[a[0]] ?? 9999;
+          const orderB = orderMap[b[0]] ?? 9999;
+          return orderA - orderB;
+        });
+
+        let tbody = "";
+        let no = 1;
+
+        entries.forEach(([nip, p]) => {
+          const cutiDiambil = p.totalCuti || 0;
+          const sisa = getSisaCutiFromSheet(nip, data.tahun, cutiDiambil);
+          const duaTahun = getSisaDuaTahunLalu(nip, data.tahun);
+
+          tbody += `<tr>
+            <td class="text-center">${no++}</td>
+            <td>${p.nama}</td>
+            <td>${p.jabatan}</td>`;
+
+          for (let i = 1; i <= data.jumlahHari; i++) {
+            const date = new Date(tahun, bulan - 1, i);
+            const day = date.getDay();
+            const isWeekend = day === 0 || day === 6;
+            const weekendStyle = isWeekend ? 'style="background:#fce4e4;"' : "";
+
+            const isCuti = p.cutiDays.includes(i);
+            const cls = isCuti ? "bg-cuti text-center" : "";
+
+            tbody += `<td ${weekendStyle} class="${cls}">${
+              isCuti ? "1" : ""
+            }</td>`;
+          }
+
+          tbody += `
+            <td class="text-center">${cutiDiambil}</td>
+            <td class="text-center">${sisa.jatah}</td>
+            <td class="text-center">${sisa.tahun_lalu}</td>
+            <td class="text-center">${duaTahun}</td>
+          </tr>`;
+        });
+
+        document.getElementById("tbody").innerHTML = tbody;
+      } catch (e) {
+        console.error("renderTable error", e);
+      }
+    }
+
+    /* ========== FETCH (JSONP) ========== */
+    // remove previous JSONP script if exists (prevent duplicate callbacks)
+    function removePreviousJsonp() {
+      const prev = document.querySelector('script[data-jsonp="true"]');
+      if (prev) prev.remove();
+    }
+
+    function fetchAllData() {
+      setLoading(true);
+
+      // cleanup previous JSONP if any
+      removePreviousJsonp();
+
+      const callbackName = "handleAll";
+      const src = `${url}?action=getAll&callback=${callbackName}`;
+
+      const script = document.createElement("script");
+      script.src = src;
+      script.setAttribute("data-jsonp", "true");
+      script.onerror = () => {
+        console.error("GAS request failed");
+        setLoading(false);
+        removePreviousJsonp();
+      };
+      // optional: cleanup after loaded (not removing because callback needs to run)
+      document.body.appendChild(script);
+    }
+
+    /* ========== EXPORT ========== */
+    async function exportExcel() {
+      const table = document.getElementById("reportTable");
+      if (!table) return alert("Tabel belum tersedia.");
+
+      const workbook = new ExcelJS.Workbook();
+      const sheet = workbook.addWorksheet(
+        `Data Cuti ${data.namaBulan} ${data.tahun}`,
+        {
+          views: [{ state: "frozen", ySplit: 2 }],
+        }
+      );
+
+      /* 1. AMBIL DATA TABEL & INPUT KE EXCEL */
+      const rows = [];
+      table.querySelectorAll("tr").forEach((tr) => {
+        const row = [];
+        tr.querySelectorAll("th,td").forEach((td) =>
+          row.push(td.textContent.trim())
+        );
+        rows.push(row);
+      });
+
+      rows.forEach((r) => sheet.addRow(r));
+
+      /* 2. SET LEBAR KOLOM */
+      sheet.columns = rows[0].map(() => ({ width: 12 }));
+      sheet.getColumn(1).width = 5;
+      sheet.getColumn(2).width = 25;
+      sheet.getColumn(3).width = 18;
+
+      /* 3. STYLING HEADER (2 BARIS) */
+      for (let r = 1; r <= 2; r++) {
+        const row = sheet.getRow(r);
+        row.eachCell((cell) => {
+          cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+          cell.alignment = {
+            horizontal: "center",
+            vertical: "middle",
+            wrapText: true,
+          };
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FF0070C0" },
+          };
+          cell.border = {
+            top: { style: "thin" },
+            left: { style: "thin" },
+            right: { style: "thin" },
+            bottom: { style: "thin" },
+          };
+        });
+      }
+
+      /* 4. BODY + WEEKEND + COLORING “A” & “1” */
+      const startRow = 3;
+      const totalRows = sheet.rowCount;
+      const tanggalCount = data.jumlahHari;
+      const tanggalStartCol = 4;
+      const tanggalEndCol = tanggalStartCol + tanggalCount - 1;
+
+      for (let r = startRow; r <= totalRows; r++) {
+        const row = sheet.getRow(r);
+
+        for (let col = tanggalStartCol; col <= tanggalEndCol; col++) {
+          const day = col - tanggalStartCol + 1;
+          const isWeekend = checkWeekend(day, data.bulan, data.tahun);
+
+          const cell = row.getCell(col);
+          const value = cell.value;
+
+          if (isWeekend) {
+            cell.fill = {
+              type: "pattern",
+              pattern: "solid",
+              fgColor: { argb: "FFFFE2E2" },
+            };
+          }
+
+          if (value === "A") {
+            cell.fill = {
+              type: "pattern",
+              pattern: "solid",
+              fgColor: { argb: "FFFFFF00" },
+            };
+            cell.font = { bold: true, color: { argb: "FF000000" } };
+          }
+
+          if (value === "1") {
+            cell.font = { bold: true, color: { argb: "FF000000" } };
+          }
+
+          cell.border = {
+            top: { style: "thin" },
+            left: { style: "thin" },
+            right: { style: "thin" },
+            bottom: { style: "thin" },
+          };
+          cell.alignment = { horizontal: "center", vertical: "middle" };
+        }
+
+        [1, 2, 3].forEach((c) => {
+          const cell = row.getCell(c);
+          cell.border = {
+            top: { style: "thin" },
+            left: { style: "thin" },
+            right: { style: "thin" },
+            bottom: { style: "thin" },
+          };
+          if (c === 1) cell.alignment = { horizontal: "center" };
+        });
+      }
+
+      /* 5. BORDER KOLOM TOTAL & SISA */
+      const lastCols = [
+        tanggalEndCol + 1,
+        tanggalEndCol + 2,
+        tanggalEndCol + 3,
+        tanggalEndCol + 4,
+      ];
+      for (let r = 3; r <= totalRows; r++) {
+        const row = sheet.getRow(r);
+        lastCols.forEach((c) => {
+          const cell = row.getCell(c);
+          cell.border = {
+            top: { style: "thin" },
+            left: { style: "thin" },
+            right: { style: "thin" },
+            bottom: { style: "thin" },
+          };
+          cell.alignment = { horizontal: "center" };
+        });
+      }
+
+      /* 6. EXPORT FILE */
+      const buffer = await workbook.xlsx.writeBuffer();
+      saveAs(
+        new Blob([buffer]),
+        `Data_Cuti_${data.namaBulan}_${data.tahun}.xlsx`.replace(/\s+/g, "_")
+      );
+    }
+
+    /* CEK WEEKEND */
+    function checkWeekend(day, month, year) {
+      const d = new Date(year, month - 1, day);
+      return d.getDay() === 0 || d.getDay() === 6; // Minggu = 0, Sabtu = 6
+    }
+
+    /* ========== EVENTS ========== */
+    if (form) {
+      form.addEventListener("submit", (ev) => {
+        ev.preventDefault();
+
+        // ambil button tiap kali (safety)
+        const btnT =
+          document.getElementById("btnTampil") ||
+          document.querySelector("#filterForm button[type='submit']");
+        const btnL = document.getElementById("loadingBtn");
+
+        if (btnT) btnT.style.display = "none";
+        if (btnL) {
+          btnL.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Memuat...`;
+          btnL.style.display = "inline-block";
+        }
+
+        bulan = Number(bulanSelect.value);
+        tahun = Number(tahunSelect.value);
+
+        fetchAllData();
+      });
+    }
+
+    if (btnExport) {
+      btnExport.addEventListener("click", () => {
+        if (!data)
+          return alert("Data belum dimuat. Tekan Tampilkan terlebih dahulu.");
+        exportExcel();
+      });
+    }
+
+    /* ========== INITIAL LOAD ========== */
+    // Tampilkan spinner di awal saat auto-load
+    setLoading(true);
     fetchAllData();
   });
-
-  document.getElementById("btnExport").addEventListener("click", () => {
-    if (!data)
-      return alert("Data belum dimuat. Tekan Tampilkan terlebih dahulu.");
-    exportExcel();
-  });
-
-  /* ========== INITIAL LOAD ========== */
-  fetchAllData();
 </script>
