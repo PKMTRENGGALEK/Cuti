@@ -72,6 +72,110 @@
     align-items: center;
     justify-content: center;
   }
+  /* Ukuran F4: 210mm × 330mm */
+  @page {
+    size: 330mm 210mm; /* F4 Landscape */
+    margin: 15mm;
+  }
+
+  @media print {
+    body {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    /* Hilangkan form & tombol */
+    #filterForm,
+    #btnExport,
+    #btnPrint,
+    #btnTampil,
+    #loadingBtn {
+      display: none !important;
+    }
+
+    /* Hilangkan border card */
+    .card,
+    .card-body {
+      border: none !important;
+      box-shadow: none !important;
+    }
+
+    /* Agar tabel tidak terpotong */
+    .table-responsive {
+      overflow: visible !important;
+    }
+
+    table {
+      font-size: 11px;
+    }
+
+    /* Area tanda tangan full layout print */
+    .print-footer {
+      display: flex !important;
+      justify-content: space-between;
+      margin-top: 40px;
+      padding: 0 10px;
+    }
+
+    .footer-block {
+      width: 40%;
+      position: relative;
+    }
+
+    .footer-name {
+      font-weight: bold;
+      margin-top: 5px;
+    }
+
+    .footer-nip {
+      font-weight: bold;
+      margin-top: -5px;
+    }
+
+    /* --- tanda tangan --- */
+    .ttd-wrap {
+      position: relative;
+      height: 60px; /* Space reserved for signature */
+      margin-bottom: -10px;
+    }
+
+    .ttd-img {
+      position: absolute;
+      top: 5px; /* naikkan agar tidak mendorong layout */
+      left: 0;
+      width: 120px;
+      opacity: 0.95;
+    }
+
+    .ttd-right .ttd-img {
+      right: 0;
+      left: auto;
+    }
+  }
+  #reportTable {
+    table-layout: auto !important;
+    width: auto !important;
+    max-width: 100%;
+  }
+  #reportTable {
+    table-layout: auto !important;
+    width: auto !important;
+    max-width: 100%;
+  }
+
+  /* Sembunyikan footer saat tidak print */
+  .print-footer {
+    display: none;
+  }
+  .table-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  #reportTable {
+    width: auto !important;
+  }
 </style>
 
 <div class="container-fluid p-4">
@@ -117,15 +221,52 @@
             >
               <i class="fa-solid fa-file-excel"></i> Export Excel
             </button>
+
+            <button
+              type="button"
+              class="btn btn-danger btn-sm shadow"
+              id="btnPrint"
+            >
+              <i class="fa-solid fa-file-pdf"></i> Print PDF
+            </button>
           </div>
         </div>
       </form>
 
-      <div class="table-responsive sticky-head">
+      <div class="table-wrapper">
         <table id="reportTable" class="table table-bordered table-sm">
           <thead id="thead"></thead>
           <tbody id="tbody"></tbody>
         </table>
+      </div>
+      <!-- FOOTER PRINT PDF -->
+      <div class="print-footer">
+        <!-- Kiri -->
+        <div class="footer-block">
+          <p>Mengetahui,</p>
+          <p>Kepala Puskesmas Trenggalek</p>
+
+          <!-- Container tanda tangan -->
+          <div class="ttd-wrap">
+            <img src="ttd/kapusnew.png" class="ttd-img" />
+          </div>
+
+          <p class="footer-name">DR. MURTI RUKIYANDARI</p>
+          <p class="footer-nip">NIP. 19800611 200903 2 004</p>
+        </div>
+
+        <!-- Kanan -->
+        <div class="footer-block text-end">
+          <p id="tglAkhir" class="mb-1"></p>
+          <p>Pelaksana,</p>
+
+          <div class="ttd-wrap ttd-right">
+            <img src="ttd/hayuning.png" class="ttd-img" />
+          </div>
+
+          <p class="footer-name">HAYUNING DEWI OCTAVIANTI, S.K.M.</p>
+          <p class="footer-nip">NIP. 19801003 200604 2 022</p>
+        </div>
       </div>
     </div>
   </div>
@@ -134,6 +275,45 @@
 <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 
 <script>
+  function setTanggalAkhir() {
+    const bulan = document.getElementById("bulanSelect").value;
+    const tahun = document.getElementById("tahunSelect").value;
+
+    if (!bulan || !tahun) return;
+
+    const lastDay = new Date(tahun, bulan, 0).getDate();
+
+    const namaBulan = [
+      "",
+      "Januari",
+      "Februari",
+      "Maret",
+      "April",
+      "Mei",
+      "Juni",
+      "Juli",
+      "Agustus",
+      "September",
+      "Oktober",
+      "November",
+      "Desember",
+    ];
+
+    document.getElementById(
+      "tglAkhir"
+    ).innerText = `Trenggalek, ${lastDay} ${namaBulan[bulan]} ${tahun}`;
+  }
+
+  // Panggil setelah data tampil
+  document.getElementById("btnTampil").addEventListener("click", () => {
+    setTimeout(setTanggalAkhir, 500);
+  });
+
+  // Set otomatis saat load awal jika bulan/tahun ada
+  window.addEventListener("load", () => {
+    setTimeout(setTanggalAkhir, 500);
+  });
+
   document.addEventListener("DOMContentLoaded", () => {
     /* ========== CONFIG ========== */
     const url =
@@ -446,18 +626,25 @@
         }`;
 
         let thead = `
-        <tr class="table-primary text-center">
-          <th rowspan="2" style="width:40px; white-space:nowrap;">No</th>
-          <th rowspan="2" style="white-space:nowrap;">NAMA PEGAWAI</th>
-          <th rowspan="2" style="white-space:nowrap;">JABATAN</th>
-          <th colspan="${data.jumlahHari}" style="width:40px;">TANGGAL</th>
-          <th rowspan="2" style="white-space:nowrap;">TOTAL CUTI BULAN INI</th>
-          <th rowspan="2" style="white-space:nowrap;">SISA CUTI TAHUN INI</th>
-          <th rowspan="2" style="white-space:nowrap;">SISA CUTI TAHUN LALU</th>
-          <th rowspan="2" style="white-space:nowrap;">SISA CUTI 2 TAHUN LALU</th>
-        </tr>
-  
-        <tr class="table-secondary">`;
+          <tr class="table-primary text-center">
+            <th rowspan="2" style="width:40px; white-space:nowrap;">No</th>
+            <th rowspan="2" style="white-space:nowrap;">NAMA PEGAWAI</th>
+            <th rowspan="2" style="white-space:nowrap;">NIK</th>
+            <th colspan="${data.jumlahHari}" style="width:40px;">TANGGAL</th>
+            <th rowspan="2" style="white-space:nowrap;">TOTAL</th>
+            <th rowspan="2" style="white-space:nowrap;">SISA CUTI ${
+              data.tahun
+            }</th>
+            <th rowspan="2" style="white-space:nowrap;">SISA CUTI ${
+              data.tahun - 1
+            }</th>
+            <th rowspan="2" style="white-space:nowrap;">SISA CUTI ${
+              data.tahun - 2
+            }</th>
+          </tr>
+
+          <tr class="table-secondary">
+          `;
 
         for (let i = 1; i <= data.jumlahHari; i++) {
           const date = new Date(tahun, bulan - 1, i);
@@ -491,7 +678,8 @@
           tbody += `<tr>
             <td class="text-center">${no++}</td>
             <td>${p.nama}</td>
-            <td>${p.jabatan}</td>`;
+           <td>${nip}</td>
+           `;
 
           for (let i = 1; i <= data.jumlahHari; i++) {
             const date = new Date(tahun, bulan - 1, i);
@@ -734,5 +922,8 @@
     // Tampilkan spinner di awal saat auto-load
     setLoading(true);
     fetchAllData();
+  });
+  document.getElementById("btnPrint").addEventListener("click", () => {
+    window.print();
   });
 </script>
