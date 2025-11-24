@@ -118,7 +118,6 @@
         font-weight: 600;
         cursor: pointer;
       }
-
     </style>
   </head>
   <body>
@@ -156,6 +155,15 @@
         <a href="profile.html"
           ><i class="fa-solid fa-user"></i><span>Profile</span></a
         >
+        <a
+          href="reportbulanan.html"
+          target="_blank"
+          id="menuReport"
+          class="d-flex justify-content-between align-items-center"
+          style="display: none"
+        >
+          <span><i class="fa-solid fa-book-open me-2"></i>Report</span>
+        </a>
         <a href="#" class="text-danger" onclick="logout()"
           ><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a
         >
@@ -204,6 +212,15 @@
           <a href="profile.html"
             ><i class="fa-solid fa-user"></i><span>Profile</span></a
           >
+          <a
+            href="reportbulanan.html"
+            target="_blank"
+            id="menuReport"
+            class="d-flex justify-content-between align-items-center"
+            style="display: none"
+          >
+            <span><i class="fa-solid fa-book-open me-2"></i>Report</span>
+          </a>
           <a href="#" class="text-danger" onclick="logout()"
             ><i class="fa-solid fa-right-from-bracket"></i
             ><span>Logout</span></a
@@ -297,7 +314,7 @@
         <div class="table-responsive">
           <table id="tabelCuti" class="table table-striped table-bordered">
             <thead class="table-light">
-              <tr style="font-size: 14px;">
+              <tr style="font-size: 14px">
                 <th>No</th>
                 <th>Nama Pegawai</th>
                 <th>Jenis Cuti</th>
@@ -404,6 +421,7 @@
     onerror="this.src='assets/user/Profile.png'" />`;
         }
         const role = (user.role || "").toLowerCase();
+        const Report = document.getElementById("menureport");
         const menuPengajuan = document.getElementById("menuPengajuan");
         const menuPengajuanMobile = document.getElementById(
           "menuPengajuanMobile"
@@ -621,13 +639,22 @@
         new bootstrap.Modal(document.getElementById("alasanModal")).show();
       }
       function openFormPermohonan(no) {
-  if (!no) return alert("Nomor data tidak ditemukan!");
+        if (!no) return alert("Nomor data tidak ditemukan!");
 
-  window.open(
-    `form_permohonan.html?no=${encodeURIComponent(no)}`, 
-    "_blank"
-  );
-}
+        const iframe = document.getElementById("iframeFormPermohonan");
+        const modal = new bootstrap.Modal(
+          document.getElementById("modalFormPermohonan")
+        );
+
+        iframe.classList.add("loading");
+        iframe.src = "";
+
+        setTimeout(() => {
+          iframe.src = `form_permohonan.html?no=${encodeURIComponent(no)}`;
+        }, 200);
+
+        modal.show();
+      }
 
       function logout() {
         localStorage.removeItem("userData");

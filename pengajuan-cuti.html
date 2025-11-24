@@ -39,12 +39,12 @@
         left: 0;
       }
       #tabelPengajuan {
-  font-size: 0.65rem !important;
-}
+        font-size: 0.65rem !important;
+      }
 
-#tabelPengajuan thead {
-  font-size: 0.63rem !important;
-}
+      #tabelPengajuan thead {
+        font-size: 0.63rem !important;
+      }
       .sidebar .brand {
         font-weight: 700;
         color: #1f2937;
@@ -222,6 +222,15 @@
         <a href="profile.html"
           ><i class="fa-solid fa-user"></i><span>Profile</span></a
         >
+        <a
+          href="reportbulanan.html"
+          target="_blank"
+          id="menuReport"
+          class="d-flex justify-content-between align-items-center"
+          style="display: none"
+        >
+          <span><i class="fa-solid fa-book-open me-2"></i>Report</span>
+        </a>
         <a href="#" class="text-danger" onclick="logout()"
           ><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a
         >
@@ -271,6 +280,15 @@
           <a href="profile.html"
             ><i class="fa-solid fa-user"></i><span>Profile</span></a
           >
+          <a
+            href="reportbulanan.html"
+            target="_blank"
+            id="menuReport"
+            class="d-flex justify-content-between align-items-center"
+            style="display: none"
+          >
+            <span><i class="fa-solid fa-book-open me-2"></i>Report</span>
+          </a>
           <a
             href="#"
             class="text-danger"
@@ -375,7 +393,7 @@
             <thead class="table-light">
               <tr class="text-center">
                 <th>No</th>
-                <th >Nama Pegawai</th>
+                <th>Nama Pegawai</th>
                 <th>Jenis Cuti</th>
                 <th>Tanggal Cuti</th>
                 <th>Lama</th>
@@ -710,6 +728,7 @@
         }
 
         const role = (user.role || "").toLowerCase();
+        const Report = document.getElementById("menureport");
         const menuPengajuan = document.getElementById("menuPengajuan");
         const menuPengajuanMobile = document.getElementById(
           "menuPengajuanMobile"

@@ -22,6 +22,40 @@
   .bg-cuti {
     background-color: #fff3cd !important;
   }
+  .text-center-vertical {
+    vertical-align: middle;
+    text-align: center;
+  }
+  .sticky-head thead th {
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 2;
+  }
+  /* Perkecil tinggi header */
+  #thead th {
+    padding: 4px !important;
+    font-size: 11px;
+    line-height: 12px;
+    white-space: nowrap;
+  }
+
+  /* Perkecil tinggi body */
+  #tbody td {
+    padding: 3px 4px !important;
+    font-size: 11px;
+  }
+
+  /* Header tanggal */
+  #thead th.text-center {
+    padding: 2px !important;
+    font-size: 10px;
+  }
+
+  /* Angka tanggal biar lebih compact */
+  #thead th:nth-child(n + 4) {
+    width: 22px;
+  }
 </style>
 
 <div class="container-fluid p-4">
@@ -32,7 +66,7 @@
       </h5>
       <h6 id="judulBulan" class="text-center"></h6>
 
-      <form method="GET" class="row mb-3">
+      <form id="filterForm" method="GET" class="row mb-3">
         <input type="hidden" name="page" value="report" />
         <div class="col-auto">
           <select name="bulan" id="bulanSelect" class="form-select"></select>
@@ -44,13 +78,13 @@
           <button class="btn btn-success">Tampilkan</button>
         </div>
         <div class="col-auto">
-          <button type="button" class="btn btn-primary" onclick="exportExcel()">
+          <button type="button" class="btn btn-primary" id="btnExport">
             Export Excel
           </button>
         </div>
       </form>
 
-      <div class="table-responsive">
+      <div class="table-responsive sticky-head">
         <table id="reportTable" class="table table-bordered table-sm">
           <thead id="thead"></thead>
           <tbody id="tbody"></tbody>
@@ -61,15 +95,17 @@
 </div>
 
 <script>
+  /* ========== CONFIG ========== */
   const url =
     "https://script.google.com/macros/s/AKfycbyPP_a_WHUCLoCQbC119U335ddf7VZG3qxvqx9RoAddxRqXhRpVsj-WZOaP-78jxB4j/exec";
 
-  // ambil bulan & tahun dari URL
+  /* ========== STATE ========== */
   let params = new URLSearchParams(window.location.search);
   let bulan = Number(params.get("bulan")) || new Date().getMonth() + 1;
   let tahun = Number(params.get("tahun")) || new Date().getFullYear();
 
-  // isi dropdown bulan & tahun
+  window.orderMap = {};
+
   const bulanSelect = document.getElementById("bulanSelect");
   const tahunSelect = document.getElementById("tahunSelect");
   for (let i = 1; i <= 12; i++) {
@@ -85,73 +121,370 @@
     }>${t}</option>`;
   }
 
-  window.callback = function (list) {
+  /* global data containers fetched from GAS */
+  let cutiList = [];
+  let sisaList = [];
+  let data = null;
+
+  /* ========== HELPERS ========== */
+
+  function parseDateFlexible(v) {
+    if (!v && v !== 0) return null;
+    if (v instanceof Date && !isNaN(v)) return v;
+    try {
+      let s = String(v).trim();
+      let d = new Date(s);
+      if (!isNaN(d)) return d;
+      d = new Date(s.replace(/-/g, "/"));
+      if (!isNaN(d)) return d;
+    } catch (e) {}
+    return null;
+  }
+
+  function daysInMonthFromRange(startDate, endDate, month, year) {
+    if (!startDate || !endDate) return [];
+
+    startDate = new Date(
+      startDate.getFullYear(),
+      startDate.getMonth(),
+      startDate.getDate()
+    );
+    endDate = new Date(
+      endDate.getFullYear(),
+      endDate.getMonth(),
+      endDate.getDate()
+    );
+
+    const monthStart = new Date(year, month - 1, 1);
+    const monthEnd = new Date(
+      year,
+      month - 1,
+      new Date(year, month, 0).getDate()
+    );
+
+    const from = startDate > monthStart ? startDate : monthStart;
+    const to = endDate < monthEnd ? endDate : monthEnd;
+
+    if (from > to) return [];
+
+    const days = [];
+    let cur = new Date(from);
+
+    while (cur <= to) {
+      const day = cur.getDay();
+      // Skip Saturday(6) & Sunday(0)
+      if (day !== 0 && day !== 6) {
+        days.push(cur.getDate());
+      }
+      cur.setDate(cur.getDate() + 1);
+    }
+
+    return days;
+  }
+
+  /* ========== PROCESS & RENDER ========== */
+
+  window.handleAll = function (result) {
+    cutiList = Array.isArray(result.cuti)
+      ? result.cuti
+      : (result || []).cuti || [];
+    sisaList = Array.isArray(result.sisa)
+      ? result.sisa
+      : (result || []).sisa || [];
+
+    // Generate orderMap berdasarkan sheet Sisa
+    window.orderMap = {};
+    sisaList.forEach((row, index) => {
+      const nipRaw =
+        row["NIP"] ||
+        row["Nip"] ||
+        row["nip"] ||
+        row["No. Induk"] ||
+        row["NIP/NIP"] ||
+        "";
+
+      const nip = String(nipRaw).trim().replace(/\D/g, "");
+      if (nip) orderMap[nip] = index;
+    });
+
+    processDataAndRender();
+  };
+
+  function processDataAndRender() {
     const jumlahHari = new Date(tahun, bulan, 0).getDate();
     const namaBulan = new Date(tahun, bulan - 1, 1).toLocaleString("id", {
       month: "long",
     });
 
-    let pegawaiMap = {};
+    const pegawaiMap = {};
 
-    list.forEach((row) => {
-      let nip = row["NIP"];
-      let nama = row["Nama Pegawai"];
-      let jabatan = row["Jabatan"];
-      let tglMulai = new Date(row["Tanggal Mulai"]);
-      let day = tglMulai.getMonth() + 1 == bulan ? tglMulai.getDate() : null;
+    /* ========== PROSES CUTI ========== */
+    cutiList.forEach((row) => {
+      // === FILTER: HANYA CUTI TAHUNAN ===
+      const jenis = (row["Jenis Cuti"] || row["jenis"] || "").toLowerCase();
+      if (!jenis.includes("tahunan")) return;
 
-      if (!pegawaiMap[nip]) pegawaiMap[nip] = { nama, jabatan, cuti: [] };
-      if (day) pegawaiMap[nip].cuti.push(day);
+      const nipRaw =
+        row["NIP"] || row["Nip"] || row["nip"] || row["No. Induk"] || "";
+
+      const nip = String(nipRaw).trim().replace(/\D/g, "");
+      if (!nip) return;
+
+      const nama = row["Nama Pegawai"] || row["Nama"] || row["nama"] || "";
+      const jabatan = row["Jabatan"] || row["jabatan"] || "";
+
+      const tglMulai =
+        row["Tanggal Mulai"] ||
+        row["Tgl Mulai"] ||
+        row["Mulai"] ||
+        row["tanggal_mulai"] ||
+        "";
+      const tglSelesai =
+        row["Tanggal Selesai"] ||
+        row["Tgl Selesai"] ||
+        row["Selesai"] ||
+        row["tanggal_selesai"] ||
+        "";
+
+      const start = parseDateFlexible(tglMulai);
+      const end = parseDateFlexible(tglSelesai) || start;
+
+      if (!pegawaiMap[nip]) pegawaiMap[nip] = { nama, jabatan, cutiDays: [] };
+
+      const days = daysInMonthFromRange(start, end, bulan, tahun);
+      days.forEach((d) => {
+        if (!pegawaiMap[nip].cutiDays.includes(d)) {
+          pegawaiMap[nip].cutiDays.push(d);
+        }
+      });
     });
 
-    data = { namaBulan, tahun, jumlahHari, pegawaiMap };
+    Object.values(pegawaiMap).forEach((p) => {
+      p.cutiDays.sort((a, b) => a - b);
+      p.totalCuti = p.cutiDays.length;
+    });
+
+    /* ========== TAMBAHKAN YANG TIDAK PUNYA CUTI ========== */
+    sisaList.forEach((row) => {
+      const nipRaw =
+        row["NIP"] ||
+        row["Nip"] ||
+        row["nip"] ||
+        row["No. Induk"] ||
+        row["NIP/NIP"] ||
+        "";
+
+      const nip = String(nipRaw).trim().replace(/\D/g, "");
+
+      const nama =
+        row["Nama Pegawai"] ||
+        row["Nama"] ||
+        row["Nama Lengarakat"] ||
+        row["Nama Pegawai Lengkap"] ||
+        row["nama"] ||
+        "";
+
+      const jabatan = row["Jabatan"] || "";
+
+      if (nip && !pegawaiMap[nip]) {
+        pegawaiMap[nip] = {
+          nama,
+          jabatan,
+          cutiDays: [],
+          totalCuti: 0,
+        };
+      }
+    });
+
+    data = { namaBulan, tahun, jumlahHari, pegawaiMap, sisaList };
     renderTable();
-  };
+  }
+
+  function getSisaCutiFromSheet(nip, tahun, cutiDiambil) {
+    const row = sisaList.find((r) => {
+      const rnipRaw =
+        r["NIP"] ||
+        r["Nip"] ||
+        r["nip"] ||
+        r["NIP/NIP"] ||
+        r["No. Induk"] ||
+        "";
+      const rnip = String(rnipRaw).trim().replace(/\D/g, "");
+      return rnip === nip;
+    });
+
+    if (!row) return { tahun_lalu: 0, jatah: 0, sisa: 0 };
+
+    const tahunLalu =
+      Number(
+        row[String(tahun - 1)] || row[String(tahun - 1).toString()] || 0
+      ) || 0;
+    const jatah =
+      Number(row[String(tahun)] || row[String(tahun).toString()] || 0) || 0;
+
+    return { tahun_lalu: tahunLalu, jatah, sisa: jatah - cutiDiambil };
+  }
+
+  function getSisaDuaTahunLalu(nip, tahun) {
+    const row = sisaList.find((r) => {
+      const rnipRaw = r["NIP"] || r["Nip"] || r["nip"] || r["NIP/NIP"] || "";
+      const rnip = String(rnipRaw).trim().replace(/\D/g, "");
+      return rnip === nip;
+    });
+
+    if (!row) return 0;
+
+    return Number(row[String(tahun - 2)]) || 0;
+  }
 
   function renderTable() {
     document.getElementById(
       "judulBulan"
     ).textContent = `BULAN ${data.namaBulan.toUpperCase()} TAHUN ${data.tahun}`;
 
-    let thead = `<tr class="table-primary text-center">
-                 <th rowspan="2">No</th>
-                 <th rowspan="2">NAMA PEGAWAI</th>
-                 <th rowspan="2">JABATAN</th>
-                 <th colspan="${data.jumlahHari}">TANGGAL</th>
-               </tr><tr class="table-secondary">`;
+    let thead = `
+    <tr class="table-primary text-center">
+      <th rowspan="2" style="width:40px; white-space:nowrap;">No</th>
+      <th rowspan="2" style="white-space:nowrap;">NAMA PEGAWAI</th>
+      <th rowspan="2" style="white-space:nowrap;">JABATAN</th>
+      <th colspan="${data.jumlahHari}" style="width:40px;">TANGGAL</th>
+      <th rowspan="2" style="white-space:nowrap;">TOTAL CUTI BULAN INI</th>
+      <th rowspan="2" style="white-space:nowrap;">SISA CUTI TAHUN INI</th>
+      <th rowspan="2" style="white-space:nowrap;">SISA CUTI TAHUN LALU</th>
+      <th rowspan="2" style="white-space:nowrap;">SISA CUTI 2 TAHUN LALU</th>
+    </tr>
+
+    <tr class="table-secondary">`;
 
     for (let i = 1; i <= data.jumlahHari; i++) {
-      thead += `<th>${String(i).padStart(2, "0")}</th>`;
+      const date = new Date(tahun, bulan - 1, i);
+      const day = date.getDay();
+      const isWeekend = day === 0 || day === 6;
+      const weekendStyle = isWeekend ? 'style="background:#fce4e4;"' : "";
+
+      thead += `<th class="text-center" ${weekendStyle}>${String(i).padStart(
+        2,
+        "0"
+      )}</th>`;
     }
+
     thead += "</tr>";
+
     document.getElementById("thead").innerHTML = thead;
+
+    const entries = Object.entries(data.pegawaiMap).sort((a, b) => {
+      const orderA = orderMap[a[0]] ?? 9999;
+      const orderB = orderMap[b[0]] ?? 9999;
+      return orderA - orderB;
+    });
 
     let tbody = "";
     let no = 1;
 
-    Object.values(data.pegawaiMap).forEach((p) => {
+    entries.forEach(([nip, p]) => {
+      const cutiDiambil = p.totalCuti || 0;
+      const sisa = getSisaCutiFromSheet(nip, data.tahun, cutiDiambil);
+      const duaTahun = getSisaDuaTahunLalu(nip, data.tahun);
+
       tbody += `<tr>
-                <td>${no++}</td>
-                <td>${p.nama}</td>
-                <td>${p.jabatan}</td>`;
+        <td class="text-center">${no++}</td>
+        <td>${p.nama}</td>
+        <td>${p.jabatan}</td>`;
+
       for (let i = 1; i <= data.jumlahHari; i++) {
-        let cls = p.cuti.includes(i) ? "bg-cuti" : "";
-        tbody += `<td class="${cls}">${p.cuti.includes(i) ? "1" : ""}</td>`;
+        const date = new Date(tahun, bulan - 1, i);
+        const day = date.getDay();
+        const isWeekend = day === 0 || day === 6;
+        const weekendStyle = isWeekend ? 'style="background:#fce4e4;"' : "";
+
+        const isCuti = p.cutiDays.includes(i);
+        const cls = isCuti ? "bg-cuti text-center" : "";
+
+        tbody += `<td ${weekendStyle} class="${cls}">${isCuti ? "1" : ""}</td>`;
       }
-      tbody += "</tr>";
+
+      tbody += `
+        <td class="text-center">${cutiDiambil}</td>
+        <td class="text-center">${sisa.jatah}</td>
+        <td class="text-center">${sisa.tahun_lalu}</td>
+        <td class="text-center">${duaTahun}</td>
+      </tr>`;
     });
 
     document.getElementById("tbody").innerHTML = tbody;
   }
 
-  // fetch GAS
-  fetch(url)
-    .then((r) => r.text())
-    .then((txt) => eval(txt));
+  /* ========== FETCH ========== */
+  function fetchAllData() {
+    const callbackName = "handleAll";
+    const src = `${url}?action=getAll&callback=${callbackName}`;
+    const script = document.createElement("script");
+    script.src = src;
+    script.onerror = () => console.error("GAS request failed");
+    document.body.appendChild(script);
+  }
 
+  /* ========== EXPORT ========== */
   function exportExcel() {
     const table = document.getElementById("reportTable");
-    const workbook = XLSX.utils.table_to_book(table, { sheet: "Data Cuti" });
-    XLSX.writeFile(workbook, `Data_Cuti_${data.namaBulan}_${data.tahun}.xlsx`);
+    if (!table) return alert("Tabel belum tersedia.");
+
+    const theadEl = table.querySelector("thead");
+    const headerRows = Array.from(theadEl.querySelectorAll("tr"));
+    const aoa = [];
+
+    headerRows.forEach((hr) => {
+      const cells = Array.from(hr.children).map((td) => td.textContent.trim());
+      aoa.push(cells);
+    });
+
+    const bodyRows = Array.from(table.querySelectorAll("tbody tr"));
+    bodyRows.forEach((tr) => {
+      const cells = Array.from(tr.children).map((td) => td.textContent.trim());
+      aoa.push(cells);
+    });
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+    const colCount = aoa.reduce((max, r) => Math.max(max, r.length), 0);
+    const colWidths = new Array(colCount).fill(10).map((_, idx) => {
+      let max = 10;
+      aoa.forEach((row) => {
+        const len = (row[idx] || "").length;
+        if (len > max) max = len;
+      });
+      return { wch: Math.min(Math.max(max + 2, 10), 50) };
+    });
+    ws["!cols"] = colWidths;
+    ws["!freeze"] = { xSplit: 0, ySplit: 2 };
+
+    XLSX.utils.book_append_sheet(
+      wb,
+      ws,
+      `Data Cuti ${data.namaBulan} ${data.tahun}`
+    );
+
+    XLSX.writeFile(
+      wb,
+      `Data_Cuti_${data.namaBulan}_${data.tahun}.xlsx`.replace(/\s+/g, "_")
+    );
   }
+
+  /* ========== EVENTS ========== */
+  document.getElementById("filterForm").addEventListener("submit", (ev) => {
+    ev.preventDefault();
+    bulan = Number(bulanSelect.value);
+    tahun = Number(tahunSelect.value);
+    fetchAllData();
+  });
+
+  document.getElementById("btnExport").addEventListener("click", () => {
+    if (!data)
+      return alert("Data belum dimuat. Tekan Tampilkan terlebih dahulu.");
+    exportExcel();
+  });
+
+  /* ========== INITIAL LOAD ========== */
+  fetchAllData();
 </script>
