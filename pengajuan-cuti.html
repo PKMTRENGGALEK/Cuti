@@ -491,7 +491,7 @@
 
     <script>
       const scriptURL =
-        "https://script.google.com/macros/s/AKfycbzt6xv3yHqeRiTrNcmghTwAq5cgpJ873CF3S4t4XC5qQTa60fcUFILFIdOk9KFaO0o2/exec";
+        "https://script.google.com/macros/s/AKfycbx-lSDlFehwNJxbYAdYTeBCgsOWQ2FidZlI6_ahGk7U2r49qhdSLbH12BAKiyNItw/exec";
 
       // Format tanggal: dd/mm/yyyy
       function formatDate(dateString) {
@@ -583,13 +583,14 @@
           },
           showConfirmButton: false,
         });
-
+        console.log("DATA TERKIRIM:", { no, status, tolakan: alasan });
         $.post(scriptURL, {
           action: "updateStatus",
           no: no,
           status: status,
-          alasan: alasan,
+          tolakan: alasan, // <- ganti dari 'alasan' menjadi 'tolakan'
         })
+
           .done(() => {
             Swal.fire("Berhasil", "Status cuti diperbarui", "success");
 

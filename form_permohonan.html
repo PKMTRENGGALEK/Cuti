@@ -57,7 +57,6 @@
       .pdf-mode .formulir-cuti {
         font-size: 10px !important;
       }
-   
 
       @media print {
         html,
@@ -105,7 +104,6 @@
           right: 0 !important;
         }
       }
-
     </style>
   </head>
   <body>
@@ -370,11 +368,11 @@
         </tr>
       </table>
     </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <script>
       const API_URL =
-        "https://script.google.com/macros/s/AKfycbzt6xv3yHqeRiTrNcmghTwAq5cgpJ873CF3S4t4XC5qQTa60fcUFILFIdOk9KFaO0o2/exec";
+        "https://script.google.com/macros/s/AKfycbx-lSDlFehwNJxbYAdYTeBCgsOWQ2FidZlI6_ahGk7U2r49qhdSLbH12BAKiyNItw/exec";
 
       // variabel global untuk menyimpan data cuti
       let formDataCuti = null;
@@ -529,7 +527,7 @@
           nipKapusEl.textContent = "NIP. 19800611 200903 2 004";
           nipKapusEl.style.fontWeight = "bold";
 
-        // ==== TTD Kapus berdasarkan status ====
+          // ==== TTD Kapus berdasarkan status ====
           const statusCuti = (data["Status"] || "").trim().toLowerCase();
           const imgKapus = document.getElementById("ttd-kapus");
 
@@ -537,8 +535,8 @@
             document.getElementById("ck-atasan-disetujui").textContent = "✔️";
 
             // prioritas pakai URL dari spreadsheet, jika kosong ambil default
-            imgKapus.src = data["TTD Kapus URL"] 
-              ? data["TTD Kapus URL"] 
+            imgKapus.src = data["TTD Kapus URL"]
+              ? data["TTD Kapus URL"]
               : "ttd/kapus.png";
 
             imgKapus.style.display = "block";
@@ -546,7 +544,6 @@
             imgKapus.style.display = "none";
             document.getElementById("ck-atasan-disetujui").textContent = "";
           }
-
 
           // Ambil sisa cuti (N, N1, N2, N3)
           try {
@@ -572,50 +569,49 @@
       });
 
       // Fungsi download PDF
-  async function downloadPDF() {
-  if (!formDataCuti) return alert("❗ Data belum dimuat.");
+      async function downloadPDF() {
+        if (!formDataCuti) return alert("❗ Data belum dimuat.");
 
-  const el = document.getElementById("formulir-cuti");
-  const btn = document.getElementById("btnDownloadPDF");
+        const el = document.getElementById("formulir-cuti");
+        const btn = document.getElementById("btnDownloadPDF");
 
-  btn.style.display = "none";
-  el.classList.add("pdf-mode");
+        btn.style.display = "none";
+        el.classList.add("pdf-mode");
 
-  await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise((resolve) => setTimeout(resolve, 300));
 
-  const namaPegawai = formDataCuti["Nama Pegawai"]?.replace(/\s+/g, "_") || "pegawai";
+        const namaPegawai =
+          formDataCuti["Nama Pegawai"]?.replace(/\s+/g, "_") || "pegawai";
 
-  const opt = {
-    margin: [0, 0],
-    filename: `Formulir_Cuti_${namaPegawai}.pdf`,
-    image: { type: "jpeg", quality: 1 },
-    html2canvas: {
-      scale: 3,
-      useCORS: true,
-      scrollY: 0
-    },
-    jsPDF: {
-  unit: "mm",
-  format: [216, 380], // ukuran F4 panjang
-  orientation: "portrait"
-},
-    pagebreak: { mode: "none" }
+        const opt = {
+          margin: [0, 0],
+          filename: `Formulir_Cuti_${namaPegawai}.pdf`,
+          image: { type: "jpeg", quality: 1 },
+          html2canvas: {
+            scale: 3,
+            useCORS: true,
+            scrollY: 0,
+          },
+          jsPDF: {
+            unit: "mm",
+            format: [216, 380], // ukuran F4 panjang
+            orientation: "portrait",
+          },
+          pagebreak: { mode: "none" },
+        };
 
-  };
+        try {
+          await html2pdf().from(el).set(opt).save();
+        } catch (err) {
+          console.error("PDF ERROR:", err);
+          alert("⚠ Terjadi error saat generate PDF.");
+        }
 
-  try {
-    await html2pdf().from(el).set(opt).save();
-  } catch (err) {
-    console.error("PDF ERROR:", err);
-    alert("⚠ Terjadi error saat generate PDF.");
-  }
-
-  setTimeout(() => {
-    el.classList.remove("pdf-mode");
-    btn.style.display = "inline-block";
-  }, 500);
-}
-
+        setTimeout(() => {
+          el.classList.remove("pdf-mode");
+          btn.style.display = "inline-block";
+        }, 500);
+      }
     </script>
   </body>
 </html>
