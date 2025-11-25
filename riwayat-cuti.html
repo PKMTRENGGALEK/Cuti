@@ -164,6 +164,10 @@
         >
           <span><i class="fa-solid fa-book-open me-2"></i>Report</span>
         </a>
+        <a href="surat.html" id="menuSurat"
+          ><i class="fa-solid fa-pen-to-square"></i
+          ><span>Surat Permohonan</span></a
+        >
         <a href="#" class="text-danger" onclick="logout()"
           ><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a
         >
@@ -215,12 +219,16 @@
           <a
             href="reportbulanan.html"
             target="_blank"
-            id="menuReport"
+            id="menuReportMobile"
             class="d-flex justify-content-between align-items-center"
             style="display: none"
           >
             <span><i class="fa-solid fa-book-open me-2"></i>Report</span>
           </a>
+          <a href="surat.html" id="menuSuratMobile"
+            ><i class="fa-solid fa-pen-to-square"></i
+            ><span>Surat Permohonan</span></a
+          >
           <a href="#" class="text-danger" onclick="logout()"
             ><i class="fa-solid fa-right-from-bracket"></i
             ><span>Logout</span></a
@@ -428,6 +436,8 @@
         );
         const menuRiwayat = document.getElementById("menuRiwayat");
         const menuRiwayatMobile = document.getElementById("menuRiwayatMobile");
+        const menuSurat = document.getElementById("manuSurat");
+        const menuSuratMobile = document.getElementById("manuSuratMobile");
         // Hanya tampilkan kalau role Admin / Supervisi
         const bolehAksesPengajuan = role === "admin" || role === "supervisi";
 

@@ -231,6 +231,10 @@
         >
           <span><i class="fa-solid fa-book-open me-2"></i>Report</span>
         </a>
+        <a href="surat.html" id="menuSurat"
+          ><i class="fa-solid fa-pen-to-square"></i
+          ><span>Surat Permohonan</span></a
+        >
         <a href="#" class="text-danger" onclick="logout()"
           ><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a
         >
@@ -289,6 +293,10 @@
           >
             <span><i class="fa-solid fa-book-open me-2"></i>Report</span>
           </a>
+          <a href="surat.html" id="menuSuratMobile"
+            ><i class="fa-solid fa-pen-to-square"></i
+            ><span>Surat Permohonan</span></a
+          >
           <a
             href="#"
             class="text-danger"
@@ -739,15 +747,21 @@
         const menuPengajuanMobile = document.getElementById(
           "menuPengajuanMobile"
         );
+        const menuSurat = document.getElementById("menuSurat");
+        const menuSuratMobile = document.getElementById("menuSuratMobile");
 
         // Default hide
         if (menuPengajuan) menuPengajuan.style.display = "none";
         if (menuPengajuanMobile) menuPengajuanMobile.style.display = "none";
+        if (menuSurat) menuSurat.style.display = "none";
+        if (menuSuratMobile) menuSuratMobile.style.display = "none";
 
         // Show only for admin / supervisi
         if (role === "admin" || role === "supervisi") {
           if (menuPengajuan) menuPengajuan.style.display = "flex";
           if (menuPengajuanMobile) menuPengajuanMobile.style.display = "flex";
+          if (menuSurat) menuSurat.style.display = "flex";
+          if (menuSuratMobile) menuSuratMobile.style.display = "flex";
         }
 
         // Load data cuti

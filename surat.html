@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Surat Pengantar Cuti — Picker & Nomor Otomatis</title>
+
+    <!-- Bootstrap -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+
+    <!-- jQuery + Select2 -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <!-- Flatpickr -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        font-size: 12pt;
+        background: #f5f5f5;
+      }
+      .cardku {
+        background: #fff;
+        width: 210mm;
+        min-height: 297mm;
+        margin: auto;
+        padding: 15mm 12mm 60mm; /* bawah diperbesar */
+        box-sizing: border-box;
+        position: relative;
+      }
+
+      .header-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .logo {
+        width: 85px;
+        margin-right: 15px;
+      }
+      .double-separator {
+        border-bottom: 3px double #000;
+        margin: 10px 0;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 12px;
+        font-size: 12pt;
+      }
+      table th,
+      table td {
+        border: 1px solid #000;
+        padding: 6px;
+        vertical-align: top;
+      }
+      th {
+        text-align: center;
+        font-weight: 700;
+      }
+      .footer {
+        position: absolute;
+        bottom: 8mm; /* sedikit naik agar tidak sampai area print margin */
+        left: 0;
+        width: 100%;
+        text-align: center;
+      }
+
+      .footer img {
+        width: 90%;
+        display: block;
+        margin: auto;
+        height: auto;
+      }
+      .small-note {
+        font-size: 10pt;
+        color: #666;
+      }
+      #jenisSuratText {
+        margin-left: 8px; /* sedikit masuk, tapi tidak terlalu */
+        display: block;
+      }
+
+      #list-pegawai {
+        margin-left: 20px; /* list tetap lebih masuk */
+        margin-top: 6px;
+        line-height: 1.35;
+      }
+
+      @media print {
+        #form-control-panel,
+        #btnPrint {
+          display: none !important;
+        }
+        .cardku {
+          box-shadow: none !important;
+          margin: 0;
+          padding: 12mm;
+          background: #fff;
+        }
+        body,
+        html {
+          background: #fff !important;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+        .shadow,
+        .shadow-sm,
+        .shadow-lg {
+          box-shadow: none !important;
+        }
+        @page {
+          size: A4 portrait;
+          margin: 10mm;
+        }
+      }
+      .select2-container {
+        width: 100% !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container-fluid py-4">
+      <div class="row">
+        <!-- CONTROLS -->
+        <div class="col-md-3" id="form-control-panel">
+          <div class="card shadow-lg">
+            <div class="card-header bg-primary text-white text-center">
+              <strong>PENGATURAN SURAT</strong>
+            </div>
+            <div class="card-body">
+              <div class="mb-2">
+                <label class="form-label">Tanggal Surat</label>
+                <input type="text" id="tanggalSurat" class="form-control" />
+              </div>
+
+              <div class="mb-2">
+                <label class="form-label">Tahun</label>
+                <input
+                  type="number"
+                  id="tahun"
+                  class="form-control"
+                  value="2025"
+                />
+              </div>
+
+              <div class="mb-2">
+                <label class="form-label">Bulan (filter)</label>
+                <select id="bulan" class="form-select"></select>
+              </div>
+
+              <div class="mb-2">
+                <label class="form-label">Jenis Cuti</label>
+                <select id="jenisCuti" class="form-select">
+                  <option value="">--Pilih Jenis Cuti--</option>
+                  <option value="Cuti Tahunan">Cuti Tahunan</option>
+                  <option value="Cuti Sakit">Cuti Sakit</option>
+                </select>
+              </div>
+
+              <div class="mb-2">
+                <label class="form-label"
+                  >Daftar Pegawai (urut: No terbesar → terkecil)</label
+                >
+                <select
+                  id="pegawaiSelect"
+                  multiple="multiple"
+                  style="width: 100%"
+                ></select>
+              </div>
+
+              <div class="mb-2 d-grid gap-2">
+                <button
+                  class="btn btn-sm btn-outline-primary"
+                  onclick="selectAll()"
+                >
+                  Pilih Semua
+                </button>
+                <button
+                  class="btn btn-sm btn-outline-secondary"
+                  onclick="clearSelection()"
+                >
+                  Kosongkan
+                </button>
+                <button
+                  class="btn btn-sm btn-success"
+                  onclick="insertSelectedToLetter()"
+                >
+                  Masukkan ke Surat →
+                </button>
+              </div>
+
+              <hr />
+
+              <div class="mb-2">
+                <label class="form-label">Nomor tengah (isi angka saja)</label>
+                <input
+                  id="midNumber"
+                  class="form-control"
+                  placeholder="Contoh: 051"
+                />
+              </div>
+
+              <div class="mb-2">
+                <label class="form-label">Nomor final (otomatis)</label>
+                <div class="input-group">
+                  <input id="finalNumber" class="form-control" readonly />
+                  <button
+                    class="btn btn-outline-secondary"
+                    onclick="updateFinalNumber()"
+                  >
+                    Perbarui
+                  </button>
+                </div>
+                <div class="small-note mt-1">
+                  Format: prefix / <em>nomor tengah</em> / 406.010.11.001 /
+                  tahun
+                </div>
+              </div>
+
+              <hr />
+            </div>
+          </div>
+        </div>
+
+        <!-- SURAT -->
+        <div class="col-md-9">
+          <div class="cardku shadow">
+            <div class="header-container">
+              <img src="assets/pkmlogo.png" class="logo" alt="logo" />
+              <div class="header text-center">
+                <h4 class="mb-0">PEMERINTAH KABUPATEN TRENGGALEK</h4>
+                <div>DINAS KESEHATAN, PENGENDALIAN PENDUDUK</div>
+                <div>DAN KELUARGA BERENCANA</div>
+                <h4 class="mt-1 mb-0">PUSKESMAS TRENGGALEK</h4>
+                <small
+                  >Jl. Soekarno Hatta Gg. Rambutan No.1 Trenggalek, Telp (0355)
+                  792137</small
+                ><br />
+                <small>https://pkm-trenggalek.trenggalekkab.go.id</small>
+              </div>
+            </div>
+
+            <div class="double-separator"></div>
+
+            <div class="text-end mb-3">
+              Trenggalek, <span id="tglSuratDisplay"></span>
+            </div>
+
+            <div
+              style="text-align: start; margin-top: 10px; margin-bottom: 20px"
+            >
+              <div
+                style="
+                  display: inline-block;
+                  text-align: start;
+                  line-height: 1.35;
+                "
+              >
+                Yth. Kepala Dinkes PPKB<br />
+                Kabupaten Trenggalek<br />
+                di<br />
+                <b>TRENGGALEK</b>
+              </div>
+            </div>
+
+            <h4 class="text-center mt-2"><u>SURAT PENGANTAR</u></h4>
+            <p class="text-center">
+              NOMOR :
+              <span id="no-surat-display"
+                >800.1.11.2/000/406.010.11.001/2025</span
+              >
+            </p>
+
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 60px">Nomor</th>
+                  <th>Jenis Surat</th>
+                  <th style="width: 130px">Banyaknya</th>
+                  <th style="width: 180px">Keterangan</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="text-center">1</td>
+                  <td id="kolom-jenis-surat">
+                    <div id="jenisSuratText" style="margin-bottom: 4px"></div>
+                    <div id="list-pegawai"></div>
+                  </td>
+
+                  <td class="text-center">
+                    <span id="jumlah-data-text">0</span>
+                    <span id="satuan-text">Bendel</span>
+                  </td>
+
+                  <td class="text-start">
+                    Dikirim dengan hormat untuk menjadikan periksa
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div style="text-align: end; margin-top: 60px; margin-bottom: 70px">
+              <div style="display: inline-block; text-align: left">
+                <div style="font-weight: bold">KEPALA PUSKESMAS TRENGGALEK</div>
+
+                <!-- Jarak tanda tangan -->
+                <div style="height: 80px"></div>
+
+                <div>
+                  <b><u>dr. MURTI RUKIYANDARI</u></b>
+                </div>
+                <div>Pembina Utama Muda</div>
+                <div>NIP. 19800611 200903 2 004</div>
+              </div>
+            </div>
+
+            <div class="footer">
+              <img src="assets/footer.jpeg" alt="footer" />
+            </div>
+          </div>
+
+          <div class="text-center mt-3 mb-5">
+            <button
+              id="btnPrint"
+              class="btn btn-danger px-4"
+              onclick="window.print()"
+            >
+              PRINT
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+      /* ====== fungsi terbilang ====== */
+      function terbilang(n) {
+        const angka = [
+          "",
+          "satu",
+          "dua",
+          "tiga",
+          "empat",
+          "lima",
+          "enam",
+          "tujuh",
+          "delapan",
+          "sembilan",
+          "sepuluh",
+          "sebelas",
+        ];
+        n = parseInt(n, 10);
+        if (n < 12) return angka[n];
+        if (n < 20) return terbilang(n - 10) + " belas";
+        if (n < 100)
+          return terbilang(Math.floor(n / 10)) + " puluh " + terbilang(n % 10);
+        if (n < 200) return "seratus " + terbilang(n - 100);
+        if (n < 1000)
+          return (
+            terbilang(Math.floor(n / 100)) + " ratus " + terbilang(n % 100)
+          );
+        if (n < 2000) return "seribu " + terbilang(n - 1000);
+        if (n < 1000000)
+          return (
+            terbilang(Math.floor(n / 1000)) + " ribu " + terbilang(n % 1000)
+          );
+        return n;
+      }
+
+      /* ====== format (2) dua ====== */
+      function formatAngkaTerbilang(n) {
+        const t = terbilang(n).trim();
+        return `${n} (${t})`;
+      }
+
+      /* ====== CONFIG ====== */
+      const GAS_URL =
+        "https://script.google.com/macros/s/AKfycbx-lSDlFehwNJxbYAdYTeBCgsOWQ2FidZlI6_ahGk7U2r49qhdSLbH12BAKiyNItw/exec";
+      const TEMPLATE_LOCAL_PATH =
+        "/mnt/data/PENGANTAR CUTI TAHUNAN 6 NOVEMBER 2025.docx";
+      const FIXED_PART = "406.010.11.001";
+
+      /* ====== UI init ====== */
+      const bulanNames = [
+        "Januari",
+        "Februari",
+        "Maret",
+        "April",
+        "Mei",
+        "Juni",
+        "Juli",
+        "Agustus",
+        "September",
+        "Oktober",
+        "November",
+        "Desember",
+      ];
+      function populateBulan() {
+        const sel = document.getElementById("bulan");
+        sel.innerHTML = bulanNames.map((m) => `<option>${m}</option>`).join("");
+      }
+      populateBulan();
+
+      flatpickr("#tanggalSurat", {
+        dateFormat: "Y-m-d",
+        defaultDate: new Date(),
+        onChange: (d, s) => updateTanggalDisplay(s),
+      });
+      document.getElementById("templateLink").href = TEMPLATE_LOCAL_PATH;
+
+      /* init select2 */
+      $(document).ready(function () {
+        $("#pegawaiSelect").select2({
+          placeholder: "Pilih pegawai...",
+          width: "100%",
+        });
+      });
+
+      /* ====== JSONP fetch helper ====== */
+      async function fetchJsonpLike(url) {
+        const res = await fetch(url, { cache: "no-store" });
+        const txt = await res.text();
+        const firstParen = txt.indexOf("(");
+        const lastParen = txt.lastIndexOf(")");
+        if (firstParen === -1 || lastParen === -1) {
+          try {
+            return JSON.parse(txt);
+          } catch (e) {
+            throw new Error("Unexpected response: " + txt);
+          }
+        }
+        const jsonStr = txt.substring(firstParen + 1, lastParen);
+        return JSON.parse(jsonStr);
+      }
+
+      /* ====== normalize row ====== */
+      function normalizeRow(raw) {
+        const out = {
+          no: 0,
+          nip: "",
+          nama_pegawai: "",
+          jabatan: "",
+          tgl_mulai: "",
+          tgl_selesai: "",
+          lama_cuti: "",
+          jenis_cuti: "",
+          keterangan: "",
+          file_pendukung: "",
+          tanggal_pengajuan: "",
+          status: "",
+          tolakan: "",
+        };
+        for (const key in raw) {
+          if (!Object.prototype.hasOwnProperty.call(raw, key)) continue;
+          const v = raw[key];
+          const k = String(key).trim().toLowerCase();
+          if (k === "no") out.no = Number(v) || out.no;
+          else if (k === "nip") out.nip = v || "";
+          else if (k.includes("nama")) out.nama_pegawai = v || "";
+          else if (k.includes("jabatan")) out.jabatan = v || "";
+          else if (k.includes("mulai")) out.tgl_mulai = v || "";
+          else if (k.includes("selesai")) out.tgl_selesai = v || "";
+          else if (k.includes("lama")) out.lama_cuti = v || "";
+          else if (k.includes("jenis")) out.jenis_cuti = v || "";
+          else if (k.includes("keterangan")) out.keterangan = v || "";
+          else if (k.includes("file")) out.file_pendukung = v || "";
+          else if (k.includes("pengajuan") || k.includes("tanggal pengajuan"))
+            out.tanggal_pengajuan = v || "";
+          else if (k.includes("status")) out.status = v || "";
+          else if (k.includes("tolak") || k.includes("tolakan"))
+            out.tolakan = v || "";
+        }
+        return out;
+      }
+
+      /* ====== load & cache ====== */
+      let cachedRows = [];
+      async function loadAllCutiFromGAS() {
+        const url = `${GAS_URL}?action=getCuti&callback=cb`;
+        try {
+          const data = await fetchJsonpLike(url);
+          cachedRows = (data || []).map((r) => normalizeRow(r));
+          return cachedRows;
+        } catch (err) {
+          console.error("GAS load error:", err);
+          cachedRows = [];
+          return [];
+        }
+      }
+
+      /* ====== helpers ====== */
+      function rangeIntersectsMonth(startStr, endStr, monthIndex, year) {
+        if (!startStr) return false;
+        const s = new Date(startStr);
+        const e = endStr ? new Date(endStr) : new Date(startStr);
+        s.setHours(0, 0, 0, 0);
+        e.setHours(23, 59, 59, 999);
+        const mStart = new Date(year, monthIndex, 1, 0, 0, 0, 0);
+        const mEnd = new Date(year, monthIndex + 1, 0, 23, 59, 59, 999);
+        return s <= mEnd && e >= mStart;
+      }
+      function parseNo(r) {
+        return Number(r.no) || 0;
+      }
+
+      /* ====== filter & populate select (No desc) ====== */
+      async function onFilterChange() {
+        const jenis = document.getElementById("jenisCuti").value;
+        const bulanName = document.getElementById("bulan").value;
+        const tahun =
+          Number(document.getElementById("tahun").value) ||
+          new Date().getFullYear();
+        const monthIndex = bulanNames.indexOf(bulanName);
+
+        if (!cachedRows.length) await loadAllCutiFromGAS();
+
+        const matched = cachedRows.filter((r) => {
+          if (!r.jenis_cuti) return false;
+          if (String(r.jenis_cuti).trim() !== String(jenis).trim())
+            return false;
+          return rangeIntersectsMonth(
+            r.tgl_mulai,
+            r.tgl_selesai,
+            monthIndex,
+            tahun
+          );
+        });
+
+        matched.sort((a, b) => parseNo(b) - parseNo(a));
+
+        const sel = document.getElementById("pegawaiSelect");
+        sel.innerHTML = "";
+        matched.forEach((r) => {
+          const nama = r.nama_pegawai || "(Nama kosong)";
+          const nip = r.nip || "";
+          const display = `${nama}${nip ? " (NIP: " + nip + ")" : ""}`;
+          const opt = document.createElement("option");
+          opt.value = JSON.stringify({ no: r.no, nama: nama, nip: nip });
+          opt.text = display;
+          sel.appendChild(opt);
+        });
+
+        $("#pegawaiSelect").trigger("change.select2");
+
+        document.getElementById("list-pegawai").innerHTML = "";
+        document.getElementById("jumlah-data-text").innerText = "0";
+        document.getElementById(
+          "jenisSuratText"
+        ).innerText = `Permohonan ${jenis} Pegawai Puskesmas Trenggalek Bulan ${bulanName} Tahun ${tahun} An. Sdr:`;
+
+        updateFinalNumber();
+        updateJumlahFormat();
+      }
+
+      /* ====== selection helpers ====== */
+      function selectAll() {
+        const sel = document.getElementById("pegawaiSelect");
+        for (let i = 0; i < sel.options.length; i++)
+          sel.options[i].selected = true;
+        $("#pegawaiSelect").trigger("change.select2");
+      }
+      function clearSelection() {
+        const sel = document.getElementById("pegawaiSelect");
+        for (let i = 0; i < sel.options.length; i++)
+          sel.options[i].selected = false;
+        $("#pegawaiSelect").trigger("change.select2");
+      }
+
+      /* ====== insert selected to surat (sorted by No desc) ====== */
+      function insertSelectedToLetter() {
+        const sel = document.getElementById("pegawaiSelect");
+        const selected = Array.from(sel.selectedOptions).map((o) => {
+          try {
+            return JSON.parse(o.value);
+          } catch (e) {
+            return { no: 0, nama: o.text, nip: "" };
+          }
+        });
+
+        // urutkan dari No terbesar → terkecil
+        selected.sort((a, b) => (b.no || 0) - (a.no || 0));
+
+        // tampilkan list pegawai
+        let html = "";
+        selected.forEach((s, i) => {
+          const nipText = s.nip ? `<br>(NIP. ${s.nip})` : "";
+          html += `${i + 1}. ${s.nama}${nipText}<br>`;
+        });
+
+        document.getElementById("list-pegawai").innerHTML = html;
+
+        // set jumlah MENTAH dulu
+        document.getElementById("jumlah-data-text").innerText = selected.length;
+
+        // BARU update menjadi (3) tiga dan ganti “Lembar/Bendel”
+        updateJumlahFormat();
+      }
+
+      function updateJumlahFormat() {
+        const jenis = document.getElementById("jenisCuti").value;
+        const jumlah = Number(
+          document.getElementById("jumlah-data-text").innerText
+        );
+
+        // satuan
+        const satuan = jenis === "Cuti Tahunan" ? "Lembar" : "Bendel";
+        document.getElementById("satuan-text").innerText = ` ${satuan}`;
+
+        // tulis (2) dua
+        if (jumlah > 0) {
+          document.getElementById("jumlah-data-text").innerText =
+            formatAngkaTerbilang(jumlah);
+        }
+      }
+
+      /* ====== nomor surat logic ====== */
+      function getPrefixForJenis(jenis) {
+        if (String(jenis).trim() === "Cuti Tahunan") return "800.1.11.4";
+        if (String(jenis).trim() === "Cuti Sakit") return "800.1.11.2";
+        return "800.1.11.2";
+      }
+      function updateFinalNumber() {
+        const jenis = document.getElementById("jenisCuti").value;
+        const mid = (document.getElementById("midNumber").value || "").trim();
+        const tahun =
+          (document.getElementById("tahun").value || "").trim() ||
+          new Date().getFullYear();
+        const prefix = getPrefixForJenis(jenis);
+        const middle = mid || "000";
+        const final = `${prefix}/${middle}/${FIXED_PART}/${tahun}`;
+        document.getElementById("finalNumber").value = final;
+        document.getElementById("no-surat-display").innerText = final;
+      }
+
+      /* ====== init ====== */
+      (async function init() {
+        flatpickr("#tanggalSurat", {
+          dateFormat: "Y-m-d",
+          defaultDate: new Date(),
+          onChange: (d, s) => updateTanggalDisplay(s),
+        });
+        document
+          .getElementById("midNumber")
+          .addEventListener("input", updateFinalNumber);
+        document
+          .getElementById("jenisCuti")
+          .addEventListener("change", async () => {
+            updateFinalNumber();
+            await onFilterChange();
+          });
+        document
+          .getElementById("tahun")
+          .addEventListener("change", async () => {
+            updateFinalNumber();
+            await onFilterChange();
+          });
+        // load data & initial filter
+        await loadAllCutiFromGAS();
+        await onFilterChange();
+        updateFinalNumber();
+        // initial tanggal display
+        updateTanggalDisplay(new Date().toISOString().slice(0, 10));
+      })();
+
+      function updateTanggalDisplay(dateStr) {
+        if (!dateStr) {
+          document.getElementById("tglSuratDisplay").innerText = "";
+          return;
+        }
+        const d = new Date(dateStr);
+        const bulan = bulanNames;
+        document.getElementById(
+          "tglSuratDisplay"
+        ).innerText = `${d.getDate()} ${
+          bulan[d.getMonth()]
+        } ${d.getFullYear()}`;
+      }
+
+      /* expose refresh function */
+      window.refreshFromGAS = async function () {
+        await loadAllCutiFromGAS();
+        await onFilterChange();
+      };
+    </script>
+  </body>
+</html>

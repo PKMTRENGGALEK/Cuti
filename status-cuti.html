@@ -206,7 +206,7 @@
           <a
             href="reportbulanan.html"
             target="_blank"
-            id="menuReport"
+            id="menuReportMobile"
             class="d-flex justify-content-between align-items-center"
             style="display: none"
           >
@@ -393,16 +393,20 @@
         }
 
         const role = (user.role || "").toLowerCase();
-        const Report = document.getElementById("menureport");
+        const menuReport = document.getElementById("menuReport");
+        const menuReportMobile = document.getElementById("menuReportMobile");
+        const menuRiwayat = document.getElementById("menuRiwayat");
+        const menuRiwayatMobile = document.getElementById("menuRiwayatMobile");
         const menuPengajuan = document.getElementById("menuPengajuan");
         const menuPengajuanMobile = document.getElementById(
           "menuPengajuanMobile"
         );
-        const menuRiwayat = document.getElementById("menuRiwayat");
-        const menuRiwayatMobile = document.getElementById("menuRiwayatMobile");
+
         // Hanya tampilkan kalau role Admin / Supervisi
         const bolehAksesPengajuan = role === "admin" || role === "supervisi";
         if (!bolehAksesPengajuan) {
+          if (menuReport) menuReport.remove();
+          if (menuReportMobile) menuReportMobile.remove();
           if (menuPengajuan) menuPengajuan.remove();
           if (menuPengajuanMobile) menuPengajuanMobile.remove();
           if (menuRiwayat) menuRiwayat.remove();
