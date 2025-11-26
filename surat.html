@@ -130,96 +130,13 @@
       .select2-container {
         width: 100% !important;
       }
-      /* ===================== */
-/* RESPONSIVE FOR MOBILE */
-/* ===================== */
-
-@media (max-width: 768px) {
-  body {
-    background: #ffffff;
-  }
-
-  .container-fluid {
-    padding: 0 10px;
-  }
-
-  /* Card surat */
-  .cardku {
-    width: 100% !important;
-    min-height: auto;
-    margin: 0;
-    padding: 15px !important;
-  }
-
-  /* Panel kontrol jadi full width */
-  #form-control-panel {
-    margin-bottom: 15px;
-  }
-
-  /* Header logo + teks rapi */
-  .header-container {
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .header-container .logo {
-    margin-right: 0;
-    margin-bottom: 10px;
-  }
-
-  /* Tabel bisa geser kanan kiri */
-  table {
-    display: block;
-    width: 100%;
-    overflow-x: auto;
-  }
-
-  .footer img {
-    width: 100%;
-  }
-
-  /* Select2 full width */
-  .select2-container {
-    width: 100% !important;
-  }
-}
-
-/* HP kecil (≤ 480px) */
-@media (max-width: 480px) {
-  h4 {
-    font-size: 16px;
-  }
-
-  .cardku {
-    padding: 10px !important;
-  }
-
-  table th,
-  table td {
-    font-size: 11px;
-    padding: 4px;
-  }
-
-  #btnPrint {
-    width: 100%;
-  }
-
-  #form-control-panel .btn,
-  #form-control-panel input,
-  #form-control-panel select {
-    font-size: 12px;
-    padding: 6px 8px;
-  }
-}
-
     </style>
   </head>
   <body>
     <div class="container-fluid py-4">
       <div class="row">
         <!-- CONTROLS -->
-        <div class="col-md-3 mb-3" id="form-control-panel">
-
+        <div class="col-md-3" id="form-control-panel">
           <a
             href="dashboard.html"
             class="btn btn-outline-success shadow mb-2 shadow"
@@ -505,9 +422,6 @@
         const sel = document.getElementById("bulan");
         sel.innerHTML = bulanNames.map((m) => `<option>${m}</option>`).join("");
       }
-      populateBulan();
-document.getElementById("bulan").value = bulanNames[new Date().getMonth()];
-
       populateBulan();
 
       flatpickr("#tanggalSurat", {
