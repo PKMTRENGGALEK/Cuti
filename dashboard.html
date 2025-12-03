@@ -1153,7 +1153,7 @@
           return (window.location.href = "index.html");
         }
         const user = JSON.parse(userData);
-
+        console.log(user);
         // Render initial UI from local user (avatar, name) - keep behavior
         const namaPegawai = document.getElementById("namaPegawai");
         if (namaPegawai) namaPegawai.textContent = user.nama || "namaPegawai";
@@ -1171,8 +1171,8 @@
         const fotoProfil = document.querySelector("#fotoProfilCard");
         if (fotoProfil) {
           let picUrl = "assets/user/Profile.png";
-          if (user.pic && user.pic.trim() !== "")
-            picUrl = `assets/user/${user.pic}`;
+          if (user.foto && user.foto.trim() !== "")
+            picUrl = `assets/user/${user.foto}`;
           fotoProfil.src = picUrl;
           fotoProfil.onerror = () =>
             (fotoProfil.src = "assets/user/Profile.png");
