@@ -235,7 +235,11 @@
                   tahun
                 </div>
               </div>
-
+              <div class="mb-2">
+                <button id="btnKirimDinkes" class="btn btn-primary">
+                  Kirim ke Dinkes
+                </button>
+              </div>
               <hr />
             </div>
           </div>
@@ -356,10 +360,14 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-      /* ====== fungsi terbilang ====== */
+      /* =====================
+         Cleaned & consolidated JS
+         ===================== */
+
+      /* ====== terbilang ====== */
       function terbilang(n) {
         const angka = [
-          "",
+          "nol",
           "satu",
           "dua",
           "tiga",
@@ -373,6 +381,7 @@
           "sebelas",
         ];
         n = parseInt(n, 10);
+        if (isNaN(n)) return "";
         if (n < 12) return angka[n];
         if (n < 20) return terbilang(n - 10) + " belas";
         if (n < 100)
@@ -387,10 +396,9 @@
           return (
             terbilang(Math.floor(n / 1000)) + " ribu " + terbilang(n % 1000)
           );
-        return n;
+        return String(n);
       }
 
-      /* ====== format (2) dua ====== */
       function formatAngkaTerbilang(n) {
         const t = terbilang(n).trim();
         return `${n} (${t})`;
@@ -403,7 +411,7 @@
         "/mnt/data/PENGANTAR CUTI TAHUNAN 6 NOVEMBER 2025.docx";
       const FIXED_PART = "406.010.11.001";
 
-      /* ====== UI init ====== */
+      /* ====== UI data ====== */
       const bulanNames = [
         "Januari",
         "Februari",
@@ -418,28 +426,25 @@
         "November",
         "Desember",
       ];
+
       function populateBulan() {
         const sel = document.getElementById("bulan");
+        if (!sel) return;
         sel.innerHTML = bulanNames.map((m) => `<option>${m}</option>`).join("");
       }
       populateBulan();
 
-      flatpickr("#tanggalSurat", {
-        dateFormat: "Y-m-d",
-        defaultDate: new Date(),
-        onChange: (d, s) => updateTanggalDisplay(s),
-      });
-      // document.getElementById("templateLink").href = TEMPLATE_LOCAL_PATH;
-
-      /* init select2 */
+      /* ====== select2 init (jQuery) ====== */
       $(document).ready(function () {
-        $("#pegawaiSelect").select2({
-          placeholder: "Pilih pegawai...",
-          width: "100%",
-        });
+        if ($("#pegawaiSelect").length) {
+          $("#pegawaiSelect").select2({
+            placeholder: "Pilih pegawai...",
+            width: "100%",
+          });
+        }
       });
 
-      /* ====== JSONP fetch helper ====== */
+      /* ====== fetch helper: JSON or JSONP-like ====== */
       async function fetchJsonpLike(url) {
         const res = await fetch(url, { cache: "no-store" });
         const txt = await res.text();
@@ -472,11 +477,13 @@
           tanggal_pengajuan: "",
           status: "",
           tolakan: "",
+          status_dinkes: "",
         };
         for (const key in raw) {
           if (!Object.prototype.hasOwnProperty.call(raw, key)) continue;
           const v = raw[key];
           const k = String(key).trim().toLowerCase();
+
           if (k === "no") out.no = Number(v) || out.no;
           else if (k === "nip") out.nip = v || "";
           else if (k.includes("nama")) out.nama_pegawai = v || "";
@@ -489,14 +496,24 @@
           else if (k.includes("file")) out.file_pendukung = v || "";
           else if (k.includes("pengajuan") || k.includes("tanggal pengajuan"))
             out.tanggal_pengajuan = v || "";
-          else if (k.includes("status")) out.status = v || "";
-          else if (k.includes("tolak") || k.includes("tolakan"))
+          // IMPORTANT: check status_dinkes before general status
+          else if (k.includes("status dinkes")) out.status_dinkes = v || "";
+          else if (
+            k === "status" ||
+            (k.includes("status") && !k.includes("status dinkes"))
+          )
+            out.status = v || "";
+          else if (
+            k.includes("tolak") ||
+            k.includes("tolakan") ||
+            k.includes("alasan")
+          )
             out.tolakan = v || "";
         }
         return out;
       }
 
-      /* ====== load & cache ====== */
+      /* ====== cache loader ====== */
       let cachedRows = [];
       async function loadAllCutiFromGAS() {
         const url = `${GAS_URL}?action=getCuti&callback=cb`;
@@ -526,12 +543,16 @@
         return Number(r.no) || 0;
       }
 
-      /* ====== filter & populate select (No desc) ====== */
+      /* ====== filtering & populate select ====== */
       async function onFilterChange() {
-        const jenis = document.getElementById("jenisCuti").value;
-        const bulanName = document.getElementById("bulan").value;
+        const jenis = (
+          document.getElementById("jenisCuti")?.value || ""
+        ).trim();
+        const bulanName =
+          document.getElementById("bulan")?.value ||
+          bulanNames[new Date().getMonth()];
         const tahun =
-          Number(document.getElementById("tahun").value) ||
+          Number(document.getElementById("tahun")?.value) ||
           new Date().getFullYear();
         const monthIndex = bulanNames.indexOf(bulanName);
 
@@ -541,6 +562,9 @@
           if (!r.jenis_cuti) return false;
           if (String(r.jenis_cuti).trim() !== String(jenis).trim())
             return false;
+          // only those with empty Status Dinkes
+          const sd = String(r.status_dinkes || "").trim();
+          if (sd !== "") return false;
           return rangeIntersectsMonth(
             r.tgl_mulai,
             r.tgl_selesai,
@@ -552,24 +576,32 @@
         matched.sort((a, b) => parseNo(b) - parseNo(a));
 
         const sel = document.getElementById("pegawaiSelect");
-        sel.innerHTML = "";
-        matched.forEach((r) => {
-          const nama = r.nama_pegawai || "(Nama kosong)";
-          const nip = r.nip || "";
-          const display = `${nama}${nip ? " (NIP: " + nip + ")" : ""}`;
-          const opt = document.createElement("option");
-          opt.value = JSON.stringify({ no: r.no, nama: nama, nip: nip });
-          opt.text = display;
-          sel.appendChild(opt);
-        });
+        if (sel) {
+          sel.innerHTML = "";
+          matched.forEach((r) => {
+            const nama = r.nama_pegawai || "(Nama kosong)";
+            const nip = r.nip || "";
+            const display = `${nama}${nip ? " (NIP: " + nip + ")" : ""}`;
+            const opt = document.createElement("option");
+            opt.value = JSON.stringify({ no: r.no, nama: nama, nip: nip });
+            opt.text = display;
+            sel.appendChild(opt);
+          });
+          $("#pegawaiSelect").trigger("change.select2");
+        }
 
-        $("#pegawaiSelect").trigger("change.select2");
+        // reset list display & jumlah (store raw count in data-count)
+        const listEl = document.getElementById("list-pegawai");
+        if (listEl) listEl.innerHTML = "";
+        const jumlahEl = document.getElementById("jumlah-data-text");
+        if (jumlahEl) {
+          jumlahEl.dataset.count = "0";
+          jumlahEl.innerText = "0";
+        }
 
-        document.getElementById("list-pegawai").innerHTML = "";
-        document.getElementById("jumlah-data-text").innerText = "0";
-        document.getElementById(
-          "jenisSuratText"
-        ).innerText = `Permohonan ${jenis} Pegawai Puskesmas Trenggalek Bulan ${bulanName} Tahun ${tahun} An. Sdr:`;
+        const jenisSuratText = document.getElementById("jenisSuratText");
+        if (jenisSuratText)
+          jenisSuratText.innerText = `Permohonan ${jenis} Pegawai Puskesmas Trenggalek Bulan ${bulanName} Tahun ${tahun} An. Sdr:`;
 
         updateFinalNumber();
         updateJumlahFormat();
@@ -578,61 +610,64 @@
       /* ====== selection helpers ====== */
       function selectAll() {
         const sel = document.getElementById("pegawaiSelect");
+        if (!sel) return;
         for (let i = 0; i < sel.options.length; i++)
           sel.options[i].selected = true;
         $("#pegawaiSelect").trigger("change.select2");
       }
       function clearSelection() {
         const sel = document.getElementById("pegawaiSelect");
+        if (!sel) return;
         for (let i = 0; i < sel.options.length; i++)
           sel.options[i].selected = false;
         $("#pegawaiSelect").trigger("change.select2");
       }
 
-      /* ====== insert selected to surat (sorted by No desc) ====== */
+      /* ====== insert selected to letter (No desc) ====== */
       function insertSelectedToLetter() {
         const sel = document.getElementById("pegawaiSelect");
+        if (!sel) return;
         const selected = Array.from(sel.selectedOptions).map((o) => {
           try {
             return JSON.parse(o.value);
-          } catch (e) {
+          } catch {
             return { no: 0, nama: o.text, nip: "" };
           }
         });
 
-        // urutkan dari No terbesar → terkecil
         selected.sort((a, b) => (b.no || 0) - (a.no || 0));
 
-        // tampilkan list pegawai
         let html = "";
         selected.forEach((s, i) => {
           const nipText = s.nip ? `<br>(NIP. ${s.nip})` : "";
           html += `${i + 1}. ${s.nama}${nipText}<br>`;
         });
+        const listEl = document.getElementById("list-pegawai");
+        if (listEl) listEl.innerHTML = html;
 
-        document.getElementById("list-pegawai").innerHTML = html;
+        // store raw count in data-count to avoid parsing/display issues
+        const jumlahEl = document.getElementById("jumlah-data-text");
+        if (jumlahEl) {
+          jumlahEl.dataset.count = String(selected.length || 0);
+        }
 
-        // set jumlah MENTAH dulu
-        document.getElementById("jumlah-data-text").innerText = selected.length;
-
-        // BARU update menjadi (3) tiga dan ganti “Lembar/Bendel”
         updateJumlahFormat();
       }
 
       function updateJumlahFormat() {
-        const jenis = document.getElementById("jenisCuti").value;
-        const jumlah = Number(
-          document.getElementById("jumlah-data-text").innerText
-        );
+        const jenis = (
+          document.getElementById("jenisCuti")?.value || ""
+        ).trim();
+        const jumlahEl = document.getElementById("jumlah-data-text");
+        const rawCount = jumlahEl ? Number(jumlahEl.dataset.count || 0) : 0;
 
-        // satuan
         const satuan = jenis === "Cuti Tahunan" ? "Lembar" : "Bendel";
-        document.getElementById("satuan-text").innerText = ` ${satuan}`;
+        const satuanTextEl = document.getElementById("satuan-text");
+        if (satuanTextEl) satuanTextEl.innerText = ` ${satuan}`;
 
-        // tulis (2) dua
-        if (jumlah > 0) {
-          document.getElementById("jumlah-data-text").innerText =
-            formatAngkaTerbilang(jumlah);
+        if (jumlahEl) {
+          if (rawCount > 0) jumlahEl.innerText = formatAngkaTerbilang(rawCount);
+          else jumlahEl.innerText = "0";
         }
       }
 
@@ -643,63 +678,130 @@
         return "800.1.11.2";
       }
       function updateFinalNumber() {
-        const jenis = document.getElementById("jenisCuti").value;
-        const mid = (document.getElementById("midNumber").value || "").trim();
-        const tahun =
-          (document.getElementById("tahun").value || "").trim() ||
-          new Date().getFullYear();
+        const jenis = (
+          document.getElementById("jenisCuti")?.value || ""
+        ).trim();
+        const mid = (document.getElementById("midNumber")?.value || "").trim();
+        const tahun = (
+          document.getElementById("tahun")?.value || new Date().getFullYear()
+        ).toString();
         const prefix = getPrefixForJenis(jenis);
         const middle = mid || "000";
         const final = `${prefix}/${middle}/${FIXED_PART}/${tahun}`;
-        document.getElementById("finalNumber").value = final;
-        document.getElementById("no-surat-display").innerText = final;
+        const finalEl = document.getElementById("finalNumber");
+        if (finalEl) finalEl.value = final;
+        const display = document.getElementById("no-surat-display");
+        if (display) display.innerText = final;
+      }
+
+      /* ====== kirim ke dinkes ====== */
+      async function kirimKeDinkes() {
+        const sel = document.getElementById("pegawaiSelect");
+        if (!sel) {
+          alert("Elemen pegawaiSelect tidak ditemukan.");
+          return;
+        }
+
+        const selected = Array.from(sel.selectedOptions)
+          .map((o) => {
+            try {
+              return JSON.parse(o.value);
+            } catch {
+              return null;
+            }
+          })
+          .filter(Boolean);
+
+        if (selected.length === 0) {
+          alert("Pilih minimal satu pegawai dulu.");
+          return;
+        }
+
+        const mid = (document.getElementById("midNumber")?.value || "").trim();
+        if (!mid) {
+          alert("Isi dahulu nomor surat (mid number).");
+          return;
+        }
+
+        if (!confirm(`Kirim ${selected.length} data ke Dinkes?`)) return;
+
+        for (const s of selected) {
+          const url = `${GAS_URL}?action=updateStatusDinkes&no=${encodeURIComponent(
+            s.no
+          )}&value=${encodeURIComponent("Sudah Kirim")}&callback=cb`;
+          try {
+            await fetchJsonpLike(url);
+          } catch (err) {
+            console.error("Gagal update:", err);
+          }
+        }
+
+        alert("Status Dinkes berhasil diperbarui menjadi 'Sudah Kirim'.");
+
+        await loadAllCutiFromGAS();
+        await onFilterChange();
       }
 
       /* ====== init ====== */
       (async function init() {
-        flatpickr("#tanggalSurat", {
-          dateFormat: "Y-m-d",
-          defaultDate: new Date(),
-          onChange: (d, s) => updateTanggalDisplay(s),
-        });
-        document
-          .getElementById("midNumber")
-          .addEventListener("input", updateFinalNumber);
-        document
-          .getElementById("jenisCuti")
-          .addEventListener("change", async () => {
+        // flatpickr init (only once)
+        if (
+          typeof flatpickr !== "undefined" &&
+          document.getElementById("tanggalSurat")
+        ) {
+          flatpickr("#tanggalSurat", {
+            dateFormat: "Y-m-d",
+            defaultDate: new Date(),
+            onChange: (d, s) => updateTanggalDisplay(s),
+          });
+        }
+
+        // wire events
+        const midInput = document.getElementById("midNumber");
+        if (midInput) midInput.addEventListener("input", updateFinalNumber);
+
+        const jenisSel = document.getElementById("jenisCuti");
+        if (jenisSel)
+          jenisSel.addEventListener("change", async () => {
             updateFinalNumber();
             await onFilterChange();
           });
-        document
-          .getElementById("tahun")
-          .addEventListener("change", async () => {
+
+        const tahunSel = document.getElementById("tahun");
+        if (tahunSel)
+          tahunSel.addEventListener("change", async () => {
             updateFinalNumber();
             await onFilterChange();
           });
+
+        const insertBtn = document.getElementById("btnInsertPegawai");
+        if (insertBtn)
+          insertBtn.addEventListener("click", insertSelectedToLetter);
+
+        const kirimBtn = document.getElementById("btnKirimDinkes");
+        if (kirimBtn) kirimBtn.addEventListener("click", kirimKeDinkes);
+
         // load data & initial filter
         await loadAllCutiFromGAS();
         await onFilterChange();
         updateFinalNumber();
-        // initial tanggal display
         updateTanggalDisplay(new Date().toISOString().slice(0, 10));
       })();
 
+      /* ====== tanggal display ====== */
       function updateTanggalDisplay(dateStr) {
-        if (!dateStr) {
-          document.getElementById("tglSuratDisplay").innerText = "";
+        const el = document.getElementById("tglSuratDisplay");
+        if (!el || !dateStr) {
+          if (el) el.innerText = "";
           return;
         }
         const d = new Date(dateStr);
-        const bulan = bulanNames;
-        document.getElementById(
-          "tglSuratDisplay"
-        ).innerText = `${d.getDate()} ${
-          bulan[d.getMonth()]
+        el.innerText = `${d.getDate()} ${
+          bulanNames[d.getMonth()]
         } ${d.getFullYear()}`;
       }
 
-      /* expose refresh function */
+      /* ====== expose refresh for console use ====== */
       window.refreshFromGAS = async function () {
         await loadAllCutiFromGAS();
         await onFilterChange();
