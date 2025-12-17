@@ -209,6 +209,15 @@
           ><i class="fa-solid fa-pen-to-square"></i
           ><span>Surat Permohonan</span></a
         >
+        <a
+          href="https://pkmtrenggalek.site/Daftar_piket/"
+          target="_blank"
+          id="menudaftar"
+          class="d-flex justify-content-between align-items-center"
+          style="display: none"
+        >
+          <span><i class="fa-solid fa-book-open me-2"></i>Jadwal Pegawai 2025</span>
+        </a>
         <a href="#" onclick="logout()" class="text-danger"
           ><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a
         >
@@ -279,6 +288,14 @@
             ><i class="fa-solid fa-pen-to-square"></i
             ><span>Surat Permohonan</span></a
           >
+           <a
+          href="https://pkmtrenggalek.site/Daftar_piket/"
+          id="menudaftarmobile"
+          class="d-flex justify-content-between align-items-center"
+          style="display: none"
+        >
+          <span><i class="fa-solid fa-user-check me-2"></i>Jadwal Pegawai 2025</span>
+        </a>
           <a
             href="#"
             class="text-danger"
@@ -756,6 +773,8 @@
         const boleh = role === "admin" || role === "supervisi";
         const Report = document.getElementById("menuReport");
         const ReportMobile = document.getElementById("menuReportMobile");
+        const daftar = document.getElementById("menudaftar");
+        const daftarmobile = document.getElementById("menudaftarmobile");
         const menuPeng = document.getElementById("menuPengajuan");
         const menuPengMobile = document.getElementById("menuPengajuanMobile");
         const menuRiwayat = document.getElementById("menuRiwayat");
