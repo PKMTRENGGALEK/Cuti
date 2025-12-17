@@ -784,6 +784,8 @@
         if (!boleh) {
           Report?.remove();
           ReportMobile?.remove();
+          daftar?.remove();
+          daftarmobile?.remove();
           menuPeng?.remove();
           menuPengMobile?.remove();
           menuRiwayat?.remove();
@@ -883,6 +885,12 @@
           const menuSuratMobile = document.getElementById("menuSuratMobile");
           const menuReport = document.getElementById("menuReport");
           const menuReportMobile = document.getElementById("menuReportMobile");
+          const menudaftar = document.getElementById("menudaftar");
+          const menudaftarmobile = document.getElementById("menudaftarmobile");
+          if (menudaftar)
+            menudaftar.style.display = bolehAksesPengajuan ? "" : "none";
+          if (menudaftarmobile)
+            menudaftarmobile.style.display = bolehAksesPengajuan ? "" : "none";
           if (menuReport)
             menuReport.style.display = bolehAksesPengajuan ? "" : "none";
           if (menuReportMobile)
