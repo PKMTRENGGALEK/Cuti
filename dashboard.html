@@ -782,6 +782,8 @@
         const menuSurat = document.getElementById("manuSurat");
         const menuSuratMobile = document.getElementById("manuSuratMobile");
         if (!boleh) {
+          Report?.remove();
+          ReportMobile?.remove();
           menuPeng?.remove();
           menuPengMobile?.remove();
           menuRiwayat?.remove();
