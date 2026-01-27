@@ -1,811 +1,216 @@
 <!DOCTYPE html>
 <html lang="id">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Surat Pengantar Cuti — Picker & Nomor Otomatis</title>
+<head>
+<meta charset="UTF-8">
+<title>SURAT PENGANTAR CUTI – DINKES</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <!-- Bootstrap -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
 
-    <!-- jQuery + Select2 -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link
-      href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css"
-      rel="stylesheet"
-    />
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
 
-    <!-- Flatpickr -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
-      rel="stylesheet"
-    />
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<style>
+/* ================== FORMAT NASKAH DINAS ================== */
+@page {
+  size: A4 portrait;
+  margin: 20mm 20mm 25mm 20mm;
+}
 
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        font-size: 12pt;
-        background: #f5f5f5;
-      }
-      .cardku {
-        background: #fff;
-        width: 210mm;
-        min-height: 297mm;
-        margin: auto;
-        padding: 15mm 12mm 60mm; /* bawah diperbesar */
-        box-sizing: border-box;
-        position: relative;
-      }
+body {
+  font-family: Arial, sans-serif;
+  font-size: 12pt;
+  line-height: 1.5;
+  background: #f2f2f2;
+  color: #000;
+}
 
-      .header-container {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .logo {
-        width: 85px;
-        margin-right: 15px;
-      }
-      .double-separator {
-        border-bottom: 3px double #000;
-        margin: 10px 0;
-      }
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 12px;
-        font-size: 12pt;
-      }
-      table th,
-      table td {
-        border: 1px solid #000;
-        padding: 6px;
-        vertical-align: top;
-      }
-      th {
-        text-align: center;
-        font-weight: 700;
-      }
-      .footer {
-        position: absolute;
-        bottom: 8mm; /* sedikit naik agar tidak sampai area print margin */
-        left: 0;
-        width: 100%;
-        text-align: center;
-      }
+.cardku {
+  width: 210mm;
+  min-height: 297mm;
+  background: #fff;
+  margin: auto;
+  padding: 15mm 15mm 45mm;
+  position: relative;
+}
 
-      .footer img {
-        width: 90%;
-        display: block;
-        margin: auto;
-        height: auto;
-      }
-      .small-note {
-        font-size: 10pt;
-        color: #666;
-      }
-      #jenisSuratText {
-        margin-left: 8px; /* sedikit masuk, tapi tidak terlalu */
-        display: block;
-      }
+/* ================== HEADER ================== */
+.header-container {
+  display: grid;
+  grid-template-columns: 90px auto;
+  align-items: center;
+}
 
-      #list-pegawai {
-        margin-left: 20px; /* list tetap lebih masuk */
-        margin-top: 6px;
-        line-height: 1.35;
-      }
+.logo {
+  width: 80px;
+}
 
-      @media print {
-        #form-control-panel,
-        #btnPrint {
-          display: none !important;
-        }
-        .cardku {
-          box-shadow: none !important;
-          margin: 0;
-          padding: 12mm;
-          background: #fff;
-        }
-        body,
-        html {
-          background: #fff !important;
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-        }
-        .shadow,
-        .shadow-sm,
-        .shadow-lg {
-          box-shadow: none !important;
-        }
-        @page {
-          size: A4 portrait;
-          margin: 10mm;
-        }
-      }
-      .select2-container {
-        width: 100% !important;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container-fluid py-4">
-      <div class="row">
-        <!-- CONTROLS -->
-        <div class="col-md-3" id="form-control-panel">
-          <a
-            href="dashboard.html"
-            class="btn btn-outline-success shadow mb-2 shadow"
-            >Dashboard</a
-          >
-          <div class="card shadow-lg">
-            <div class="card-header bg-primary text-white text-center">
-              <strong>PENGATURAN SURAT</strong>
-            </div>
-            <div class="card-body">
-              <div class="mb-2">
-                <label class="form-label">Tanggal Surat</label>
-                <input type="text" id="tanggalSurat" class="form-control" />
-              </div>
+.header {
+  text-align: center;
+  line-height: 1.25;
+}
 
-              <div class="mb-2">
-                <label class="form-label">Tahun</label>
-                <input
-                  type="number"
-                  id="tahun"
-                  class="form-control"
-                  value="2025"
-                />
-              </div>
+.header h4 {
+  font-size: 14pt;
+  font-weight: bold;
+  margin: 0;
+}
 
-              <div class="mb-2">
-                <label class="form-label">Bulan (filter)</label>
-                <select id="bulan" class="form-select"></select>
-              </div>
+.double-separator {
+  border-bottom: 3px double #000;
+  margin: 8px 0 14px;
+}
 
-              <div class="mb-2">
-                <label class="form-label">Jenis Cuti</label>
-                <select id="jenisCuti" class="form-select">
-                  <option value="">--Pilih Jenis Cuti--</option>
-                  <option value="Cuti Tahunan">Cuti Tahunan</option>
-                  <option value="Cuti Sakit">Cuti Sakit</option>
-                </select>
-              </div>
+/* ================== TABEL ================== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
 
-              <div class="mb-2">
-                <label class="form-label"
-                  >Daftar Pegawai (urut: No terbesar → terkecil)</label
-                >
-                <select
-                  id="pegawaiSelect"
-                  multiple="multiple"
-                  style="width: 100%"
-                ></select>
-              </div>
+th, td {
+  border: 1px solid #000;
+  padding: 8px;
+  vertical-align: top;
+}
 
-              <div class="mb-2 d-grid gap-2">
-                <button
-                  class="btn btn-sm btn-outline-primary"
-                  onclick="selectAll()"
-                >
-                  Pilih Semua
-                </button>
-                <button
-                  class="btn btn-sm btn-outline-secondary"
-                  onclick="clearSelection()"
-                >
-                  Kosongkan
-                </button>
-                <button
-                  class="btn btn-sm btn-success"
-                  onclick="insertSelectedToLetter()"
-                >
-                  Masukkan ke Surat →
-                </button>
-              </div>
+th {
+  background: #f2f2f2;
+  text-align: center;
+}
 
-              <hr />
+/* ================== FOOTER ================== */
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+}
 
-              <div class="mb-2">
-                <label class="form-label">Nomor tengah (isi angka saja)</label>
-                <input
-                  id="midNumber"
-                  class="form-control"
-                  placeholder="Contoh: 051"
-                />
-              </div>
+.footer img {
+  width: 100%;
+}
 
-              <div class="mb-2">
-                <label class="form-label">Nomor final (otomatis)</label>
-                <div class="input-group">
-                  <input id="finalNumber" class="form-control" readonly />
-                  <button
-                    class="btn btn-outline-secondary"
-                    onclick="updateFinalNumber()"
-                  >
-                    Perbarui
-                  </button>
-                </div>
-                <div class="small-note mt-1">
-                  Format: prefix / <em>nomor tengah</em> / 406.010.11.001 /
-                  tahun
-                </div>
-              </div>
-              <div class="mb-2">
-                <button id="btnKirimDinkes" class="btn btn-primary">
-                  Kirim ke Dinkes
-                </button>
-              </div>
-              <hr />
-            </div>
-          </div>
-        </div>
+/* ================== PRINT CONTROL ================== */
+@media print {
+  body {
+    background: #fff;
+  }
 
-        <!-- SURAT -->
-        <div class="col-md-9">
-          <div class="cardku shadow">
-            <div class="header-container">
-              <img src="assets/pkmlogo.png" class="logo" alt="logo" />
-              <div class="header text-center">
-                <h4 class="mb-0">PEMERINTAH KABUPATEN TRENGGALEK</h4>
-                <div>DINAS KESEHATAN, PENGENDALIAN PENDUDUK</div>
-                <div>DAN KELUARGA BERENCANA</div>
-                <h4 class="mt-1 mb-0">PUSKESMAS TRENGGALEK</h4>
-                <small
-                  >Jl. Soekarno Hatta Gg. Rambutan No.1 Trenggalek, Telp (0355)
-                  792137</small
-                ><br />
-                <small>https://pkm-trenggalek.trenggalekkab.go.id</small>
-              </div>
-            </div>
+  .no-print {
+    display: none !important;
+  }
 
-            <div class="double-separator"></div>
+  table {
+    page-break-inside: auto;
+  }
 
-            <div class="text-end mb-3">
-              Trenggalek, <span id="tglSuratDisplay"></span>
-            </div>
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
 
-            <div
-              style="text-align: start; margin-top: 10px; margin-bottom: 20px"
-            >
-              <div
-                style="
-                  display: inline-block;
-                  text-align: start;
-                  line-height: 1.35;
-                "
-              >
-                Yth. Kepala Dinkes PPKB<br />
-                Kabupaten Trenggalek<br />
-                di<br />
-                <b>TRENGGALEK</b>
-              </div>
-            </div>
+  thead {
+    display: table-header-group;
+  }
 
-            <h4 class="text-center mt-2"><u>SURAT PENGANTAR</u></h4>
-            <p class="text-center">
-              NOMOR :
-              <span id="no-surat-display"
-                >800.1.11.2/000/406.010.11.001/2025</span
-              >
-            </p>
+  .ttd-block {
+    page-break-inside: avoid;
+  }
+}
+</style>
+</head>
 
-            <table>
-              <thead>
-                <tr>
-                  <th style="width: 60px">Nomor</th>
-                  <th>Jenis Surat</th>
-                  <th style="width: 130px">Banyaknya</th>
-                  <th style="width: 180px">Keterangan</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td class="text-center">1</td>
-                  <td id="kolom-jenis-surat">
-                    <div id="jenisSuratText" style="margin-bottom: 4px"></div>
-                    <div id="list-pegawai"></div>
-                  </td>
+<body>
 
-                  <td class="text-center">
-                    <span id="jumlah-data-text">0</span>
-                    <span id="satuan-text">Bendel</span>
-                  </td>
+<div class="container-fluid py-3 no-print">
+  <button class="btn btn-primary" onclick="window.print()">PRINT</button>
+  <button class="btn btn-success" onclick="generateWord()">DOWNLOAD WORD</button>
+</div>
 
-                  <td class="text-start">
-                    Dikirim dengan hormat untuk menjadikan periksa
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+<div class="cardku">
 
-            <div style="text-align: end; margin-top: 60px; margin-bottom: 70px">
-              <div style="display: inline-block; text-align: left">
-                <div style="font-weight: bold">KEPALA PUSKESMAS TRENGGALEK</div>
-
-                <!-- Jarak tanda tangan -->
-                <div style="height: 80px"></div>
-
-                <div>
-                  <b><u>dr. MURTI RUKIYANDARI</u></b>
-                </div>
-                <div>Pembina Utama Muda</div>
-                <div>NIP. 19800611 200903 2 004</div>
-              </div>
-            </div>
-
-            <div class="footer">
-              <img src="assets/footer.jpeg" alt="footer" />
-            </div>
-          </div>
-
-          <div class="text-center mt-3 mb-5">
-            <button
-              id="btnPrint"
-              class="btn btn-danger px-4"
-              onclick="window.print()"
-            >
-              PRINT
-            </button>
-          </div>
-        </div>
-      </div>
+  <!-- HEADER -->
+  <div class="header-container">
+    <img src="assets/pkmlogo.png" class="logo">
+    <div class="header">
+      <h4>PEMERINTAH KABUPATEN TRENGGALEK</h4>
+      <div>DINAS KESEHATAN, PPKB</div>
+      <h4>PUSKESMAS TRENGGALEK</h4>
+      <small>Jl. Soekarno Hatta Gg. Rambutan No.1 Trenggalek</small>
     </div>
+  </div>
 
-    <!-- Bootstrap bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <div class="double-separator"></div>
 
-    <script>
-      /* =====================
-         Cleaned & consolidated JS
-         ===================== */
+  <div class="text-end">
+    Trenggalek, <span id="tglSurat">6 November 2025</span>
+  </div>
 
-      /* ====== terbilang ====== */
-      function terbilang(n) {
-        const angka = [
-          "nol",
-          "satu",
-          "dua",
-          "tiga",
-          "empat",
-          "lima",
-          "enam",
-          "tujuh",
-          "delapan",
-          "sembilan",
-          "sepuluh",
-          "sebelas",
-        ];
-        n = parseInt(n, 10);
-        if (isNaN(n)) return "";
-        if (n < 12) return angka[n];
-        if (n < 20) return terbilang(n - 10) + " belas";
-        if (n < 100)
-          return terbilang(Math.floor(n / 10)) + " puluh " + terbilang(n % 10);
-        if (n < 200) return "seratus " + terbilang(n - 100);
-        if (n < 1000)
-          return (
-            terbilang(Math.floor(n / 100)) + " ratus " + terbilang(n % 100)
-          );
-        if (n < 2000) return "seribu " + terbilang(n - 1000);
-        if (n < 1000000)
-          return (
-            terbilang(Math.floor(n / 1000)) + " ribu " + terbilang(n % 1000)
-          );
-        return String(n);
-      }
+  <br>
 
-      function formatAngkaTerbilang(n) {
-        const t = terbilang(n).trim();
-        return `${n} (${t})`;
-      }
+  Yth. Kepala Dinkes PPKB<br>
+  Kabupaten Trenggalek<br>
+  di<br>
+  <b>TRENGGALEK</b>
 
-      /* ====== CONFIG ====== */
-      const GAS_URL =
-        "https://script.google.com/macros/s/AKfycbx-lSDlFehwNJxbYAdYTeBCgsOWQ2FidZlI6_ahGk7U2r49qhdSLbH12BAKiyNItw/exec";
-      const TEMPLATE_LOCAL_PATH =
-        "/mnt/data/PENGANTAR CUTI TAHUNAN 6 NOVEMBER 2025.docx";
-      const FIXED_PART = "406.010.11.001";
+  <br><br>
 
-      /* ====== UI data ====== */
-      const bulanNames = [
-        "Januari",
-        "Februari",
-        "Maret",
-        "April",
-        "Mei",
-        "Juni",
-        "Juli",
-        "Agustus",
-        "September",
-        "Oktober",
-        "November",
-        "Desember",
-      ];
+  <h4 class="text-center"><u>SURAT PENGANTAR</u></h4>
+  <p class="text-center">
+    NOMOR :
+    <span id="noSurat">800.1.11.2/051/406.010.11.001/2025</span>
+  </p>
 
-      function populateBulan() {
-        const sel = document.getElementById("bulan");
-        if (!sel) return;
-        sel.innerHTML = bulanNames.map((m) => `<option>${m}</option>`).join("");
-      }
-      populateBulan();
+  <!-- TABEL -->
+  <table>
+    <thead>
+      <tr>
+        <th width="60">No</th>
+        <th>Jenis Surat</th>
+        <th width="120">Banyaknya</th>
+        <th width="180">Keterangan</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td align="center">1</td>
+        <td>
+          Permohonan Cuti Tahunan Pegawai Puskesmas Trenggalek:<br><br>
+          1. Nama Pegawai A<br>
+          2. Nama Pegawai B
+        </td>
+        <td align="center">2 (dua) lembar</td>
+        <td>Dikirim dengan hormat untuk diperiksa</td>
+      </tr>
+    </tbody>
+  </table>
 
-      /* ====== select2 init (jQuery) ====== */
-      $(document).ready(function () {
-        if ($("#pegawaiSelect").length) {
-          $("#pegawaiSelect").select2({
-            placeholder: "Pilih pegawai...",
-            width: "100%",
-          });
-        }
-      });
+  <!-- TTD -->
+  <div class="ttd-block" style="text-align:right; margin-top:50px;">
+    <b>KEPALA PUSKESMAS TRENGGALEK</b><br><br><br>
+    <b><u>dr. MURTI RUKIYANDARI</u></b><br>
+    Pembina Utama Muda<br>
+    NIP. 19800611 200903 2 004
+  </div>
 
-      /* ====== fetch helper: JSON or JSONP-like ====== */
-      async function fetchJsonpLike(url) {
-        const res = await fetch(url, { cache: "no-store" });
-        const txt = await res.text();
-        const firstParen = txt.indexOf("(");
-        const lastParen = txt.lastIndexOf(")");
-        if (firstParen === -1 || lastParen === -1) {
-          try {
-            return JSON.parse(txt);
-          } catch (e) {
-            throw new Error("Unexpected response: " + txt);
-          }
-        }
-        const jsonStr = txt.substring(firstParen + 1, lastParen);
-        return JSON.parse(jsonStr);
-      }
+  <div class="footer">
+    <img src="assets/footer.jpeg">
+  </div>
 
-      /* ====== normalize row ====== */
-      function normalizeRow(raw) {
-        const out = {
-          no: 0,
-          nip: "",
-          nama_pegawai: "",
-          jabatan: "",
-          tgl_mulai: "",
-          tgl_selesai: "",
-          lama_cuti: "",
-          jenis_cuti: "",
-          keterangan: "",
-          file_pendukung: "",
-          tanggal_pengajuan: "",
-          status: "",
-          tolakan: "",
-          status_dinkes: "",
-        };
-        for (const key in raw) {
-          if (!Object.prototype.hasOwnProperty.call(raw, key)) continue;
-          const v = raw[key];
-          const k = String(key).trim().toLowerCase();
+</div>
 
-          if (k === "no") out.no = Number(v) || out.no;
-          else if (k === "nip") out.nip = v || "";
-          else if (k.includes("nama")) out.nama_pegawai = v || "";
-          else if (k.includes("jabatan")) out.jabatan = v || "";
-          else if (k.includes("mulai")) out.tgl_mulai = v || "";
-          else if (k.includes("selesai")) out.tgl_selesai = v || "";
-          else if (k.includes("lama")) out.lama_cuti = v || "";
-          else if (k.includes("jenis")) out.jenis_cuti = v || "";
-          else if (k.includes("keterangan")) out.keterangan = v || "";
-          else if (k.includes("file")) out.file_pendukung = v || "";
-          else if (k.includes("pengajuan") || k.includes("tanggal pengajuan"))
-            out.tanggal_pengajuan = v || "";
-          // IMPORTANT: check status_dinkes before general status
-          else if (k.includes("status dinkes")) out.status_dinkes = v || "";
-          else if (
-            k === "status" ||
-            (k.includes("status") && !k.includes("status dinkes"))
-          )
-            out.status = v || "";
-          else if (
-            k.includes("tolak") ||
-            k.includes("tolakan") ||
-            k.includes("alasan")
-          )
-            out.tolakan = v || "";
-        }
-        return out;
-      }
+<script>
+function generateWord() {
+  window.open(
+    "https://script.google.com/macros/s/AKfycbx-lSDlFehwNJxbYAdYTeBCgsOWQ2FidZlI6_ahGk7U2r49qhdSLbH12BAKiyNItw/exec?action=generateWord",
+    "_blank"
+  );
+}
+</script>
 
-      /* ====== cache loader ====== */
-      let cachedRows = [];
-      async function loadAllCutiFromGAS() {
-        const url = `${GAS_URL}?action=getCuti&callback=cb`;
-        try {
-          const data = await fetchJsonpLike(url);
-          cachedRows = (data || []).map((r) => normalizeRow(r));
-          return cachedRows;
-        } catch (err) {
-          console.error("GAS load error:", err);
-          cachedRows = [];
-          return [];
-        }
-      }
-
-      /* ====== helpers ====== */
-      function rangeIntersectsMonth(startStr, endStr, monthIndex, year) {
-        if (!startStr) return false;
-        const s = new Date(startStr);
-        const e = endStr ? new Date(endStr) : new Date(startStr);
-        s.setHours(0, 0, 0, 0);
-        e.setHours(23, 59, 59, 999);
-        const mStart = new Date(year, monthIndex, 1, 0, 0, 0, 0);
-        const mEnd = new Date(year, monthIndex + 1, 0, 23, 59, 59, 999);
-        return s <= mEnd && e >= mStart;
-      }
-      function parseNo(r) {
-        return Number(r.no) || 0;
-      }
-
-      /* ====== filtering & populate select ====== */
-      async function onFilterChange() {
-        const jenis = (
-          document.getElementById("jenisCuti")?.value || ""
-        ).trim();
-        const bulanName =
-          document.getElementById("bulan")?.value ||
-          bulanNames[new Date().getMonth()];
-        const tahun =
-          Number(document.getElementById("tahun")?.value) ||
-          new Date().getFullYear();
-        const monthIndex = bulanNames.indexOf(bulanName);
-
-        if (!cachedRows.length) await loadAllCutiFromGAS();
-
-        const matched = cachedRows.filter((r) => {
-          if (!r.jenis_cuti) return false;
-          if (String(r.jenis_cuti).trim() !== String(jenis).trim())
-            return false;
-          // only those with empty Status Dinkes
-          const sd = String(r.status_dinkes || "").trim();
-          if (sd !== "") return false;
-          return rangeIntersectsMonth(
-            r.tgl_mulai,
-            r.tgl_selesai,
-            monthIndex,
-            tahun
-          );
-        });
-
-        matched.sort((a, b) => parseNo(b) - parseNo(a));
-
-        const sel = document.getElementById("pegawaiSelect");
-        if (sel) {
-          sel.innerHTML = "";
-          matched.forEach((r) => {
-            const nama = r.nama_pegawai || "(Nama kosong)";
-            const nip = r.nip || "";
-            const display = `${nama}${nip ? " (NIP: " + nip + ")" : ""}`;
-            const opt = document.createElement("option");
-            opt.value = JSON.stringify({ no: r.no, nama: nama, nip: nip });
-            opt.text = display;
-            sel.appendChild(opt);
-          });
-          $("#pegawaiSelect").trigger("change.select2");
-        }
-
-        // reset list display & jumlah (store raw count in data-count)
-        const listEl = document.getElementById("list-pegawai");
-        if (listEl) listEl.innerHTML = "";
-        const jumlahEl = document.getElementById("jumlah-data-text");
-        if (jumlahEl) {
-          jumlahEl.dataset.count = "0";
-          jumlahEl.innerText = "0";
-        }
-
-        const jenisSuratText = document.getElementById("jenisSuratText");
-        if (jenisSuratText)
-          jenisSuratText.innerText = `Permohonan ${jenis} Pegawai Puskesmas Trenggalek Bulan ${bulanName} Tahun ${tahun} An. Sdr:`;
-
-        updateFinalNumber();
-        updateJumlahFormat();
-      }
-
-      /* ====== selection helpers ====== */
-      function selectAll() {
-        const sel = document.getElementById("pegawaiSelect");
-        if (!sel) return;
-        for (let i = 0; i < sel.options.length; i++)
-          sel.options[i].selected = true;
-        $("#pegawaiSelect").trigger("change.select2");
-      }
-      function clearSelection() {
-        const sel = document.getElementById("pegawaiSelect");
-        if (!sel) return;
-        for (let i = 0; i < sel.options.length; i++)
-          sel.options[i].selected = false;
-        $("#pegawaiSelect").trigger("change.select2");
-      }
-
-      /* ====== insert selected to letter (No desc) ====== */
-      function insertSelectedToLetter() {
-        const sel = document.getElementById("pegawaiSelect");
-        if (!sel) return;
-        const selected = Array.from(sel.selectedOptions).map((o) => {
-          try {
-            return JSON.parse(o.value);
-          } catch {
-            return { no: 0, nama: o.text, nip: "" };
-          }
-        });
-
-        selected.sort((a, b) => (b.no || 0) - (a.no || 0));
-
-        let html = "";
-        selected.forEach((s, i) => {
-          const nipText = s.nip ? `<br>(NIP. ${s.nip})` : "";
-          html += `${i + 1}. ${s.nama}${nipText}<br>`;
-        });
-        const listEl = document.getElementById("list-pegawai");
-        if (listEl) listEl.innerHTML = html;
-
-        // store raw count in data-count to avoid parsing/display issues
-        const jumlahEl = document.getElementById("jumlah-data-text");
-        if (jumlahEl) {
-          jumlahEl.dataset.count = String(selected.length || 0);
-        }
-
-        updateJumlahFormat();
-      }
-
-      function updateJumlahFormat() {
-        const jenis = (
-          document.getElementById("jenisCuti")?.value || ""
-        ).trim();
-        const jumlahEl = document.getElementById("jumlah-data-text");
-        const rawCount = jumlahEl ? Number(jumlahEl.dataset.count || 0) : 0;
-
-        const satuan = jenis === "Cuti Tahunan" ? "Lembar" : "Bendel";
-        const satuanTextEl = document.getElementById("satuan-text");
-        if (satuanTextEl) satuanTextEl.innerText = ` ${satuan}`;
-
-        if (jumlahEl) {
-          if (rawCount > 0) jumlahEl.innerText = formatAngkaTerbilang(rawCount);
-          else jumlahEl.innerText = "0";
-        }
-      }
-
-      /* ====== nomor surat logic ====== */
-      function getPrefixForJenis(jenis) {
-        if (String(jenis).trim() === "Cuti Tahunan") return "800.1.11.4";
-        if (String(jenis).trim() === "Cuti Sakit") return "800.1.11.2";
-        return "800.1.11.2";
-      }
-      function updateFinalNumber() {
-        const jenis = (
-          document.getElementById("jenisCuti")?.value || ""
-        ).trim();
-        const mid = (document.getElementById("midNumber")?.value || "").trim();
-        const tahun = (
-          document.getElementById("tahun")?.value || new Date().getFullYear()
-        ).toString();
-        const prefix = getPrefixForJenis(jenis);
-        const middle = mid || "000";
-        const final = `${prefix}/${middle}/${FIXED_PART}/${tahun}`;
-        const finalEl = document.getElementById("finalNumber");
-        if (finalEl) finalEl.value = final;
-        const display = document.getElementById("no-surat-display");
-        if (display) display.innerText = final;
-      }
-
-      /* ====== kirim ke dinkes ====== */
-      async function kirimKeDinkes() {
-        const sel = document.getElementById("pegawaiSelect");
-        if (!sel) {
-          alert("Elemen pegawaiSelect tidak ditemukan.");
-          return;
-        }
-
-        const selected = Array.from(sel.selectedOptions)
-          .map((o) => {
-            try {
-              return JSON.parse(o.value);
-            } catch {
-              return null;
-            }
-          })
-          .filter(Boolean);
-
-        if (selected.length === 0) {
-          alert("Pilih minimal satu pegawai dulu.");
-          return;
-        }
-
-        const mid = (document.getElementById("midNumber")?.value || "").trim();
-        if (!mid) {
-          alert("Isi dahulu nomor surat (mid number).");
-          return;
-        }
-
-        if (!confirm(`Kirim ${selected.length} data ke Dinkes?`)) return;
-
-        for (const s of selected) {
-          const url = `${GAS_URL}?action=updateStatusDinkes&no=${encodeURIComponent(
-            s.no
-          )}&value=${encodeURIComponent("Sudah Kirim")}&callback=cb`;
-          try {
-            await fetchJsonpLike(url);
-          } catch (err) {
-            console.error("Gagal update:", err);
-          }
-        }
-
-        alert("Status Dinkes berhasil diperbarui menjadi 'Sudah Kirim'.");
-
-        await loadAllCutiFromGAS();
-        await onFilterChange();
-      }
-
-      /* ====== init ====== */
-      (async function init() {
-        // flatpickr init (only once)
-        if (
-          typeof flatpickr !== "undefined" &&
-          document.getElementById("tanggalSurat")
-        ) {
-          flatpickr("#tanggalSurat", {
-            dateFormat: "Y-m-d",
-            defaultDate: new Date(),
-            onChange: (d, s) => updateTanggalDisplay(s),
-          });
-        }
-
-        // wire events
-        const midInput = document.getElementById("midNumber");
-        if (midInput) midInput.addEventListener("input", updateFinalNumber);
-
-        const jenisSel = document.getElementById("jenisCuti");
-        if (jenisSel)
-          jenisSel.addEventListener("change", async () => {
-            updateFinalNumber();
-            await onFilterChange();
-          });
-
-        const tahunSel = document.getElementById("tahun");
-        if (tahunSel)
-          tahunSel.addEventListener("change", async () => {
-            updateFinalNumber();
-            await onFilterChange();
-          });
-
-        const insertBtn = document.getElementById("btnInsertPegawai");
-        if (insertBtn)
-          insertBtn.addEventListener("click", insertSelectedToLetter);
-
-        const kirimBtn = document.getElementById("btnKirimDinkes");
-        if (kirimBtn) kirimBtn.addEventListener("click", kirimKeDinkes);
-
-        // load data & initial filter
-        await loadAllCutiFromGAS();
-        await onFilterChange();
-        updateFinalNumber();
-        updateTanggalDisplay(new Date().toISOString().slice(0, 10));
-      })();
-
-      /* ====== tanggal display ====== */
-      function updateTanggalDisplay(dateStr) {
-        const el = document.getElementById("tglSuratDisplay");
-        if (!el || !dateStr) {
-          if (el) el.innerText = "";
-          return;
-        }
-        const d = new Date(dateStr);
-        el.innerText = `${d.getDate()} ${
-          bulanNames[d.getMonth()]
-        } ${d.getFullYear()}`;
-      }
-
-      /* ====== expose refresh for console use ====== */
-      window.refreshFromGAS = async function () {
-        await loadAllCutiFromGAS();
-        await onFilterChange();
-      };
-    </script>
-  </body>
+</body>
 </html>
