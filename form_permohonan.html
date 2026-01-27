@@ -504,8 +504,13 @@
           );
           document.getElementById("alamat-cuti").textContent =
             data["Alamat"] || "-";
-          document.getElementById("telp-cuti").textContent =
-            data["Telp"] || "-";
+         document.getElementById("telp-cuti").textContent =
+            data["No Telp"] ||
+            data["noTelp"] ||
+            data["Telp"] ||
+            data["No HP"] ||
+            "-";
+
 
           // Jenis cuti
           const jenisCutiIdMap = {
