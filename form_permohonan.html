@@ -428,26 +428,38 @@
           const callbackName = "handleSisaCuti_" + Date.now();
           const script = document.createElement("script");
           script.src = `${API_URL}?action=getSisa&callback=${callbackName}&t=${Date.now()}`;
+      
           window[callbackName] = (response) => {
-            if (!response || response.error)
-              reject(response?.error || "Gagal memuat data sisa cuti");
-            else {
-              const row = response.find(
-                (r) => r["NIP"] === nip || r["nip"] === nip
-              );
-              resolve(row || null);
+            if (!Array.isArray(response)) {
+              reject("Format data sisa cuti salah");
+              return;
             }
+      
+            const nipStr = String(nip).trim();
+      
+            const row = response.find(r => {
+              const nipKey = Object.keys(r).find(
+                k => k.toLowerCase().replace(/\s/g, "") === "nip"
+              );
+              return nipKey && String(r[nipKey]).trim() === nipStr;
+            });
+      
+            resolve(row || null);
+      
             document.body.removeChild(script);
             delete window[callbackName];
           };
+      
           script.onerror = () => {
-            reject("Gagal memuat data sisa cuti dari server");
+            reject("Gagal load sisa cuti");
             document.body.removeChild(script);
             delete window[callbackName];
           };
+      
           document.body.appendChild(script);
         });
       }
+
 
       document.addEventListener("DOMContentLoaded", async function () {
         const params = new URLSearchParams(window.location.search);
