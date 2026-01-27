@@ -561,15 +561,20 @@
           try {
             const sisaCutiData = await fetchSisaCuti(data["NIP"]);
             if (sisaCutiData) {
-              const tahunSekarang = new Date().getFullYear();
-              document.getElementById("sisa-cuti-N").textContent =
-                sisaCutiData[tahunSekarang] ?? "-";
-              document.getElementById("sisa-cuti-N1").textContent =
-                sisaCutiData[tahunSekarang - 1] ?? "-";
-              document.getElementById("sisa-cuti-N2").textContent =
-                sisaCutiData[tahunSekarang - 2] ?? "-";
-              document.getElementById("sisa-cuti-N3").textContent =
-                sisaCutiData[tahunSekarang - 3] ?? "-";
+             function ambilCutiTahun(row, tahun) {
+                const key = Object.keys(row).find(
+                  k => k.replace(/\s/g, "") === String(tahun)
+                );
+                return key ? row[key] : "-";
+              }
+              
+              const th = new Date().getFullYear();
+              
+              document.getElementById("sisa-cuti-N").textContent  = ambilCutiTahun(sisaCutiData, th);
+              document.getElementById("sisa-cuti-N1").textContent = ambilCutiTahun(sisaCutiData, th - 1);
+              document.getElementById("sisa-cuti-N2").textContent = ambilCutiTahun(sisaCutiData, th - 2);
+              document.getElementById("sisa-cuti-N3").textContent = ambilCutiTahun(sisaCutiData, th - 3);
+
             }
           } catch (err) {
             console.error("Gagal memuat data sisa cuti:", err);
