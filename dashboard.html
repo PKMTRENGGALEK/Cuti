@@ -1100,17 +1100,17 @@
             }
 
             // Ambil nilai base dari kolom 2025 (bisa key '2025' atau number 2025)
-            const sisaKol2025 =
-              baris["2025"] !== undefined
-                ? baris["2025"]
-                : baris[2025] !== undefined
-                ? baris[2025]
-                : baris["sisa2025"] !== undefined
-                ? baris["sisa2025"]
+            const sisaKol2026 =
+              baris["2026"] !== undefined
+                ? baris["2026"]
+                : baris[2026] !== undefined
+                ? baris[2026]
+                : baris["sisa2026"] !== undefined
+                ? baris["sisa2026"]
                 : baris["sisa"] !== undefined
                 ? baris["sisa"]
                 : 0;
-            const sisaTahunIniBase = Number(sisaKol2025) || 0;
+            const sisaTahunIniBase = Number(sisaKol2026) || 0;
 
             // Ambil kolom tahun sebelumnya jika ada
             const tahunIni = new Date().getFullYear();
